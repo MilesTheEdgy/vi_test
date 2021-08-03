@@ -10,9 +10,9 @@ import {
   ApolloClient,
   InMemoryCache,
   ApolloProvider,
-  createHttpLink,
-  setContext
+  createHttpLink
 } from "@apollo/client";
+import { setContext } from '@apollo/client/link/context'
 import { HashRouter } from "react-router-dom"
 React.icons = icons
 
@@ -21,9 +21,7 @@ const httpLink = createHttpLink({
 });
 
 const authLink = setContext((_, { headers }) => {
-  // get the authentication token from local storage if it exists
-  const token = localStorage.getItem('token');
-  // return the headers to the context so httpLink can read them
+  const token = document.cookie.slice(11)
   return {
     headers: {
       ...headers,

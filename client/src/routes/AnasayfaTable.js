@@ -1,6 +1,6 @@
 import React, { lazy } from "react";
 import { useSelector } from "react-redux";
-import { TUM_TEKLIFLER, BEKELEYEN_TEKLIFLER, BAKIYE_HAREKETLERI, SIZIN_TEKLIFLERINIZ } from "src/store";
+import { TUM_TEKLIFLER, BEKELEYEN_TEKLIFLER, BAKIYE_HAREKETLERI, SIZIN_TEKLIFLERINIZ } from "../store";
 import "./anasayfatable.css"
 
 const TumTeklifler = lazy(() => import('./tables/tumteklifler/TumTeklifler'));

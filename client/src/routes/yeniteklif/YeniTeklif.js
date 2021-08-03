@@ -21,9 +21,10 @@ import {
   CModalTitle
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import Loader from '../loader/Loader'
+import Loader from '../../hoc/loader/Loader'
 import "./yeniteklif.css"
 import { initialState, yeniTeklifReducer } from '.'
+import { useLazyQuery, useMutation, gql } from '@apollo/client'
 
 const UrunEkle = () => {
 
@@ -72,7 +73,21 @@ const UrunEkle = () => {
   }
 
   const [inputRef, setInputFocus] = useFocus()
-
+  const GET_SEARCH_LIST = gql`
+    query($inputField: String!) {
+      product(searchCriteria: $inputField) {
+        Product_name
+        Barcode
+      }
+    }
+  `
+  const [getSearchList, { loading }] = useLazyQuery(GET_SEARCH_LIST,{
+    fetchPolicy: "network-only",
+    onError: (err) => console.log(err),
+    onCompleted: (data) => {
+      console.log(data)
+    }
+  })
   
   const searchList = async () => {
     dispatch({type: "ISLOADING_TRUE"})
@@ -176,13 +191,13 @@ const UrunEkle = () => {
                   <CInputGroupPrepend>
                     {
                       medicineSearch.isLoading ?
-                      <CButton type="button" color="primary" onClick = {searchList} >
+                      <CButton type="button" color="primary" onClick= {getSearchList({variables: {inputField: medicineSearch.input}})} >
                         <div className="spinner-border text-danger" style = {{height : "20px", width: "20px"}} role="status">
                           <span className="sr-only">Loading...</span>
                         </div>  Ara
                      </CButton>
                       :
-                      <CButton type="button" color="primary" onClick = {searchList} ><CIcon name="cil-magnifying-glass" /> Ara</CButton>
+                      <CButton type="button" color="primary" onClick= {getSearchList({variables: {inputField: medicineSearch.input}})}><CIcon name="cil-magnifying-glass" /> Ara</CButton>
                     }
                   </CInputGroupPrepend>
                   <CInput innerRef={inputRef} value = {medicineSearch.input} placeholder= "ilaç adı verya barkodunu giriniz"

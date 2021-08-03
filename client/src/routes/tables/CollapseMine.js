@@ -1,10 +1,9 @@
 import React, {useReducer, useEffect} from "react";
 import { CFormGroup, CCol, CTextarea, CLabel, CButton, CBadge, CCardBody } from "@coreui/react";
-import Loader from "src/comps/loader/Loader";
 import { initialState, reducer } from ".";
 import "./style.css"
 import "./collapsed.css"
-import Modal from "src/comps/modals/Modal";
+import Modal from "../../components/modals/Modal";
 import { useDispatch } from "react-redux";
 
 function CollapseMineTable({item, state, dispatch}) {

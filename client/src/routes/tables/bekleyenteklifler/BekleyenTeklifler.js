@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { CDataTable, CBadge, CButton, CCollapse, CCol, CLabel, CRow } from "@coreui/react";
 import { useDispatch, useSelector } from "react-redux";
+import { gql, useQuery } from "@apollo/client";
 import { fields, getBadge, getStatus, getCondition, toggleDetails, whichCollapsedToRender } from "../";
 import "../style.css"
 
@@ -17,6 +18,58 @@ const BekleyenTeklifler = () => {
     const mainDispatch = useDispatch()
 
     const bekleyeinTekliflerID = "/api/data/table/bekleyen"
+
+    const GET_APPLICATIONS_ONHOLD = gql`
+      query {
+        application(onHold: true ) {
+          application_id
+          transaction_id
+          product_name
+          product_barcode
+          goal
+          condition
+          unit_price
+          submitter
+          submitter_pledge
+          description
+          status
+          joiners {
+            name
+            pledge
+          }
+          submit_date
+          final_date
+          status_change_date
+        }
+      }
+    `;
+    const { loading } = useQuery(GET_APPLICATIONS_ONHOLD, {
+      fetchPolicy: "network-only",
+      onError: (error) => console.log(error),
+      onCompleted: (data) => { // for some reason, if data is empty, it defines as object instead of array and I can't map it or I get an error
+        // console.log(typeof data)
+        // console.log("data is: ", data.length)
+        // if (data.length !== 0) {
+        //   const dataArr = data.map((obj, i) => {
+        //     return {
+        //       birimFiyat: obj.price,
+        //       durum: obj.status,
+        //       eczane: obj.submitter,
+        //       hedef: obj.goal,
+        //       ID: obj.id,
+        //       kampanya: obj.condition,
+        //       pledge: obj.poster_pledge,
+        //       sonTarih: obj.final_date,
+        //       İlaç: obj.product_name,
+        //       description: obj.description,
+        //       katılanlar: obj.joiners
+        //     }
+        //   })
+        //   setData(dataArr)
+        // }
+        //  setData(data)
+      }
+    });
 
     const fetchData = async (tableAPIstring) => {
       mainDispatch({type: "TOGGLE_LOADING_TRUE"})

@@ -1,19 +1,11 @@
   import React from 'react'
   import {
-    CWidgetDropdown,
     CRow,
     CCol,
-    CDropdown,
-    CDropdownMenu,
-    CDropdownItem,
-    CDropdownToggle,
     CWidgetProgress
   } from '@coreui/react'
-  import CIcon from '@coreui/icons-react'
-  import ChartLineSimple from '../charts/ChartLineSimple'
-  import ChartBarSimple from '../charts/ChartBarSimple'
   import "./widgetsdropdown.css"
-  import { TUM_TEKLIFLER, BAKIYE_HAREKETLERI, BEKELEYEN_TEKLIFLER, SIZIN_TEKLIFLERINIZ} from "../../store"
+  import { TUM_TEKLIFLER, BAKIYE_HAREKETLERI, BEKELEYEN_TEKLIFLER, SIZIN_TEKLIFLERINIZ} from "../store"
   import { useDispatch } from 'react-redux'
 
   const WidgetsDropdown = () => {

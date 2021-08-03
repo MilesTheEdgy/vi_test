@@ -5,6 +5,8 @@ import Loader from './hoc/loader/Loader';
 import './scss/style.scss';
 import Layout from './components/layout/Layout';
 import AuthHOC from './hoc/authhoc/AuthHOC';
+import { client } from "./index"
+import { gql } from "@apollo/client"
 
 const loading = (
   <div className="pt-3 text-center">
@@ -17,25 +19,29 @@ class App extends Component {
   componentDidMount() {
     //runs once to check if user is already logged in, so user doesn't attempt to re-login
     const isUserCookieValid = async () => {
-      const response = await fetch(`/api`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'authorization': `Bearer ${document.cookie.slice(11)} `
-        }
-      })
-
-      if (response.status === 200) {
-        const data = await response.json()
-        console.log('still authorized, routing to dashboard...')
-        this.props.dispatch({type: 'FILL_USER_SETTINGS', eczaneName: data.eczaneName, username: data.username})
-        this.props.dispatch({type: 'FILL_USER_INFO', bakiye: data.bakiye})
+      const GET_LOGIN = gql`
+          query{
+              currentUser {
+                  username
+                  pharmacy_name
+                  balance
+              }
+          }
+      `;
+      try {
+        const res = await client.query({
+          query: GET_LOGIN
+        })
+        const currentUser = res.data
         this.props.dispatch({type: 'LOG_IN'})
+        this.props.dispatch({type: 'FILL_USER_SETTINGS', eczaneName: currentUser.pharmacy_name, username: currentUser.username})          
+        this.props.dispatch({type: 'FILL_USER_INFO', bakiye: currentUser.balance})
         this.props.history.push('/dashboard')
-        // fetchMedicineData()
+      } catch (error) {
+        this.props.dispatch({type: 'LOG_OUT'})
       }
     }
-  isUserCookieValid()
+    isUserCookieValid()
   }
 
   render() {
