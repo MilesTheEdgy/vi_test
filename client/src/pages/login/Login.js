@@ -49,9 +49,11 @@ const Login = () => {
     fetchPolicy: "network-only",
     onError: () => setModal(true),
     onCompleted: (data) => {
-      console.log(data)
+      // console.log(data)
       const { token } = data.login
+      console.log(token)
       document.cookie = `pyecztoken=${token.token}`
+      console.log(document.cookie)
       dispatch({type: 'LOG_IN'})
       dispatch({type: 'FILL_USER_SETTINGS', eczaneName: token.pharmacy_name, username: token.username})
       history.push('/dashboard')

@@ -43,7 +43,7 @@ class App extends Component {
         <React.Suspense fallback={loading}>
           <Loader isLoading = {this.props.isLoading}>
             <Switch>
-              <AuthHOC>  {/* AuthHOC: if user is accessed: render layout, if not, render Login and Register pages */}
+              <AuthHOC>  {/* AuthHOC: if user has access: render layout, if not, render Login and Register pages */}
                 <Route path="/" name="Home" render={props => <Layout {...props}/>} />
               </AuthHOC>
             </Switch>

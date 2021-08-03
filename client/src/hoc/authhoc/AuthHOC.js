@@ -1,7 +1,8 @@
-import React, { useEffect } from "react";
-import { Route, useHistory, withRouter } from "react-router";
-import { useSelector, useDispatch } from "react-redux";
-import { gql, useQuery } from "@apollo/client";
+import React from "react";
+import { withRouter, Route } from "react-router";
+import { connect } from "react-redux";
+import { gql } from "@apollo/client";
+import { client } from "../../index"
 import SafeHOC from "../safehoc/SafeHOC";
 
 // const AuthHOC = (props) => {
@@ -66,19 +67,58 @@ import SafeHOC from "../safehoc/SafeHOC";
 
 
 class AuthHOC extends React.Component {
-  
-    componentWillMount() {
-      this.unlisten = this.props.history.listen((location, action) => {
+
+    componentDidMount() {
+      this.unlisten = this.props.history.listen( async (location, action) => {
         console.log("on route change");
+        const GET_LOGIN = gql`
+            query{
+                currentUser {
+                    username
+                    pharmacy_name
+                    balance
+                }
+            }
+        `;
+        try {
+          const res = await client.query({
+            query: GET_LOGIN
+          })
+          console.log(res)
+        } catch (error) {
+          console.log(error)
+          console.log(this.props.isLogged)
+          this.props.dispatch({type: 'LOG_OUT'})
+        }
+        // useQuery(GET_LOGIN, {
+        //     fetchPolicy: "network-only",
+        //     onError: () => this.props.dispatch({type: 'LOG_OUT'}),
+        //     onCompleted: (data) => {
+        //       console.log("data is: ", data)
+        //       const { token } = data.login
+        //       this.props.dispatch({type: 'LOG_IN'})
+        //       this.props.dispatch({type: 'FILL_USER_SETTINGS', eczaneName: token.pharmacy_name, username: token.username})
+              
+        //       this.props.dispatch({type: 'FILL_USER_SETTINGS', eczaneName: data.eczaneName, username: data.username})
+        //       this.props.dispatch({type: 'FILL_USER_INFO', bakiye: data.bakiye})
+        //     }
+        //   });
       });
     }
     componentWillUnmount() {
         this.unlisten();
     }
     render() {
-       return (
-           <div>{this.props.children}</div>
-        );
+      if (this.props.isLogged)
+        return <Route {...this.props} />
+      else return <SafeHOC />
+}
+  }
+
+  const mapStateToProps = (state) => {
+    return {
+      isLogged: state.user.session.isLogged
     }
   }
-  export default withRouter(AuthHOC);
+
+  export default connect(mapStateToProps)(withRouter(AuthHOC));
