@@ -24,9 +24,13 @@ import CIcon from '@coreui/icons-react'
 import { useDispatch } from 'react-redux'
 import Loader from '../../hoc/loader/Loader'
 
-const LoginQuery = ({username, password}) => {
+const Login = () => {
+  console.log("rendered")
+  const dispatch = useDispatch()
+  const history = useHistory()
+  const [username, setUsername] = React.useState("")
+  const [password, setPassword] = React.useState("")
   const [modal, setModal] = React.useState(false)
-  const [firstRender, setFirstRender] = React.useState(true)
   const GET_LOGIN = gql`
     query($username: String! $password: String!) {
       login(username: $username password: $password ) {
@@ -41,28 +45,29 @@ const LoginQuery = ({username, password}) => {
       }
     }
   `;
-  const [getLogin, { loading, error, data }] = useLazyQuery(GET_LOGIN);
+  const [getLogin, { loading }] = useLazyQuery(GET_LOGIN, {
+    fetchPolicy: "network-only",
+    onError: () => setModal(true),
+    onCompleted: (data) => {
+      console.log(data)
+      const { token } = data.login
+      document.cookie = `pyecztoken=${token.token}`
+      dispatch({type: 'LOG_IN'})
+      dispatch({type: 'FILL_USER_SETTINGS', eczaneName: token.pharmacy_name, username: token.username})
+      history.push('/dashboard')
+    }
+  });
   const modalObj = {
     header: "HATA",
     body: "LÜTFEN BİLGİLERİNİZİ KONTROL EDİN"
   }
-  console.log("in error state",loading, error, data)
-  if (loading) {
-    console.log("in loading state", loading, error, data)
-  }
-  console.log("firstRender: ", firstRender, " error: ", error)
-  if (firstRender && error) {
-    console.log("in error state",loading, error, data)
-    setFirstRender(false)
-    setModal(true)
-  }
-  if (data) console.log("in data state",loading, error, data)
-
   return (
-      <CCol xs="6">
-        <CModal 
+    <Loader isLoading = {loading}>
+      <div className="c-app c-default-layout flex-row align-items-center">
+      <CContainer>
+      <CModal 
         show={modal} 
-        onClose={() => {setModal(false); setFirstRender(true)}}
+        onClose={() => {setModal(false);}}
         color='warning'
         centered
         >
@@ -74,41 +79,10 @@ const LoginQuery = ({username, password}) => {
             </CModalBody>
             <CModalFooter>
                 <CButton color="secondary"
-                 onClick={() => {setModal(false); setFirstRender(true)}}
+                 onClick={() => {setModal(false)}}
                  >Kapat</CButton>
             </CModalFooter>
         </CModal>
-        <CButton color="primary" className="px-4"
-          onClick = {() => getLogin({variables: {username, password}, fetchPolicy: "no-cache"})}>Giriş yap</CButton>
-      </CCol>
-  )
-
-}
-
-const Login = () => {
-  console.log("rendered")
-  // const dispatch = useDispatch()
-  // const history = useHistory()
-  const [username, setUsername] = React.useState("")
-  const [password, setPassword] = React.useState("")
-  const [loading, setLoading] = React.useState(false)
-  // const [modal, setModal] = React.useState(false)
-  let errorModal = false
-  console.log("username is: ", username)
-  console.log("password is: ", password)
-  console.log("modal is: ", errorModal)
-
-    // document.cookie = `pyecztoken=${data.token}`
-    // dispatch({type: 'LOG_IN'})
-    // dispatch({type: 'FILL_USER_SETTINGS', eczaneName: data.eczaneName, username: data.username})
-    // dispatch({type: 'FILL_USER_INFO', bakiye: data.bakiye})
-    // history.push('/dashboard')
-
-
-  return (
-    <Loader isLoading = {loading}>
-      <div className="c-app c-default-layout flex-row align-items-center">
-      <CContainer>
         <CRow className="justify-content-center">
           <CCol md="8">
             <CCardGroup>
@@ -134,7 +108,10 @@ const Login = () => {
                       <CInput type="password" placeholder="şifreniz" autoComplete="current-password" onChange = {(e) => setPassword(e.target.value)} />
                     </CInputGroup>
                     <CRow>
-                      <LoginQuery username = {username} password = {password}/>
+                      <CCol xs="6">
+                        <CButton color="primary" className="px-4"
+                          onClick = {() => getLogin({variables: {username, password}})}>Giriş yap</CButton>
+                      </CCol>
                       <CCol xs="6" className="text-right">
                         <CButton color="link" className="px-0">Şifrenizi unuttunuz mu?</CButton>
                       </CCol>
