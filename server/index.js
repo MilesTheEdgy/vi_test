@@ -2,11 +2,8 @@ require("dotenv").config()
 const express = require("express")
 const { graphqlHTTP } = require('express-graphql');
 const mongoose = require("mongoose")
-const cors = require("cors")
-const Schema = mongoose.Schema;
 const schema = require("./schema/schema")
 const app = express()
-const { authenticateToken } = require("./helpers/token")
 mongoose.connect("mongodb+srv://admin:admin@testing.vpwk7.mongodb.net/eczane?retryWrites=true&w=majority",
      {useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false})
 mongoose.connection.once("open", () => {
@@ -14,7 +11,7 @@ mongoose.connection.once("open", () => {
 })
 
 
-app.use(cors())
+// app.use(cors())
 
 app.use("/graphql",
     graphqlHTTP(req => ({

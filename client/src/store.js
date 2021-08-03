@@ -13,7 +13,7 @@ const initialState = {
   dashboardTable: BEKELEYEN_TEKLIFLER,
   user: {
     session: {
-      isLogged: true
+      isLogged: false
     },
     userSettings: {
       eczaneName: "",

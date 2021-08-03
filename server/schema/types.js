@@ -100,6 +100,14 @@ const JoinerArgumentType = new GraphQLInputObjectType({
     })
 })
 
+const TestType = new GraphQLObjectType({
+    name: "Test",
+    fields: () => ({
+        message: {type: GraphQLString},
+        random: {type: GraphQLInt}
+    })
+})
+
 module.exports = {
     UserType,
     ApplicationType,
@@ -107,5 +115,6 @@ module.exports = {
     JoinersType,
     JoinerArgumentType,
     LoginType,
-    TransactionType
+    TransactionType,
+    TestType
 }

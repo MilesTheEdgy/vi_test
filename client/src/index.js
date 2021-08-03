@@ -6,13 +6,25 @@ import 'core-js';
 import { icons } from './assests/icons/index'
 import store from "./store"
 import { Provider } from 'react-redux';
+import {
+  ApolloClient,
+  InMemoryCache,
+  ApolloProvider
+} from "@apollo/client";
 import { HashRouter } from "react-router-dom"
 React.icons = icons
+
+const client = new ApolloClient({
+  uri: 'graphql',
+  cache: new InMemoryCache()
+});
 
 ReactDOM.render(
   <HashRouter>
     <Provider store = {store}>
-      <App />
+      <ApolloProvider client = {client}>
+        <App/>
+      </ApolloProvider>
     </Provider>
   </HashRouter>,
   document.getElementById('root')

@@ -18,11 +18,30 @@ const { generateAccessToken, authenticateToken } = require("../helpers/token")
 const UserModel = require("../models/user")
 const ApplicationModel = require("../models/application")
 const ProductModel = require("../models/product")
-const { ApplicationType, UserType, ProductType, LoginType } = require("./types");
+const { ApplicationType, UserType, ProductType, LoginType, TestType } = require("./types");
 
 const RootQuery = new GraphQLObjectType({
     name: 'RootQueryType',
     fields: {
+        test: {
+            type: TestType,
+            resolve: () => {
+                return {
+                    message: "THIS IS WORKING!!!",
+                    random: 69
+                }
+            }
+        },
+        argtest: {
+            type: TestType,
+            args: {input: {type: GraphQLString}},
+            resolve: (parent, args) => {
+                return {
+                    message: "lmao babe fuck you your input is: " + args.input,
+                    random: 69
+                }
+            }
+        },
         login: {
             type: LoginType,
             args: {
