@@ -9,6 +9,7 @@ class AuthHOC extends React.Component {
 
     componentDidMount() {
       this.unlisten = this.props.history.listen( async (location, action) => {
+        console.log("current location: ", location.pathname)
         const GET_LOGIN = gql`
             query{
                 currentUser {
@@ -22,13 +23,12 @@ class AuthHOC extends React.Component {
           const res = await client.query({
             query: GET_LOGIN
           })
-          const currentUser = res.data
+          const { currentUser } = res.data
           this.props.dispatch({type: 'LOG_IN'})
-          this.props.dispatch({type: 'FILL_USER_SETTINGS', eczaneName: currentUser.pharmacy_name, username: currentUser.username})          
+          this.props.dispatch({type: 'FILL_USER_SETTINGS', eczaneName: currentUser.pharmacy_name, username: currentUser.username})
           this.props.dispatch({type: 'FILL_USER_INFO', bakiye: currentUser.balance})
         } catch (error) {
           console.log(error)
-          console.log(this.props.isLogged)
           this.props.dispatch({type: 'LOG_OUT'})
         }
       });

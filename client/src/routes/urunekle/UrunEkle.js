@@ -40,7 +40,6 @@ const UrunEkle = () => {
             console.log(err)
         },
         onCompleted: (data) => {
-            console.log(data)
             const dataCopy = JSON.parse(JSON.stringify(data))
             const arr = dataCopy.product.map(obj => {
                 return { İlaç: obj.Product_name, barKod: obj.Barcode, ATC_Kodu: obj.ATC_code , reçeteTürü: obj.type }

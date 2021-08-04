@@ -46,28 +46,28 @@ const BekleyenTeklifler = () => {
     const { loading } = useQuery(GET_APPLICATIONS_ONHOLD, {
       fetchPolicy: "network-only",
       onError: (error) => console.log(error),
-      onCompleted: (data) => { // for some reason, if data is empty, it defines as object instead of array and I can't map it or I get an error
-        // console.log(typeof data)
-        // console.log("data is: ", data.length)
-        // if (data.length !== 0) {
-        //   const dataArr = data.map((obj, i) => {
-        //     return {
-        //       birimFiyat: obj.price,
-        //       durum: obj.status,
-        //       eczane: obj.submitter,
-        //       hedef: obj.goal,
-        //       ID: obj.id,
-        //       kampanya: obj.condition,
-        //       pledge: obj.poster_pledge,
-        //       sonTarih: obj.final_date,
-        //       İlaç: obj.product_name,
-        //       description: obj.description,
-        //       katılanlar: obj.joiners
-        //     }
-        //   })
-        //   setData(dataArr)
-        // }
-        //  setData(data)
+      onCompleted: (data) => {
+        if (data.application.length !== 0) {
+          const dataArr = data.application.map((obj) => {
+            let d = new Date(Number(obj.final_date))
+            let date = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`
+            return {
+              birimFiyat: obj.unit_price,
+              durum: obj.status,
+              eczane: obj.submitter,
+              hedef: obj.goal,
+              ID: obj.application_id,
+              kampanya: obj.condition,
+              pledge: obj.submitter_pledge,
+              sonTarih: date,
+              İlaç: obj.product_name,
+              description: obj.description,
+              katılanlar: obj.joiners
+            }
+          })
+          return setData(dataArr)
+        }
+         setData(data)
       }
     });
 
@@ -137,12 +137,13 @@ const BekleyenTeklifler = () => {
           <CCol>
             <div style = {{border: "solid 1px rgb(83, 83, 223, 0.35)"}} >
               <CDataTable
+                loading = {loading}
                 header
                 items={data}
                 fields={fields}
                 columnFilter
                 footer
-                itemsPerPage={50}
+                itemsPerPage={10}
                 sorter
                 pagination
                 border

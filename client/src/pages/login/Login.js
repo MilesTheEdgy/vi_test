@@ -25,7 +25,6 @@ import { useDispatch } from 'react-redux'
 import Loader from '../../hoc/loader/Loader'
 
 const Login = () => {
-  console.log("rendered")
   const dispatch = useDispatch()
   const history = useHistory()
   const [username, setUsername] = React.useState("")

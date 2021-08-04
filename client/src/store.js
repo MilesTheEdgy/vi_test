@@ -1,5 +1,5 @@
 import { createStore } from 'redux'
-
+import { devToolsEnhancer } from 'redux-devtools-extension';
 //Actions
 export const SIZIN_TEKLIFLERINIZ = "SIZIN_TEKLIFLERINIZ";
 export const BEKELEYEN_TEKLIFLER = "BEKELEYEN_TEKLIFLER";
@@ -94,5 +94,5 @@ const changeState = (state = initialState, { type, ...rest }) => {
   }
 }
 
-const store = createStore(changeState)
+const store = createStore(changeState, devToolsEnhancer())
 export default store

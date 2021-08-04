@@ -10,7 +10,7 @@ import {
 import CIcon from '@coreui/icons-react'
 
 const TheHeaderDropdownNotif = () => {
-  const itemsCount = 5
+  const itemsCount = 0
   return (
     <CDropdown
       inNav
@@ -27,14 +27,36 @@ const TheHeaderDropdownNotif = () => {
           className="text-center"
           color="light"
         >
-          <strong>You have {itemsCount} notifications</strong>
+          <strong>Sizin {itemsCount} yeni bildiriminiz var</strong>
         </CDropdownItem>
-        <CDropdownItem><CIcon name="cil-user-follow" className="mr-2 text-success" /> New user registered</CDropdownItem>
-        <CDropdownItem><CIcon name="cil-user-unfollow" className="mr-2 text-danger" /> User deleted</CDropdownItem>
-        <CDropdownItem><CIcon name="cil-chart-pie" className="mr-2 text-info" /> Sales report is ready</CDropdownItem>
-        <CDropdownItem><CIcon name="cil-basket" className="mr-2 text-primary" /> New client</CDropdownItem>
-        <CDropdownItem><CIcon name="cil-speedometer" className="mr-2 text-warning" /> Server overloaded</CDropdownItem>
-        <CDropdownItem
+        {/* <CDropdownItem><CIcon name="cil-user-follow" className="mr-2 text-success" /> (NAME) eczane Yeni bir teklif girildi (LINK) </CDropdownItem> */}
+        <CDropdownItem className="d-block">
+          <div className="text-uppercase mb-1">
+            <CIcon name="cil-user-follow" className="mr-2 text-info" />
+            <small><b>(NAME) eczane Yeni bir teklif girildi (LINK)</b></small>
+          </div>
+          <CProgress size="xs" color="info" value={70} />
+          <small className="text-muted">11444GB/16384MB</small>
+        </CDropdownItem>
+
+        <CDropdownItem className="d-block">
+          <div className="text-uppercase mb-1">
+            <CIcon name="cil-user-unfollow" className="mr-2 text-danger" />
+            <small><b> (NAME) Eczane teklif sildi (LINK) </b></small>
+          </div>
+          <CProgress size="xs" color="danger" value={70} />
+          <small className="text-muted">11444GB/16384MB</small>
+        </CDropdownItem>
+
+        <CDropdownItem className="d-block">
+          <div className="text-uppercase mb-1">
+            <CIcon name="cil-check-circle" className="mr-2 text-success" />
+            <small><b>(ID) Teklifinizi Onaylayabilirsiniz! (LINK)</b></small>
+          </div>
+          <CProgress size="xs" color="success" value={70} />
+          <small className="text-muted">11444GB/16384MB</small>
+        </CDropdownItem>
+        {/* <CDropdownItem
           header
           tag="div"
           color="light"
@@ -42,11 +64,7 @@ const TheHeaderDropdownNotif = () => {
           <strong>Server</strong>
         </CDropdownItem>
         <CDropdownItem className="d-block">
-          <div className="text-uppercase mb-1">
-            <small><b>CPU Usage</b></small>
-          </div>
-          <CProgress size="xs" color="info" value={25} />
-          <small className="text-muted">348 Processes. 1/4 Cores.</small>
+
         </CDropdownItem>
         <CDropdownItem className="d-block">
           <div className="text-uppercase mb-1">
@@ -61,7 +79,7 @@ const TheHeaderDropdownNotif = () => {
           </div>
           <CProgress size="xs" color="danger" value={90} />
           <small className="text-muted">243GB/256GB</small>
-        </CDropdownItem>
+        </CDropdownItem> */}
       </CDropdownMenu>
     </CDropdown>
   )
