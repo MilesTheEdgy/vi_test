@@ -74,7 +74,7 @@ export const yeniTeklifReducer = (state, action) => {
         ////////////////////////////////////////
         case "SET_MEDICINE_INPUT":
             for (let i = 0; i < state.medicineSearch.data.length; i++) {
-                if (action.payload === `${state.medicineSearch.data[i].medicine}--${state.medicineSearch.data[i].barcode}` ) {
+                if (action.payload === `${state.medicineSearch.data[i].Product_name}--${state.medicineSearch.data[i].Barcode}` ) {
                     return {
                         ...state,
                         medicineSearch: {

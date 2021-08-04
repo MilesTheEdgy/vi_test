@@ -147,10 +147,14 @@ const RootQuery = new GraphQLObjectType({
                     }
                     if (isString) {
                         const $regex = escapeStringRegexp(args.searchCriteria.toUpperCase());
-                        return await ProductModel.find({ Product_name: { $regex } });
+                        const query = await ProductModel.find({ Product_name: { $regex } });
+                        if (query.length === 0) throw new Error("Could not find your product")
+                        return query
                     } else {
                         const $regex = escapeStringRegexp(args.searchCriteria);
-                        return await ProductModel.find({ Barcode: { $regex } });
+                        let query = await ProductModel.find({ Barcode: { $regex } });
+                        if (query.length === 0) throw new Error("Could not find your product")
+                        return query
                     }
                 } catch (error) {
                     console.log(error)

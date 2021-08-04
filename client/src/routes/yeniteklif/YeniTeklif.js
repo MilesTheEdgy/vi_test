@@ -26,11 +26,7 @@ import "./yeniteklif.css"
 import { initialState, yeniTeklifReducer } from '.'
 import { useLazyQuery, useMutation, gql } from '@apollo/client'
 
-const UrunEkle = () => {
-
-  const [state, dispatch] = useReducer(yeniTeklifReducer, initialState);
-  const { medicineSearch, goal, pledge, unit, total, condition, conditionGoal, description, date, verifyModal } = state;
-
+const SearchField = ({medicineSearch, dispatch}) => {
   const useFocus = () => {
     const htmlElRef = useRef(null)
     const setFocus = () => {htmlElRef.current &&  htmlElRef.current.focus()}
@@ -38,7 +34,110 @@ const UrunEkle = () => {
     return [ htmlElRef, setFocus ] 
   }
 
-  const submitForm = async () => {
+  const [inputRef, setInputFocus] = useFocus()
+  const GET_SEARCH_LIST = gql`
+    query($inputField: String!) {
+      product(searchCriteria: $inputField) {
+        Product_name
+        Barcode
+      }
+    }
+  `
+  const [getSearchList, { loading }] = useLazyQuery(GET_SEARCH_LIST,{
+    fetchPolicy: "network-only",
+    onError: (err) => {
+      console.log(err)
+      dispatch({type: "MEDICINE_NOT_FOUND"})
+      dispatch({type: "SET_MEDICINE_INPUT", payload: "ÜRÜNÜNÜZ BULUNMADI"})
+    },
+    onCompleted: (data) => {
+      const dataCopy = JSON.parse(JSON.stringify(data))
+      if (dataCopy.product.length > 50)
+      dataCopy.product.splice(50)
+      dispatch({type: "SET_DATA", payload: dataCopy.product})
+      setInputFocus()
+    }
+  })
+  return (
+  <CCol xs="12" md="6">
+    <CInputGroup>
+      <CInputGroupPrepend>
+        {
+          loading ?
+          <CButton type="button" color="primary" onClick= { () => getSearchList({variables: {inputField: medicineSearch.input}})} >
+            <div className="spinner-border text-danger" style = {{height : "20px", width: "20px"}} role="status">
+              <span className="sr-only">Loading...</span>
+            </div>  Ara
+         </CButton>
+          :
+          <CButton type="button" color="primary" onClick= {() => getSearchList({variables: {inputField: medicineSearch.input}})}><CIcon name="cil-magnifying-glass" /> Ara</CButton>
+        }
+      </CInputGroupPrepend>
+      <CInput innerRef={inputRef} value = {medicineSearch.input} placeholder= "ilaç adı verya barkodunu giriniz"
+       list = "medicine-list" invalid = {medicineSearch.invalid} valid = {medicineSearch.valid}
+       onChange = {(e) => dispatch({type: "SET_MEDICINE_INPUT", payload: e.target.value}) }/>
+    </CInputGroup>
+    <datalist id = "medicine-list">
+      {
+        medicineSearch.data.map((obj, i) => {
+          return <option key = {i} >{obj.Product_name}--{obj.Barcode} </option>
+        })
+      }
+    </datalist>
+    <CFormText>Almak istediğiniz ürün</CFormText>
+  </CCol>
+  )
+}
+
+const UrunEkle = () => {
+
+  const [state, dispatch] = useReducer(yeniTeklifReducer, initialState);
+  const { medicineSearch, goal, pledge, unit, total, condition, conditionGoal, description, date, verifyModal } = state;
+
+  const SUBMIT_FORM = gql`
+    mutation (
+      $product: String!
+      $goal: Int!
+      $unit_price: Float!
+      $totalPrice: Float!
+      $submitter_pledge: Int!
+      $conditionOn: Int
+      $conditionGive: Int
+      $description: String!
+      $finalDate: String!
+      ) {
+      addApplication (
+        product: $product
+        goal: $goal
+        unit_price: $unit_price
+        totalPrice: $totalPrice
+        submitter_pledge: $submitter_pledge
+        conditionOn: $conditionOn
+        conditionGive: $conditionGive
+        description: $description
+        finalDate: $finalDate
+      ) {
+        application_id
+      }
+    }
+  `;
+
+  let math1 = total.input / goal.input
+  let math2 = unit.input * goal.input;
+  const [submitForm, { loading, error }] = useMutation(SUBMIT_FORM, {
+    onCompleted: (data) => {
+      console.log(data)
+      dispatch({type: "SUBMIT_SUCCESS"})
+    },
+    onError: (err) => {
+      console.log(err)
+      dispatch({type: "SUBMIT_FAIL"})
+    }
+  });
+
+  if (error) console.log(error)
+
+  const submitFormsss = async () => {
     dispatch({type: "FORM_SUBMIT_LOADING"})
     let math1 = total.input / goal.input
     let math2 = unit.input * goal.input;
@@ -69,52 +168,6 @@ const UrunEkle = () => {
     } else {
       // console.log('failed')
       dispatch({type: "SUBMIT_FAIL"})
-    }
-  }
-
-  const [inputRef, setInputFocus] = useFocus()
-  const GET_SEARCH_LIST = gql`
-    query($inputField: String!) {
-      product(searchCriteria: $inputField) {
-        Product_name
-        Barcode
-      }
-    }
-  `
-  const [getSearchList, { loading }] = useLazyQuery(GET_SEARCH_LIST,{
-    fetchPolicy: "network-only",
-    onError: (err) => console.log(err),
-    onCompleted: (data) => {
-      console.log(data)
-    }
-  })
-  
-  const searchList = async () => {
-    dispatch({type: "ISLOADING_TRUE"})
-    const res = await fetch('/api/data/products', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'authorization': `Bearer ${document.cookie.slice(11)} `
-      },
-      body: JSON.stringify({input: medicineSearch.input})
-    })
-    // console.log(res.status)
-
-    if (res.status === 200) {
-      const fetchData = await res.json()
-      // console.log( "before splicing...", fetchData);
-      if (fetchData.length > 50) {
-        fetchData.splice(50)
-      }
-      // console.log( "...after splicing", fetchData);
-      setInputFocus()
-      dispatch({type: "SET_DATA", payload: fetchData})
-      dispatch({type: "ISLOADING_FALSE"})
-    }
-     else if (res.status === 404) {
-      dispatch({type: "MEDICINE_NOT_FOUND"})
-      dispatch({type: "SET_MEDICINE_INPUT", payload: "ÜRÜNÜNÜZ BULUNMADI"})
     }
   }
 
@@ -186,33 +239,7 @@ const UrunEkle = () => {
               <CCol md="2">
                 <CLabel htmlFor="text-input" ><b> Ürün Adı</b></CLabel>
               </CCol>
-              <CCol xs="12" md="6">
-                <CInputGroup>
-                  <CInputGroupPrepend>
-                    {
-                      medicineSearch.isLoading ?
-                      <CButton type="button" color="primary" onClick= {getSearchList({variables: {inputField: medicineSearch.input}})} >
-                        <div className="spinner-border text-danger" style = {{height : "20px", width: "20px"}} role="status">
-                          <span className="sr-only">Loading...</span>
-                        </div>  Ara
-                     </CButton>
-                      :
-                      <CButton type="button" color="primary" onClick= {getSearchList({variables: {inputField: medicineSearch.input}})}><CIcon name="cil-magnifying-glass" /> Ara</CButton>
-                    }
-                  </CInputGroupPrepend>
-                  <CInput innerRef={inputRef} value = {medicineSearch.input} placeholder= "ilaç adı verya barkodunu giriniz"
-                   list = "medicine-list" invalid = {medicineSearch.invalid} valid = {medicineSearch.valid}
-                   onChange = {(e) => dispatch({type: "SET_MEDICINE_INPUT", payload: e.target.value}) }/>
-                </CInputGroup>
-                <datalist id = "medicine-list">
-                  {
-                    medicineSearch.data.map((obj, i) => {
-                      return <option key = {i} >{obj.medicine}--{obj.barcode} </option>
-                    })
-                  }
-                </datalist>
-                <CFormText>Almak istediğiniz ürün</CFormText>
-              </CCol>
+              <SearchField medicineSearch = {medicineSearch} dispatch = {dispatch} />
               <CCol md="2">
                 <CLabel htmlFor="text-input"><b> Hedef</b></CLabel>
               </CCol>
@@ -360,7 +387,7 @@ const UrunEkle = () => {
               </tr>
               <tr>
                 <th scope="row">Depo Birim Fiyat</th>
-                <td>{total.input / goal.input} TL </td>
+                <td>{Number(total.input).toFixed(2) / Number(goal.input).toFixed(2)} TL </td>
               </tr>
               <tr>
                 <th scope="row">Depo Toplam Fiyat</th>
@@ -390,7 +417,25 @@ const UrunEkle = () => {
           </table>
           </CModalBody>
           <CModalFooter>
-            <CButton color="primary" onClick={() => submitForm()}>Onayla</CButton>
+            <CButton color="primary" onClick={async() => {
+              try {
+                const {data} = await submitForm({
+                  variables: {
+                  product: medicineSearch.input,
+                  goal: Number(goal.input),
+                  unit_price: Number(math1.toFixed(2)),
+                  totalPrice: Number(math2.toFixed(2)),
+                  conditionOn: Number(conditionGoal.input1),
+                  conditionGive: Number(conditionGoal.input2),
+                  description: description.input,
+                  finalDate: date.input
+                }
+                })
+                console.log(data)
+              } catch(error) {
+                console.log(error)
+              }
+              }}>Onayla</CButton>
             <CButton color="warning" onClick={() => dispatch({type : "VERIFY_MODAL_TOGGLE"})}>İptal et</CButton>{' '}
           </CModalFooter>
         </CModal>

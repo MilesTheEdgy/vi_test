@@ -115,9 +115,9 @@ const BekleyenTeklifler = () => {
     }
 
 
-    useEffect(() => {
-      fetchData(bekleyeinTekliflerID)
-    }, [])
+    // useEffect(() => {
+    //   fetchData(bekleyeinTekliflerID)
+    // }, [])
 
     useEffect(() => {
       if (order >= 0) {
