@@ -1,52 +1,53 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import {
   CButton,
   CCard,
   CCardBody,
   CCardHeader,
-  CCol,
   CCollapse,
-  CFormGroup,
-  CTextarea,
-  CInput,
   CLabel,
-  CAlert,
   CDataTable
 } from '@coreui/react'
+
+import { gql, useQuery } from '@apollo/client'
 
 import "./urunekle.css"
 import { useSelector, useDispatch } from 'react-redux'
 
 const UrunEkle = () => {
     const dispatch = useDispatch()
-    // const [data, setData] = useState([])
-    const [loading, setLoading] = useState(false)
     const [details, setDetails] = useState([])
-    const [form, showForm] = useState(false)
-    const [newProduct, setNewProduct] = useState("")
-    const [newDescription, setNewDescription] = useState("")
-    // const eczName = useSelector(state => state.user.userSettings.eczaneName)
+    const [input, setInput] = useState("mo")
     const medicineList = useSelector(state => state.medicineList)
 
-    const submitProduct = async () => {
-        const res = await fetch(`/api/data/products`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'authorization': `Bearer ${document.cookie.slice(11)} `
-            },
-            body: JSON.stringify({
-                product: newProduct,
-                // added_by: eczName,
-                description: newDescription
-            })
-        })
-        if (res.status === 200) {
-            const fetchData = await res.json()
-            // console.log(fetchData);
+    const GET_SEARCH_LIST = gql`
+        query($inputField: String!) {
+        product(searchCriteria: $inputField) {
+            Product_name
+            Barcode
+            ATC_code
+            type
+            }
         }
-
-    }
+    `
+    const { loading } = useQuery(GET_SEARCH_LIST,{
+        fetchPolicy: "network-only",
+        variables: {
+            inputField: input
+        },
+        pollInterval: 1500,
+        onError: (err) => {
+            console.log(err)
+        },
+        onCompleted: (data) => {
+            console.log(data)
+            const dataCopy = JSON.parse(JSON.stringify(data))
+            const arr = dataCopy.product.map(obj => {
+                return { İlaç: obj.Product_name, barKod: obj.Barcode, ATC_Kodu: obj.ATC_code , reçeteTürü: obj.type }
+            })
+            dispatch({type: "FILL_MEDICINE_LIST", medicineList: arr})
+        }
+    })
   
     const toggleDetails = (index) => {
       const position = details.indexOf(index)
@@ -65,30 +66,6 @@ const UrunEkle = () => {
         'ATC_Kodu',
         'reçeteTürü'
      ]
-    
-    useEffect(() => {
-        const fetchData = async () => {
-            dispatch({type: "TOGGLE_LOADING_TRUE"})
-            const res = await fetch(`/api/data/products`, {
-                method: 'GET',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'authorization': `Bearer ${document.cookie.slice(11)} `
-                }
-              })
-            if (res.status === 200) {
-                const resData = await res.json()
-                // console.log('URUN EKLE resData is: ', resData)
-                const arr = resData.map(obj => {
-                    return { İlaç: obj.medicine, barKod: obj.barcode, ATC_Kodu: obj.ATC_code , reçeteTürü: obj.prescription_type }
-                })
-                // setData(arr)
-                dispatch({type: "FILL_MEDICINE_LIST", medicineList: arr})
-            }
-            dispatch({type: "TOGGLE_LOADING_FALSE"})
-        }
-        fetchData()
-    }, [dispatch])
 
   return (
     <>
@@ -98,11 +75,13 @@ const UrunEkle = () => {
                 <small> ekle</small>
             </CCardHeader>
             <CCardBody>
-            {/* <CAlert color="danger">
-                Lütfen yeni bir ürün eklemeden, önce ÜRÜN SORGULAMA yaparak ürünün eklenmiş durumunu öğrenin.
-            </CAlert> */}
             <CLabel>ÜRÜN SORGULAMA</CLabel>
             <CDataTable
+                onTableFilterChange = {(e) => {
+                    if (e === undefined || e === "") return
+                    setInput(e)
+                }}
+                loading = {loading}
                 tableFilter
                 items={medicineList}
                 fields={fields}
@@ -137,32 +116,6 @@ const UrunEkle = () => {
                         }
                     }}
             />
-            {/* <CButton color = "warning" onClick = {() => showForm(true)} >Ürününz bulunmadı mı?</CButton> */}
-
-            <div className = {`${form ? "" : "hidden"}`}>
-                <div className = "split-margin"></div>
-                <CFormGroup row>
-                    <CCol md = "6">
-                        <CLabel htmlFor="company">Ürün</CLabel>
-                        <CInput id="company" placeholder="Eklemek istediğiniz ürünü yazın" onChange = {(e) => setNewProduct(e.target.value)}/>
-                    </CCol>
-                    <CCol md = "6">
-                        <CLabel htmlFor="vat">Açıklama</CLabel>
-                        <CTextarea 
-                            name="textarea-input" 
-                            id="textarea-input" 
-                            rows="6"
-                            placeholder="Eklemek istediğiniz ürünün hakkında kısa bir açıklama yazın..." 
-                            onChange = {(e) => setNewDescription(e.target.value)}
-                        />
-                    </CCol>
-                </CFormGroup>
-                <CFormGroup row>
-                    <CCol md = "1" className = "ml-auto justify-content-end" >
-                        <CButton color = "success" onClick = {() => submitProduct()} >Onayla</CButton>
-                    </CCol>
-                </CFormGroup>
-            </div>
             </CCardBody>
         </CCard>
     </>

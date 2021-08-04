@@ -64,6 +64,10 @@ export const initialState = {
         isLoading: false,
         isSubmitSuccess: false,
         isSubmitFail: false
+    },
+    pricesVerified: {
+        unitPrice: 0,
+        totalPrice: 0
     }
 }
 
@@ -428,8 +432,13 @@ export const yeniTeklifReducer = (state, action) => {
                 verifyModal: {
                     on: !state.verifyModal.on
                 },
+                pricesVerified: {
+                    unitPrice: Number(state.total.input / state.goal.input),
+                    totalPrice: Number(state.unit.input * state.goal.input)
+                }
             }
         case "FORM_SUBMIT_LOADING":
+            console.log("fired")
             return {
                 ...state,
                 verifyModal: {
