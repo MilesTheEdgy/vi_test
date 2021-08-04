@@ -145,17 +145,19 @@ const RootQuery = new GraphQLObjectType({
                             break;
                         }
                     }
+                    let query
                     if (isString) {
                         const $regex = escapeStringRegexp(args.searchCriteria.toUpperCase());
-                        const query = await ProductModel.find({ Product_name: { $regex } });
+                        query = await ProductModel.find({ Product_name: { $regex } });
                         if (query.length === 0) throw new Error("Could not find your product")
-                        return query
                     } else {
                         const $regex = escapeStringRegexp(args.searchCriteria);
-                        let query = await ProductModel.find({ Barcode: { $regex } });
+                        query = await ProductModel.find({ Barcode: { $regex } });
                         if (query.length === 0) throw new Error("Could not find your product")
-                        return query
                     }
+                    if (query.length > 50)
+                        query.splice(50)
+                    return query
                 } catch (error) {
                     console.log(error)
                     throw new Error("could not fetch product list")
@@ -165,7 +167,7 @@ const RootQuery = new GraphQLObjectType({
         products: {
             type: new GraphQLList(ProductType),
             resolve: async (parent, args, context) => {
-                authenticateToken(context)
+                // authenticateToken(context)
                 return await ProductModel.find({})
             }
         },

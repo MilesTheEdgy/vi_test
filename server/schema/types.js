@@ -34,7 +34,8 @@ const ProductType = new GraphQLObjectType({
     fields: () => ({
         Product_name: {type: GraphQLString},
         Barcode: {type: GraphQLString},
-        ATC_code: {type: GraphQLString}
+        ATC_code: {type: GraphQLString},
+        type: {type: GraphQLString}
     })
 })
 

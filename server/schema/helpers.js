@@ -20,9 +20,12 @@ const verifyApplicationInput = async (inputArr, goal, unitPrice, totalPrice, fin
     }
     if (unitPrice == 0 || goal == 0 || totalPrice == 0) throw new Error("Your goal or price input was empty")
     if (goal % 1 != 0 || submitter_pledge % 1 != 0) throw new Error("Your number input cannot contain digits.")
-    if (unitPrice * goal !== totalPrice) {
-        throw new Error("PRICE MATH DOES NOT MATCH")
-    }
+    // if (unitPrice * goal !== Number(totalPrice.toFixed(2))) {
+    //     console.log("unitPrice: ", unitPrice, " * goal: ", goal, "!== totalPrice: ", totalPrice)
+    //     console.log("expected: ", Number(totalPrice.toFixed(2)), " got: ", unitPrice * goal)
+    //     throw new Error("PRICE MATH DOES NOT MATCH")
+    // }
+    // WILL WORK ON THIS LATER
     if (submitter_pledge >= goal) throw new Error("Your pledge cannot be bigger than your goal")
     const inputDate = new Date(finalDate);
     const todayDate = new Date();

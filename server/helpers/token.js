@@ -13,7 +13,6 @@ function generateAccessToken(username, eczaneName) {
 function authenticateToken(headers) {
     console.log('verifiying token...')
     const authHeader = headers['authorization']
-    console.log(authHeader)
     const token = authHeader && authHeader.split(' ')[1]
     if (token == null) {
         throw new Error("You do not have a session token")
