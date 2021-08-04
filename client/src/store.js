@@ -64,6 +64,7 @@ const changeState = (state = initialState, { type, ...rest }) => {
         }
       }
     case 'LOG_OUT':
+      document.cookie = `pyecztoken=resetted`
       return initialState
 
     case "TOGGLE_LOADING_TRUE":
@@ -94,5 +95,5 @@ const changeState = (state = initialState, { type, ...rest }) => {
   }
 }
 
-const store = createStore(changeState, devToolsEnhancer())
+const store = createStore(changeState, devToolsEnhancer({trace: true}))
 export default store

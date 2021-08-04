@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { CDataTable, CBadge, CButton, CCollapse, CCol, CLabel, CRow } from "@coreui/react";
 import { useDispatch, useSelector } from "react-redux";
+import { gql, useQuery } from "@apollo/client"
 import { fields, getBadge, getStatus, getCondition, toggleDetails, whichCollapsedToRender } from "../";
 import "../style.css"
 
@@ -16,6 +17,58 @@ const TumTeklifler = () => {
     
     const eczaneName = useSelector(state => state.user.userSettings.eczaneName)
     const bakiye = useSelector(state => state.user.userInfo.bakiye)
+
+    const GET_APPLICATIONS_ONHOLD = gql`
+      query {
+        applications{
+          application_id
+          transaction_id
+          product_name
+          product_barcode
+          goal
+          condition
+          unit_price
+          submitter
+          submitter_pledge
+          description
+          status
+          joiners {
+            name
+            pledge
+          }
+          submit_date
+          final_date
+          status_change_date
+        }
+      }
+    `;
+    const { loading } = useQuery(GET_APPLICATIONS_ONHOLD, {
+      fetchPolicy: "no-cache",
+      onError: (error) => console.log(error),
+      onCompleted: (data) => {
+        if (data.applications.length !== 0) {
+          const dataArr = data.applications.map((obj) => {
+            let d = new Date(Number(obj.final_date))
+            let date = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`
+            return {
+              birimFiyat: obj.unit_price,
+              durum: obj.status,
+              eczane: obj.submitter,
+              hedef: obj.goal,
+              ID: obj.application_id,
+              kampanya: obj.condition,
+              pledge: obj.submitter_pledge,
+              sonTarih: date,
+              İlaç: obj.product_name,
+              description: obj.description,
+              katılanlar: obj.joiners
+            }
+          })
+          return setData(dataArr)
+        }
+        setData(data)
+      }
+    });
 
     const fetchData = async (tableAPIstring) => {
       mainDispatch({type: "TOGGLE_LOADING_TRUE"})
@@ -63,11 +116,6 @@ const TumTeklifler = () => {
     }
 
     useEffect(() => {
-      fetchData("/api/data/table/tum")
-
-    }, [])
-
-    useEffect(() => {
       if (order >= 0) {
         setTotal(order * data[clickedItemIndex]?.birimFiyat)
         setBakiyeSonra(bakiye - total)
@@ -85,6 +133,7 @@ const TumTeklifler = () => {
           <CCol>
             <div style = {{border: "solid 1px rgb(229, 83, 83, 0.35)"}} >
               <CDataTable
+                loading = {loading}
                 header
                 items={data}
                 fields={fields}

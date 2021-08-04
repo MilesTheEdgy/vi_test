@@ -6,13 +6,9 @@ import {
 } from 'react-router-dom'
 import { CContainer, CFade } from '@coreui/react'
 
-// routes config
-import routes from './routes'
 import UrunEkle from '../../routes/urunekle/UrunEkle'
 import Dashboard from '../../routes/Dashboard'
 import YeniTeklif from "../../routes/yeniteklif/YeniTeklif"
-import Login from '../../pages/login/Login'
-import Register from '../../pages/register/Register'
   
 const loading = (
   <div className="pt-3 text-center">
@@ -21,7 +17,6 @@ const loading = (
 )
 
 const TheContent = () => {
-  console.log("rendering CONTENT")
   return (
     <main className="c-main">
       <CContainer fluid>
@@ -31,8 +26,6 @@ const TheContent = () => {
             <Route path= "/dashboard" name= "Dashboard" render = {props => <CFade> <Dashboard {...props}/> </CFade>} />
             <Route path= "/urunekle" name= "Ürün Ekle" render = {props => <CFade> <UrunEkle {...props}/> </CFade>} />
             <Route path= "/yeniteklif" name= "Yeni Teklif" render = {props => <CFade> <YeniTeklif {...props}/> </CFade>} />
-            <Route path = "/login" name = "Login" render = {props => <Login {...props} /> } />
-            <Route path = "/register" name = "Register" render = {props => <Register {...props} /> } />
             <Redirect from="/" to="/dashboard" />
           </Switch>
         </Suspense>

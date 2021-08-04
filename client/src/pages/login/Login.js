@@ -1,5 +1,5 @@
 import React from 'react'
-import { Link, useHistory } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
 import {
   CButton,
   CCard,
@@ -50,9 +50,7 @@ const Login = () => {
     onCompleted: (data) => {
       // console.log(data)
       const { token } = data.login
-      console.log(token)
       document.cookie = `pyecztoken=${token.token}`
-      console.log(document.cookie)
       dispatch({type: 'LOG_IN'})
       dispatch({type: 'FILL_USER_SETTINGS', eczaneName: token.pharmacy_name, username: token.username})
       history.push('/dashboard')

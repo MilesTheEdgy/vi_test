@@ -21,8 +21,8 @@ const SizinTeklifleriniz = () => {
     const sizinTekliflerID = "/api/data/table/sizin"
 
     const GET_APPLICATIONS_ONHOLD = gql`
-      query {
-        application(onHold: true ) {
+      query ($submitter: String) {
+        application(submitter: $submitter) {
           application_id
           transaction_id
           product_name
@@ -45,7 +45,8 @@ const SizinTeklifleriniz = () => {
       }
     `;
     const { loading } = useQuery(GET_APPLICATIONS_ONHOLD, {
-      fetchPolicy: "network-only",
+      fetchPolicy: "no-cache",
+      variables: {submitter: eczaneName},
       onError: (error) => console.log(error),
       onCompleted: (data) => {
         if (data.application.length !== 0) {
@@ -118,10 +119,6 @@ const SizinTeklifleriniz = () => {
     }
 
     useEffect(() => {
-      fetchData(sizinTekliflerID)
-    }, [])
-
-    useEffect(() => {
       if (order >= 0) {
         setTotal(order * data[clickedItemIndex]?.birimFiyat)
         setBakiyeSonra(bakiye - total)
@@ -139,6 +136,7 @@ const SizinTeklifleriniz = () => {
           <CCol>
             <div style = {{border: "solid 1px rgb(41, 165, 83)"}} >
               <CDataTable
+                loading = {loading}
                 header
                 items={data}
                 fields={fields}

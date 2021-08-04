@@ -5,13 +5,11 @@ import {
   CDropdownMenu,
   CDropdownToggle
 } from '@coreui/react'
-import { useHistory } from 'react-router'
 import CIcon from '@coreui/icons-react'
 import { useSelector, useDispatch } from 'react-redux'
 
 const TheHeaderDropdown = () => {
   const userSettings = useSelector(state => state.user.userSettings)
-  const history = useHistory()
   const dispatch = useDispatch();
   return (
     <CDropdown
@@ -40,9 +38,7 @@ const TheHeaderDropdown = () => {
         </CDropdownItem>
         <CDropdownItem divider />
         <CDropdownItem onClick = { () => {
-          document.cookie = `pyecztoken=resetted`
           dispatch({type: "LOG_OUT"})
-          // history.push("/login")
           }} >
           <CIcon name="cil-lock-locked" className="mfe-2" />
           Çıkış yap

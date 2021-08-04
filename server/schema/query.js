@@ -207,11 +207,12 @@ const RootQuery = new GraphQLObjectType({
             }
         },
         applications: {
-            type: ApplicationType,
+            type: new GraphQLList(ApplicationType),
             resolve: async (parent, args, context) => {
                 try {
                     authenticateToken(context)
                     const res = await ApplicationModel.find({})
+                    console.log(mapUnitPriceToStringArray(res))
                     return mapUnitPriceToStringArray(res)
                 } catch (error) {
                     console.error(error)

@@ -44,7 +44,7 @@ const BekleyenTeklifler = () => {
       }
     `;
     const { loading } = useQuery(GET_APPLICATIONS_ONHOLD, {
-      fetchPolicy: "network-only",
+      fetchPolicy: "no-cache",
       onError: (error) => console.log(error),
       onCompleted: (data) => {
         if (data.application.length !== 0) {

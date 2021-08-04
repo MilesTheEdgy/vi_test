@@ -9,7 +9,6 @@ class AuthHOC extends React.Component {
 
     componentDidMount() {
       this.unlisten = this.props.history.listen( async (location, action) => {
-        console.log("current location: ", location.pathname)
         const GET_LOGIN = gql`
             query{
                 currentUser {
@@ -21,14 +20,16 @@ class AuthHOC extends React.Component {
         `;
         try {
           const res = await client.query({
-            query: GET_LOGIN
+            query: GET_LOGIN,
+            fetchPolicy: "no-cache"
           })
-          const { currentUser } = res.data
-          this.props.dispatch({type: 'LOG_IN'})
-          this.props.dispatch({type: 'FILL_USER_SETTINGS', eczaneName: currentUser.pharmacy_name, username: currentUser.username})
-          this.props.dispatch({type: 'FILL_USER_INFO', bakiye: currentUser.balance})
+          if (res.data.currentUser) {
+            this.props.dispatch({type: 'LOG_IN'})
+            this.props.dispatch({type: 'FILL_USER_SETTINGS', eczaneName: res.data.currentUser.pharmacy_name, username: res.data.currentUser.username})
+            this.props.dispatch({type: 'FILL_USER_INFO', bakiye: res.data.currentUser.balance})
+          }
         } catch (error) {
-          console.log(error)
+          console.log( "Error in AuthHoc: ", error)
           this.props.dispatch({type: 'LOG_OUT'})
         }
       });
@@ -37,8 +38,9 @@ class AuthHOC extends React.Component {
         this.unlisten();
     }
     render() {
-      if (this.props.isLogged)
+      if (this.props.isLogged) {
         return <Route {...this.props} />
+      }
       else return <SafeHOC />
 }
   }
