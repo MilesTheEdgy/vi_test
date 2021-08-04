@@ -5,6 +5,7 @@ import "./style.css"
 import "./collapsed.css"
 import Modal from "../../components/modals/Modal";
 import { useDispatch } from "react-redux";
+import { gql, useMutation } from "@apollo/client";
 
 function CollapseMineTable({item, state, dispatch}) {
     switch (item.durum) {
@@ -55,32 +56,32 @@ function CollapseMineTable({item, state, dispatch}) {
         }
 }
 
-function CollapseMine ({item, fetchData, tableAPIstring}) {
-
+function CollapseMine ({item, fetchData, tableAPIstring, refetch}) {
     const [state, dispatch] = useReducer(reducer, initialState);
     const mainDispatch = useDispatch()
-    const { isLoading, modal } = state
-
-    const removeBid = async () => {
-        mainDispatch({type: "TOGGLE_LOADING_TRUE"})
-        const res = await fetch('/api/bid', {
-              method: 'DELETE',
-              headers: {
-                'Content-Type': 'application/json',
-                'authorization': `Bearer ${document.cookie.slice(11)} `
-              },
-              body: JSON.stringify({
-                bid_id: item.id
-              })
-            })
-        if (res.status === 200) {
-            dispatch({type: "MODAL_DISPLAY", payload : {type: "SUCCESS"}})
-            fetchData(tableAPIstring)
-        } else {
-            dispatch({type: "MODAL_DISPLAY", payload : {type: "FAILURE"}})
+    const { isLoading, modal } = state    
+    const REMOVE_BID = gql`
+    mutation ($applicationID: ID) {
+        deleteApplication(applicationID: $applicationID) {
+            application_id
         }
-        mainDispatch({type: "TOGGLE_LOADING_FALSE"})
     }
+    `;
+    const [removeBid, { loading }] = useMutation(REMOVE_BID, {
+        fetchPolicy: "no-cache",
+        variables: {applicationID: item.ID},
+        onError: (error) => {
+            mainDispatch({type: "TOGGLE_LOADING_FALSE"})
+            dispatch({type: "MODAL_DISPLAY", payload : {type: "FAILURE"}})
+            console.log(error)
+        },
+        onCompleted: (data) => {
+            mainDispatch({type: "TOGGLE_LOADING_FALSE"})
+            dispatch({type: "MODAL_DISPLAY", payload : {type: "SUCCESS"}})
+            console.log(data)
+            refetch()
+        }
+    })
 
     const approveBid = async () => {
         dispatch({type: "APPROVE_BID", payload: {type: "LOADING_ON"}})      
@@ -159,7 +160,10 @@ function CollapseMine ({item, fetchData, tableAPIstring}) {
             {
             state.isOnHold && 
             <CFormGroup row className = "collapsedMine-footerControlButtons" id = "collapsedMine-footer">
-                <CButton color = "danger" onClick = {() => removeBid()} >Teklifi sil</CButton>
+                <CButton color = "danger" onClick = {() => {
+                    mainDispatch({type: "TOGGLE_LOADING_TRUE"})
+                    removeBid()
+                    }} >Teklifi sil</CButton>
                 <CButton disabled = {!state.hedefeKalanIs0} color = "success" onClick = {() => approveBid()} >Onayla</CButton>
             </CFormGroup>
             }
