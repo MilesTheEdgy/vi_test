@@ -18,7 +18,8 @@ const { generateAccessToken, authenticateToken } = require("../helpers/token")
 const UserModel = require("../models/user")
 const ApplicationModel = require("../models/application")
 const ProductModel = require("../models/product")
-const { ApplicationType, UserType, ProductType, LoginType, TestType } = require("./types");
+const TransactionModel = require("../models/transaction")
+const { ApplicationType, UserType, ProductType, LoginType, TestType, TransactionType } = require("./types");
 
 const RootQuery = new GraphQLObjectType({
     name: 'RootQueryType',
@@ -217,6 +218,17 @@ const RootQuery = new GraphQLObjectType({
                 } catch (error) {
                     console.error(error)
                     throw new Error("Could not fetch applications data")
+                }
+            }
+        },
+        transaction: {
+            type: new GraphQLList(TransactionType),
+            resolve: async(parent, args, context) => {
+                try {
+                    // WORK ON THIS
+                    return await TransactionModel.find({})
+                } catch (error) {
+                    throw new Error("could not fetch your transactions")
                 }
             }
         }
