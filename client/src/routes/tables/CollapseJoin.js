@@ -1,5 +1,6 @@
 import React, {useReducer, useEffect} from "react";
 import { CFormGroup, CCol, CTextarea, CLabel, CButton, CInput, CBadge, CCardBody } from "@coreui/react";
+import { gql, useMutation } from "@apollo/client"
 import Loader from "../../hoc/loader/Loader";
 import { isBelow0, initialState, reducer } from ".";
 import "./style.css"
@@ -65,68 +66,93 @@ function CollapseJoinTables ({item, state, dispatch}) {
     }
 }
 
-function CollapseJoin ({ reduxUser, item, order, setOrder, total, bakiyeSonra, fetchData, tableAPIstring}) {
+function CollapseJoin ({ reduxUser, item, order, setOrder, total, bakiyeSonra, fetchData, tableAPIstring, refetch}) {
 
     const [state, dispatch] = useReducer(reducer, initialState);
 
     const { modal, isLoading } = state;
 
-    const deleteJoin = async () => {
-        dispatch({type: "APPROVE_BID", payload : {type: "LOADING_ON"}})
-        const res = await fetch('/api/bid/join', {
-              method: 'DELETE',
-              headers: {
-                'Content-Type': 'application/json',
-                'authorization': `Bearer ${document.cookie.slice(11)} `
-              },
-              body: JSON.stringify({
-                bid_id: item.ID
-              })
-            })
-        if (res.status === 200) {
-            console.log("sent userInputJoin to server successfully");
-            dispatch({type: "MODAL_DISPLAY", payload: {type: "SUCCESS"}})
-            await fetchData(tableAPIstring)
-        } else {
-            console.log("userInputJoin was not sent to server");
-            dispatch({type: "MODAL_DISPLAY", payload: {type: "FAILURE"}})
-        }
-        dispatch({type: "APPROVE_BID", payload : {type: "LOADING_OFF"}})
-    }
+    // const deleteJoin = async () => {
+    //     dispatch({type: "APPROVE_BID", payload : {type: "LOADING_ON"}})
+    //     const res = await fetch('/api/bid/join', {
+    //           method: 'DELETE',
+    //           headers: {
+    //             'Content-Type': 'application/json',
+    //             'authorization': `Bearer ${document.cookie.slice(11)} `
+    //           },
+    //           body: JSON.stringify({
+    //             bid_id: item.ID
+    //           })
+    //         })
+    //     if (res.status === 200) {
+    //         console.log("sent userInputJoin to server successfully");
+    //         dispatch({type: "MODAL_DISPLAY", payload: {type: "SUCCESS"}})
+    //         await fetchData(tableAPIstring)
+    //     } else {
+    //         console.log("userInputJoin was not sent to server");
+    //         dispatch({type: "MODAL_DISPLAY", payload: {type: "FAILURE"}})
+    //     }
+    //     dispatch({type: "APPROVE_BID", payload : {type: "LOADING_OFF"}})
+    // }
 
-    const onSubmit = async () => {
-        console.log(item)
-        dispatch({type: "APPROVE_BID", payload : {type: "LOADING_ON"}})
-
-        const res = await fetch('/api/bid/join', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'authorization': `Bearer ${document.cookie.slice(11)} `
-              },
-              body: JSON.stringify({
-                userInputJoin: order,
-                bid_id: item.ID
-              })
-            })
-        if (res.status === 200) {
-            console.log("sent userInputJoin to server successfully");
-            dispatch({type: "MODAL_DISPLAY", payload: {type: "SUCCESS"}})
-            await fetchData(tableAPIstring)
-        } else {
-            console.log("userInputJoin was not sent to server");
-            dispatch({type: "MODAL_DISPLAY", payload: {type: "FAILURE"}})
+    const DELETE_JOIN = gql`
+        mutation($applicationID: ID) {
+            deleteJoin(applicationID: $applicationID) {
+                application_id
+            }
         }
-        dispatch({type: "APPROVE_BID", payload : {type: "LOADING_OFF"}})
-    }
+    `;
+
+    const [deleteJoin] = useMutation(DELETE_JOIN, {
+        fetchPolicy: "no-cache",
+        variables: {applicationID: item.ID},
+        onError: (err) => {
+            console.log(err)
+            dispatch({type: "MODAL_DISPLAY", payload: {type: "FAILURE"}})
+            dispatch({type: "APPROVE_BID", payload : {type: "LOADING_OFF"}})
+        },
+        onCompleted: (data) => {
+            console.log(data)
+            dispatch({type: "MODAL_DISPLAY", payload: {type: "SUCCESS"}})
+            dispatch({type: "APPROVE_BID", payload : {type: "LOADING_OFF"}})
+            refetch()
+        }
+    })
+
+    const JOIN_APPLICATON = gql`
+        mutation($applicationID: ID!, $pledge: Int!) {
+            joinApplication(applicationID: $applicationID, pledge: $pledge) {
+                application_id
+            }
+        }
+    `;
+    const [joinApplication] = useMutation(JOIN_APPLICATON, {
+        fetchPolicy: "no-cache",
+        variables: {
+            applicationID: item.ID,
+            pledge: Number(order)
+        },
+        onError: (err) => {
+            console.log(err)
+            dispatch({type: "MODAL_DISPLAY", payload: {type: "FAILURE"}})
+            dispatch({type: "APPROVE_BID", payload : {type: "LOADING_OFF"}})
+        },
+        onCompleted: (data) => {
+            console.log(data)
+            dispatch({type: "MODAL_DISPLAY", payload: {type: "SUCCESS"}})
+            dispatch({type: "APPROVE_BID", payload : {type: "LOADING_OFF"}})
+            refetch()
+        }
+    })
 
     useEffect(() => {
         if (item.katılanlar) {
-            for (let i = 0; i < item.katılanlar.length; i++) {
-                if (item.katılanlar[i].name === reduxUser) {
-                    Object.assign(item.katılanlar[i], {isCurrentUser: true})
+            const itemCopy = JSON.parse(JSON.stringify(item));
+            for (let i = 0; i < itemCopy.katılanlar.length; i++) {
+                if (itemCopy.katılanlar[i].name === reduxUser) {
+                    Object.assign(itemCopy.katılanlar[i], {isCurrentUser: true})
                 }
-                dispatch({type: "ADD_ROW", payload: {...item.katılanlar[i], clicked: false}})
+                dispatch({type: "ADD_ROW", payload: {...itemCopy.katılanlar[i], clicked: false}})
             }
         }
         dispatch({type: "HEDEF_HESAPLA_COLLAPSED_JOIN", payload: item.pledge, hedef: item.hedef})
@@ -188,8 +214,14 @@ function CollapseJoin ({ reduxUser, item, order, setOrder, total, bakiyeSonra, f
                     </span>
                 </CCol>
                 <CCol md = "3">
-                    <CButton color = "danger" className = "btn-ghost-danger" onClick = {() => deleteJoin()} >SIL</CButton>
-                    <CButton color = "success" onClick = {() => onSubmit()} >ONAYLA</CButton>
+                    <CButton color = "danger" className = "btn-ghost-danger" onClick = {() => {
+                        dispatch({type: "APPROVE_BID", payload : {type: "LOADING_ON"}})
+                        deleteJoin()
+                        }} >SIL</CButton>
+                    <CButton color = "success" onClick = {() => {
+                            dispatch({type: "APPROVE_BID", payload : {type: "LOADING_ON"}})
+                            joinApplication()
+                        }} >ONAYLA</CButton>
                 </CCol>
             </CFormGroup>
             }

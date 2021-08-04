@@ -67,7 +67,30 @@ function CollapseMine ({item, fetchData, tableAPIstring, refetch}) {
         }
     }
     `;
-    const [removeBid, { loading }] = useMutation(REMOVE_BID, {
+    const [removeBid] = useMutation(REMOVE_BID, {
+        fetchPolicy: "no-cache",
+        variables: {applicationID: item.ID},
+        onError: (error) => {
+            mainDispatch({type: "TOGGLE_LOADING_FALSE"})
+            dispatch({type: "MODAL_DISPLAY", payload : {type: "FAILURE"}})
+            console.log(error)
+        },
+        onCompleted: (data) => {
+            mainDispatch({type: "TOGGLE_LOADING_FALSE"})
+            dispatch({type: "MODAL_DISPLAY", payload : {type: "SUCCESS"}})
+            console.log(data)
+            refetch()
+        }
+    })
+
+    const APPROVE_APPLICATION = gql`
+        mutation($applicationID: ID!, $chosenJoiners: [JoinerArg]!) {
+            approveApplication(applicationID: $applicationID, chosenJoiners: $chosenJoiners) {
+                application_id
+            }
+        }
+    `;
+    const [approveApplication] = useMutation(APPROVE_APPLICATION, {
         fetchPolicy: "no-cache",
         variables: {applicationID: item.ID},
         onError: (error) => {
@@ -107,7 +130,7 @@ function CollapseMine ({item, fetchData, tableAPIstring, refetch}) {
             if (res.status === 200) {
                 dispatch({type: "MODAL_DISPLAY", payload : {type: "SUCCESS"}})
                 dispatch({type: "APPROVE_BID", payload: {type: "LOADING_OFF"}})
-                fetchData(tableAPIstring)
+                fetchData(tableAPIstring)-
             } else {
                 dispatch({type: "MODAL_DISPLAY", payload : {type: "FAILURE"}})
                 dispatch({type: "APPROVE_BID", payload: {type: "LOADING_OFF"}})
