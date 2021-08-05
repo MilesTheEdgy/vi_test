@@ -17,9 +17,7 @@ const SizinTeklifleriniz = () => {
     
     const eczaneName = useSelector(state => state.user.userSettings.eczaneName)
     const bakiye = useSelector(state => state.user.userInfo.bakiye)
-  
-    const sizinTekliflerID = "/api/data/table/sizin"
-
+    
     const GET_APPLICATIONS_ONHOLD = gql`
       query ($submitter: String) {
         application(submitter: $submitter) {
@@ -227,7 +225,7 @@ const SizinTeklifleriniz = () => {
                         return (
                         <CCollapse show={details.includes(index)}>
                             <CCol sm = "12">
-                              {whichCollapsedToRender(eczaneName, item.eczane, item, index, order, setOrder, total, bakiyeSonra, fetchData, sizinTekliflerID)}
+                              {whichCollapsedToRender(eczaneName, item.eczane, item, index, order, setOrder, total, bakiyeSonra, refetch)}
                             </CCol>
                         </CCollapse>
                       )

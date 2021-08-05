@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { CDataTable, CBadge, CButton, CCollapse, CCardBody, CCol, CCard, CCardHeader, CFormGroup, CLabel, CRow } from "@coreui/react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
+import { useQuery, gql } from "@apollo/client" 
 
 function BakiyeHareketleriTable({item, eczaneName}) {
-
   return (
     <CCardBody>
       <CCol xs="12" sm="12">
@@ -45,23 +45,24 @@ function BakiyeHareketleriTable({item, eczaneName}) {
                   <tbody>
                     {
                       item.joiners.map((obj, i) => {
-                        if (obj.eczane === eczaneName)
-                        return (
-                            <tr key = {i} >
-                              <th scope="row">{i+1}</th>
-                              <td><b>{obj.eczane}</b></td>
-                              <td>{obj.pledge}/<b>{item.hedef}</b></td>
-                              <td style = {{color: "red"}}>-{obj.total.toFixed(2)}</td>
-                              <td>{obj.bakiye.toFixed(2)}</td>
-                            </tr>
-                        )
+                        console.log(i, obj)
+                        if (obj.name === eczaneName)
+                          return (
+                              <tr key = {i} >
+                                <th scope="row">{i+1}</th>
+                                <td><b>{obj.name}</b></td>
+                                <td>{obj.amount}/<b>{item.hedef}</b></td>
+                                <td style = {{color: "red"}}>-{obj.total}</td>
+                                <td>{obj.balanceAfter}</td>
+                              </tr>
+                          )
                         return (
                           <tr key = {i}>
                               <th scope="row">{i+1}</th>
-                              <td>{obj.eczane}</td>
-                              <td>{obj.pledge}/<b>{item.hedef}</b></td>
-                              <td style = {{color: "red"}}>-{obj.total.toFixed(2)}</td>
-                              <td>{obj.bakiye.toFixed(2)}</td>
+                              <td>{obj.name}</td>
+                              <td>{obj.amount}/<b>{item.hedef}</b></td>
+                              <td style = {{color: "red"}}>-{obj.total}</td>
+                              <td>{obj.balanceAfter}</td>
                           </tr>
                         )
                       })
@@ -81,7 +82,6 @@ const BakiyeHareketleriniz = () => {
     const eczaneName = useSelector(state => state.user.userSettings.eczaneName)
     const [details, setDetails] = useState([])
     const [data, setData] = useState([])
-    const mainDispatch = useDispatch()
   
     const toggleDetails = (index) => {
       const position = details.indexOf(index)
@@ -133,43 +133,97 @@ const BakiyeHareketleriniz = () => {
         default: return ''
       }
     }
-    useEffect(() => {
-      const fetchData = async () => {
-        mainDispatch({type: "TOGGLE_LOADING_TRUE"})
-        const res = await fetch('/api/data/table/hareket', {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json',
-                'authorization': `Bearer ${document.cookie.slice(11)} `
-              }
-            })
-        if (res.status === 200) {
-          const fetchedData = await res.json()
-          // console.log(fetchedData)
-          const data = fetchedData.map(obj => {
-            return {
-              ID: obj.transaction_id,
-              application_id: obj.id,
-              İlaç: obj.product_name,
-              eczane: obj.seller,
-              tür: obj.seller === eczaneName ? "Satış" : "Alış",
-              hedef: obj.goal,
-              pledge: obj.poster_pledge,
-              tarih: new Date(obj.date),
-              total: parseFloat(obj.seller_amount, 10),
-              bakiye: parseFloat(obj.seller_balance_after, 10),
-              joiners: obj.verJoiners
-            }
-          })
-          setData(data)
-          mainDispatch({type: "TOGGLE_LOADING_FALSE"})
-        } else if (res.status === 401 ||res.status === 403) {
-          mainDispatch({type: "LOG_OUT"})
+    // useEffect(() => {
+    //   const fetchData = async () => {
+    //     mainDispatch({type: "TOGGLE_LOADING_TRUE"})
+    //     const res = await fetch('/api/data/table/hareket', {
+    //           method: 'GET',
+    //           headers: {
+    //             'Content-Type': 'application/json',
+    //             'authorization': `Bearer ${document.cookie.slice(11)} `
+    //           }
+    //         })
+    //     if (res.status === 200) {
+    //       const fetchedData = await res.json()
+    //       // console.log(fetchedData)
+    //       const data = fetchedData.map(obj => {
+    //         return {
+    //           ID: obj.transaction_id,
+    //           application_id: obj.id,
+    //           İlaç: obj.product_name,
+    //           eczane: obj.seller,
+    //           tür: obj.seller === eczaneName ? "Satış" : "Alış",
+    //           hedef: obj.goal,
+    //           pledge: obj.poster_pledge,
+    //           tarih: new Date(obj.date),
+    //           total: parseFloat(obj.seller_amount, 10),
+    //           bakiye: parseFloat(obj.seller_balance_after, 10),
+    //           joiners: obj.verJoiners
+    //         }
+    //       })
+    //       setData(data)
+    //       mainDispatch({type: "TOGGLE_LOADING_FALSE"})
+    //     } else if (res.status === 401 ||res.status === 403) {
+    //       mainDispatch({type: "LOG_OUT"})
+    //     }
+    //   }
+    //   fetchData()
+    //   // eslint-disable-next-line
+    // }, [])
+
+    const GET_BAKIYE_HAREKETLER = gql`
+      query ($userTransactions: String) {
+        transaction(userTransactions: $userTransactions) {
+          application_id
+          transaction_id
+          product {
+            Product_name
+            Barcode
+          }
+          unit_price
+          goal
+          seller {
+            name
+            amount
+            sellerPledge
+            total
+            balanceAfter
+          }
+          buyers {
+            name
+            amount
+            total
+            balanceAfter
+          }
+          date
         }
       }
-      fetchData()
-      // eslint-disable-next-line
-    }, [])
+    `
+
+    const { loading } = useQuery(GET_BAKIYE_HAREKETLER, {
+      fetchPolicy: "no-cache",
+      variables: {userTransactions: eczaneName},
+      onError: (err) => console.log(err),
+      onCompleted: (data) => {
+        console.log(data)
+        const mappedData = data.transaction.map(obj => {
+          return {
+            ID: obj.transaction_id,
+            application_id: obj.application_id,
+            İlaç: obj.product.Product_name,
+            eczane: obj.seller.name,
+            tür: obj.seller.name === eczaneName ? "Satış" : "Alış",
+            hedef: obj.goal,
+            pledge: obj.seller.sellerPledge,
+            tarih: obj.date,
+            total: parseFloat(obj.seller.total, 10),
+            bakiye: parseFloat(obj.seller.balanceAfter, 10),
+            joiners: obj.buyers
+          }
+        })
+        setData(mappedData)
+      }
+    })
   
     return (
     <>
@@ -182,6 +236,7 @@ const BakiyeHareketleriniz = () => {
           <CCol>
           <div style = {{border: "solid 1px rgb(249, 177, 21, 0.35)"}} >
             <CDataTable
+              loading = {loading}
               header
               items={data}
               fields={fields}
@@ -208,7 +263,7 @@ const BakiyeHareketleriniz = () => {
                 'tarih':
                 (item)=>(
                   <td>
-                    <p>{item.tarih.getFullYear()}-{item.tarih.getMonth()+1}-{item.tarih.getDate()}</p>
+                    <p>{item.tarih}</p>
                   </td>
                   ),
                 'toplam':

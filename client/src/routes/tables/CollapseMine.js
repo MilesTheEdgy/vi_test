@@ -56,10 +56,10 @@ function CollapseMineTable({item, state, dispatch}) {
         }
 }
 
-function CollapseMine ({item, fetchData, tableAPIstring, refetch}) {
+function CollapseMine ({item, refetch}) {
     const [state, dispatch] = useReducer(reducer, initialState);
     const mainDispatch = useDispatch()
-    const { isLoading, modal } = state
+    const { modal } = state
     const REMOVE_BID = gql`
     mutation ($applicationID: ID) {
         deleteApplication(applicationID: $applicationID) {

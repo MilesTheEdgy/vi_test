@@ -1,5 +1,5 @@
 import React from 'react'
-import { useHistory } from 'react-router-dom'
+import { useHistory, Link } from 'react-router-dom'
 import {
   CButton,
   CCard,
@@ -121,12 +121,13 @@ const Login = () => {
               <CCard className="text-white bg-primary py-5 d-md-down-none" style={{ width: '44%' }}>
                 <CCardBody className="text-center">
                   <div>
+                    <p>Hesabınız yok mu?</p>
                     <h2>Hesap oluşturun</h2>
-                    {/* <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut
-                      labore et dolore magna aliqua.</p> */}
-                    {/* <Link to="/register"> */}
+                    <p>Bütün eczanelere kolay bir şekilde ortak alışveriş hizmetlerini sağlıyoruz.
+                    Toptancılardan alım yaparken adet hedefi derdiniz kalmasın!</p>
+                    <Link to="/register">
                       <CButton color="primary" className="mt-3" active tabIndex={-1}>Kayıt olun!</CButton>
-                    {/* </Link> */}
+                    </Link>
                   </div>
                 </CCardBody>
               </CCard>

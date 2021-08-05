@@ -1,6 +1,7 @@
 const graphql = require('graphql');
 const mongoose = require("mongoose")
 const sanitize = require('mongo-sanitize');
+const bcrypt = require("bcrypt")
 const {
     GraphQLObjectType,
     GraphQLString,
@@ -24,11 +25,37 @@ const { authenticateToken } = require("../helpers/token")
 const ApplicationModel = require("../models/application")
 const CounterModel = require("../models/counter")
 const TransactionModel = require("../models/transaction")
-const { ApplicationType, JoinerArgumentType, TransactionType } = require("./types");
+const { ApplicationType, JoinerArgumentType, RegisterType } = require("./types");
+const UserModel = require('../models/user');
 
 const Mutation = new GraphQLObjectType({
     name: 'Mutation',
     fields: {
+        register: {
+            type: RegisterType,
+            args: {
+                username: {type: new GraphQLNonNull(GraphQLString)},
+                password: {type: new GraphQLNonNull(GraphQLString)},
+                pharmacy_name: {type: new GraphQLNonNull(GraphQLString)}
+            },
+            resolve: async (parent, args) => {
+                try {
+                    const { username, password, pharmacy_name } = args
+                    const hash = await bcrypt.hash(password, 10)
+                    const user = new UserModel({
+                        username,
+                        pharmacy_name,
+                        hash
+                    })
+                    console.log(user)
+                    await user.save()
+                    return user
+                } catch (error) {
+                    console.log(error)
+                    throw new Error("Could not register")
+                }
+            }
+        },
         addApplication: {
             type: ApplicationType,
             args: {
@@ -153,8 +180,10 @@ const Mutation = new GraphQLObjectType({
                             barcode: product_barcode
                         },
                         unit_price: unit_price.toString(),
+                        goal: goal,
                         seller: {
                             name: user.pharmacyName,
+                            sellerPledge: submitter_pledge,
                             amount: sellerAmount,
                             total: Number(unit_price.toString()) * sellerAmount,
                             balanceAfter: sellerNewBalance

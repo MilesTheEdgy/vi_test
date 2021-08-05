@@ -66,7 +66,7 @@ function CollapseJoinTables ({item, state, dispatch}) {
     }
 }
 
-function CollapseJoin ({ reduxUser, item, order, setOrder, total, bakiyeSonra, fetchData, tableAPIstring, refetch}) {
+function CollapseJoin ({ reduxUser, item, order, setOrder, total, bakiyeSonra, refetch}) {
 
     const [state, dispatch] = useReducer(reducer, initialState);
 

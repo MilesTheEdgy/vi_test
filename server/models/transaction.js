@@ -21,10 +21,12 @@ const TransactionModel = mongoose.model("Transaction", new Schema({
         name: String,
         barcode: Number
     },
-    unit_price: {type: Number},
+    unit_price: {type: mongoose.Types.Decimal128},
+    goal: {type: Number},
     seller: {
         name: String,
         amount: Number,
+        sellerPledge: Number,
         total: {type: mongoose.Types.Decimal128},
         balanceAfter: {type: mongoose.Types.Decimal128}
     },

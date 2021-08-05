@@ -13,7 +13,6 @@ const TumTeklifler = () => {
     const [total, setTotal] = useState(0)
     const [bakiyeSonra, setBakiyeSonra] = useState(0)
     const mainDispatch = useDispatch()
-    const tumTekliflerID = "/api/data/table/tum"
     
     const eczaneName = useSelector(state => state.user.userSettings.eczaneName)
     const bakiye = useSelector(state => state.user.userInfo.bakiye)
@@ -224,7 +223,7 @@ const TumTeklifler = () => {
                         return (
                         <CCollapse show={details.includes(index)}>
                             <CCol sm = "12">
-                              {whichCollapsedToRender(eczaneName, item.eczane, item, index, order, setOrder, total, bakiyeSonra, fetchData, tumTekliflerID, refetch)}
+                              {whichCollapsedToRender(eczaneName, item.eczane, item, index, order, setOrder, total, bakiyeSonra, refetch)}
                             </CCol>
                         </CCollapse>
                       )

@@ -226,38 +226,41 @@ const RootQuery = new GraphQLObjectType({
             args: {userTransactions: {type: GraphQLString}},
             resolve: async(parent, args, context) => {
                 try {
-                    let res = await TransactionModel.find({"seller.name": args.userTransactions})
-                    console.log("res", res)
-                    // let buyersMapped = res.buyers.map(obj => {
-                    //     return {
-                    //         ...obj,
-                    //         total: obj.total.toString(),
-                    //         balanceAfter: obj.balanceAfter.toString()
-                    //     }
-                    // })
-                    // console.log(buyersMapped)
-                    console.log('for fucks sake')
-                    const mapped = res.map(obj => {
+                    const res = await TransactionModel.find({$or: [{"seller.name": args.userTransactions}, {"buyers.name": args.userTransactions}]})
+                    const mapBuyers = (buyers) => {
+                        let mappedBuyers = []
+                        for (let i = 0; i < buyers.length; i++) {
+                            mappedBuyers.push({
+                                ...buyers[i]._doc,
+                                total: buyers[i].total.toString(),
+                                balanceAfter: buyers[i].balanceAfter.toString()
+                            })
+                        }
+                        return mappedBuyers
+                    }
+                    console.log(res)
+                    const mapped = res.map((obj) => {
+                        let d = new Date(Number(obj._doc.date))
+                        let date = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`
                         return {
                             ...obj._doc,
+                            unit_price: obj._doc.unit_price.toString(),
+                            product: {
+                                Product_name: obj._doc.product.name,
+                                Barcode: obj._doc.product.barcode
+                            },
                             seller: {
                                 ...obj._doc.seller,
                                 total: obj._doc.seller.total.toString(),
                                 balanceAfter: obj._doc.seller.balanceAfter.toString()
                             },
-                            buyers: obj._doc.buyers.map(obj => {
-                                return {
-                                    ...obj._doc.seller,
-                                    total: obj._doc.seller.total.toString(),
-                                    balanceAfter: obj._doc.seller.balanceAfter.toString()
-                                }
-                            })
+                            buyers: mapBuyers(obj.buyers),
+                            date
                         }
                     })
-                    console.log("mapped", mapped)
-                    console.log('do something')
                     return mapped
                 } catch (error) {
+                    console.log(error)
                     throw new Error("could not fetch your transactions")
                 }
             }

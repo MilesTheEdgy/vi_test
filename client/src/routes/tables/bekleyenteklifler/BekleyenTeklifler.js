@@ -17,8 +17,6 @@ const BekleyenTeklifler = () => {
     const bakiye = useSelector(state => state.user.userInfo.bakiye)
     const mainDispatch = useDispatch()
 
-    const bekleyeinTekliflerID = "/api/data/table/bekleyen"
-
     const GET_APPLICATIONS_ONHOLD = gql`
       query {
         application(onHold: true ) {
@@ -222,7 +220,7 @@ const BekleyenTeklifler = () => {
                         return (
                         <CCollapse show={details.includes(index)}>
                             <CCol sm = "12">
-                              {whichCollapsedToRender(eczaneName, item.eczane, item, index, order, setOrder, total, bakiyeSonra, fetchData, bekleyeinTekliflerID, refetch)}
+                              {whichCollapsedToRender(eczaneName, item.eczane, item, index, order, setOrder, total, bakiyeSonra, refetch)}
                             </CCol>
                         </CCollapse>
                       )

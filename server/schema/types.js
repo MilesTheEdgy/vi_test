@@ -20,6 +20,16 @@ const LoginType = new GraphQLObjectType({
     })
 });
 
+const RegisterType = new GraphQLObjectType({
+    name: 'Register',
+    fields: () => ({
+        username: { type: GraphQLString },
+        password: { type: GraphQLString },
+        pharmacy_name: { type: GraphQLString }
+
+    })
+});
+
 const UserType = new GraphQLObjectType({
     name: 'User',
     fields: () => ({
@@ -65,6 +75,7 @@ const TransInfoType = new GraphQLObjectType({
     fields: () => ({
         name: {type: GraphQLString},
         amount: {type: GraphQLInt},
+        sellerPledge: {type: GraphQLInt},
         total: {type: GraphQLFloat},
         balanceAfter: {type: GraphQLFloat}
     })
@@ -77,6 +88,7 @@ const TransactionType = new GraphQLObjectType({
         transaction_id: {type: GraphQLInt},
         product: {type: ProductType},
         unit_price: {type: GraphQLString},
+        goal: {type: GraphQLInt},
         seller: {type: TransInfoType},
         buyers: {type: new GraphQLList(TransInfoType)},
         date: {type: GraphQLString}
@@ -117,5 +129,6 @@ module.exports = {
     JoinerArgumentType,
     LoginType,
     TransactionType,
-    TestType
+    TestType,
+    RegisterType
 }
