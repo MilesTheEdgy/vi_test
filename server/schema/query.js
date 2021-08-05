@@ -223,10 +223,40 @@ const RootQuery = new GraphQLObjectType({
         },
         transaction: {
             type: new GraphQLList(TransactionType),
+            args: {userTransactions: {type: GraphQLString}},
             resolve: async(parent, args, context) => {
                 try {
-                    // WORK ON THIS
-                    return await TransactionModel.find({})
+                    let res = await TransactionModel.find({"seller.name": args.userTransactions})
+                    console.log("res", res)
+                    // let buyersMapped = res.buyers.map(obj => {
+                    //     return {
+                    //         ...obj,
+                    //         total: obj.total.toString(),
+                    //         balanceAfter: obj.balanceAfter.toString()
+                    //     }
+                    // })
+                    // console.log(buyersMapped)
+                    console.log('for fucks sake')
+                    const mapped = res.map(obj => {
+                        return {
+                            ...obj._doc,
+                            seller: {
+                                ...obj._doc.seller,
+                                total: obj._doc.seller.total.toString(),
+                                balanceAfter: obj._doc.seller.balanceAfter.toString()
+                            },
+                            buyers: obj._doc.buyers.map(obj => {
+                                return {
+                                    ...obj._doc.seller,
+                                    total: obj._doc.seller.total.toString(),
+                                    balanceAfter: obj._doc.seller.balanceAfter.toString()
+                                }
+                            })
+                        }
+                    })
+                    console.log("mapped", mapped)
+                    console.log('do something')
+                    return mapped
                 } catch (error) {
                     throw new Error("could not fetch your transactions")
                 }
