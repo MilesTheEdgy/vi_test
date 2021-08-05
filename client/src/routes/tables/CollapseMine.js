@@ -59,7 +59,7 @@ function CollapseMineTable({item, state, dispatch}) {
 function CollapseMine ({item, fetchData, tableAPIstring, refetch}) {
     const [state, dispatch] = useReducer(reducer, initialState);
     const mainDispatch = useDispatch()
-    const { isLoading, modal } = state    
+    const { isLoading, modal } = state
     const REMOVE_BID = gql`
     mutation ($applicationID: ID) {
         deleteApplication(applicationID: $applicationID) {
@@ -101,43 +101,9 @@ function CollapseMine ({item, fetchData, tableAPIstring, refetch}) {
         onCompleted: (data) => {
             mainDispatch({type: "TOGGLE_LOADING_FALSE"})
             dispatch({type: "MODAL_DISPLAY", payload : {type: "SUCCESS"}})
-            console.log(data)
             refetch()
         }
     })
-
-    const approveBid = async () => {
-        dispatch({type: "APPROVE_BID", payload: {type: "LOADING_ON"}})      
-        let selectedUsers = []
-        for (let i = 0; i < state.rows.length; i++) {
-            if (state.rows[i].clicked === true) {
-                selectedUsers.push(state.rows[i].name)
-            }
-        }
-        console.log(selectedUsers);
-        if (state.hedefeKalanIs0) {
-            const res = await fetch('/api/bid/approve', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'authorization': `Bearer ${document.cookie.slice(11)} `
-                    },
-                    body: JSON.stringify({
-                        selectedUsers: selectedUsers,
-                        id: item.ID
-                    })
-                })
-            if (res.status === 200) {
-                dispatch({type: "MODAL_DISPLAY", payload : {type: "SUCCESS"}})
-                dispatch({type: "APPROVE_BID", payload: {type: "LOADING_OFF"}})
-                fetchData(tableAPIstring)-
-            } else {
-                dispatch({type: "MODAL_DISPLAY", payload : {type: "FAILURE"}})
-                dispatch({type: "APPROVE_BID", payload: {type: "LOADING_OFF"}})
-            }
-        }
-    }
-
 
     useEffect(() => {
         if (item.katılanlar) {
@@ -187,7 +153,15 @@ function CollapseMine ({item, fetchData, tableAPIstring, refetch}) {
                     mainDispatch({type: "TOGGLE_LOADING_TRUE"})
                     removeBid()
                     }} >Teklifi sil</CButton>
-                <CButton disabled = {!state.hedefeKalanIs0} color = "success" onClick = {() => approveBid()} >Onayla</CButton>
+                <CButton disabled = {!state.hedefeKalanIs0} color = "success" onClick = {() => {
+                    let selectedUsers = []
+                    for (let i = 0; i < state.rows.length; i++) {
+                        if (state.rows[i].clicked === true) {
+                            selectedUsers.push({name: state.rows[i].name, pledge: state.rows[i].pledge})
+                        }
+                    }
+                    approveApplication({variables: {chosenJoiners: selectedUsers}})
+                    }} >Onayla</CButton>
             </CFormGroup>
             }
         </>

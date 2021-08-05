@@ -6,7 +6,7 @@ import { fields, getBadge, getStatus, getCondition, toggleDetails, whichCollapse
 import "../style.css"
 
 const TumTeklifler = () => {
-    const [data, setData] = useState([])
+    const [tableData, setTableData] = useState([])
     const [details, setDetails] = useState([])
     const [clickedItemIndex, setClickedItemIndex] = useState(0)
     const [order, setOrder] = useState(0)
@@ -18,7 +18,7 @@ const TumTeklifler = () => {
     const eczaneName = useSelector(state => state.user.userSettings.eczaneName)
     const bakiye = useSelector(state => state.user.userInfo.bakiye)
 
-    const GET_APPLICATIONS_ONHOLD = gql`
+    const GET_ALL_APPLICATIONS = gql`
       query {
         applications{
           application_id
@@ -42,14 +42,28 @@ const TumTeklifler = () => {
         }
       }
     `;
-    const { loading } = useQuery(GET_APPLICATIONS_ONHOLD, {
-      fetchPolicy: "no-cache",
-      onError: (error) => console.log(error),
-      onCompleted: (data) => {
+    const { loading, refetch , data} = useQuery(GET_ALL_APPLICATIONS, {
+      fetchPolicy: "network-only",
+      onError: (error) => console.log(error)
+    });
+
+    useEffect(() => {
+      if(loading === false && data){
         if (data.applications.length !== 0) {
           const dataArr = data.applications.map((obj) => {
             let d = new Date(Number(obj.final_date))
             let date = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`
+            let bgColor = ""
+            switch (obj.status) {
+              case "APPROVED":
+                bgColor = "rgb(55, 229, 148, 0.25)";
+                break;
+              case "DELETED":
+                bgColor = "red";
+                break
+              default:
+                break;
+            }
             return {
               birimFiyat: obj.unit_price,
               durum: obj.status,
@@ -61,14 +75,14 @@ const TumTeklifler = () => {
               sonTarih: date,
               İlaç: obj.product_name,
               description: obj.description,
-              katılanlar: obj.joiners
+              katılanlar: obj.joiners,
+              bgColor
             }
           })
-          return setData(dataArr)
+          return setTableData(dataArr)
         }
-        setData(data)
       }
-    });
+    }, [loading, data])
 
     const fetchData = async (tableAPIstring) => {
       mainDispatch({type: "TOGGLE_LOADING_TRUE"})
@@ -108,7 +122,7 @@ const TumTeklifler = () => {
             bgColor: bgColor
           }
         })
-        setData(dataArr)
+        setTableData(dataArr)
       } else if (res.status === 401 ||res.status === 403) {
         mainDispatch({type: "LOG_OUT"})
       }
@@ -117,10 +131,10 @@ const TumTeklifler = () => {
 
     useEffect(() => {
       if (order >= 0) {
-        setTotal(order * data[clickedItemIndex]?.birimFiyat)
+        setTotal(order * tableData[clickedItemIndex]?.birimFiyat)
         setBakiyeSonra(bakiye - total)
       }
-    }, [order, total, clickedItemIndex, bakiye, data])
+    }, [order, total, clickedItemIndex, bakiye, tableData])
   
     return (
       <>
@@ -135,7 +149,7 @@ const TumTeklifler = () => {
               <CDataTable
                 loading = {loading}
                 header
-                items={data}
+                items={tableData}
                 fields={fields}
                 columnFilter
                 footer
@@ -210,7 +224,7 @@ const TumTeklifler = () => {
                         return (
                         <CCollapse show={details.includes(index)}>
                             <CCol sm = "12">
-                              {whichCollapsedToRender(eczaneName, item.eczane, item, index, order, setOrder, total, bakiyeSonra, fetchData, tumTekliflerID)}
+                              {whichCollapsedToRender(eczaneName, item.eczane, item, index, order, setOrder, total, bakiyeSonra, fetchData, tumTekliflerID, refetch)}
                             </CCol>
                         </CCollapse>
                       )

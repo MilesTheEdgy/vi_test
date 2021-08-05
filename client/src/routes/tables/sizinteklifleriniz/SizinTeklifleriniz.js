@@ -7,7 +7,7 @@ import "../style.css"
 
 const SizinTeklifleriniz = () => {
 
-    const [data, setData] = useState([])
+    const [tableData, setTableData] = useState([])
     const [details, setDetails] = useState([])
     const [clickedItemIndex, setClickedItemIndex] = useState(0)
     const [order, setOrder] = useState(0)
@@ -44,15 +44,29 @@ const SizinTeklifleriniz = () => {
         }
       }
     `;
-    const { loading } = useQuery(GET_APPLICATIONS_ONHOLD, {
-      fetchPolicy: "no-cache",
+    const { loading, refetch , data} = useQuery(GET_APPLICATIONS_ONHOLD, {
+      fetchPolicy: "network-only",
       variables: {submitter: eczaneName},
-      onError: (error) => console.log(error),
-      onCompleted: (data) => {
+      onError: (error) => console.log(error)
+    });
+
+    useEffect(() => {
+      if(loading === false && data){
         if (data.application.length !== 0) {
           const dataArr = data.application.map((obj) => {
             let d = new Date(Number(obj.final_date))
             let date = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`
+            let bgColor = ""
+            switch (obj.status) {
+              case "APPROVED":
+                bgColor = "rgb(55, 229, 148, 0.25)";
+                break;
+              case "DELETED":
+                bgColor = "red";
+                break
+              default:
+                break;
+            }
             return {
               birimFiyat: obj.unit_price,
               durum: obj.status,
@@ -64,14 +78,14 @@ const SizinTeklifleriniz = () => {
               sonTarih: date,
               İlaç: obj.product_name,
               description: obj.description,
-              katılanlar: obj.joiners
+              katılanlar: obj.joiners,
+              bgColor
             }
           })
-          return setData(dataArr)
+          return setTableData(dataArr)
         }
-        setData(data)
       }
-    });
+    }, [loading, data])
 
     const fetchData = async (tableAPIstring) => {
       mainDispatch({type: "TOGGLE_LOADING_TRUE"})
@@ -111,7 +125,7 @@ const SizinTeklifleriniz = () => {
             bgColor: bgColor
           }
         })
-        setData(dataArr)
+        setTableData(dataArr)
       } else if (res.status === 401 ||res.status === 403) {
         mainDispatch({type: "LOG_OUT"})
       }
@@ -120,10 +134,10 @@ const SizinTeklifleriniz = () => {
 
     useEffect(() => {
       if (order >= 0) {
-        setTotal(order * data[clickedItemIndex]?.birimFiyat)
+        setTotal(order * tableData[clickedItemIndex]?.birimFiyat)
         setBakiyeSonra(bakiye - total)
       }
-    }, [order, total, clickedItemIndex, bakiye, data])
+    }, [order, total, clickedItemIndex, bakiye, tableData])
   
     return (
       <>
@@ -138,7 +152,7 @@ const SizinTeklifleriniz = () => {
               <CDataTable
                 loading = {loading}
                 header
-                items={data}
+                items={tableData}
                 fields={fields}
                 columnFilter
                 footer
