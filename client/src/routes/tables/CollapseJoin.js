@@ -139,9 +139,9 @@ function CollapseJoin ({ reduxUser, item, order, setOrder, total, bakiyeSonra, r
         },
         onCompleted: (data) => {
             console.log(data)
+            refetch()
             dispatch({type: "MODAL_DISPLAY", payload: {type: "SUCCESS"}})
             dispatch({type: "APPROVE_BID", payload : {type: "LOADING_OFF"}})
-            refetch()
         }
     })
 

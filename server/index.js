@@ -1,7 +1,6 @@
 require("dotenv").config()
 const express = require("express")
 const { graphqlHTTP } = require('express-graphql');
-const FormatError = require('easygraphql-format-error')
 const mongoose = require("mongoose")
 const schema = require("./schema/schema")
 const app = express()
@@ -11,12 +10,6 @@ mongoose.connection.once("open", () => {
     console.log('connecting has been made')
 })
 
-const formatError = new FormatError([{
-    name: 'USER_EXISTS',
-    message: 'This user already exists',
-    statusCode: '400'
-  }])
-const errorName = formatError.errorName
 // app.use(cors())
 
 app.use("/graphql",
@@ -24,12 +17,17 @@ app.use("/graphql",
         schema,
         graphiql: true,
         context: {
-            reqHeaders: req.headers,
-            errorName
+            reqHeaders: req.headers
         },
         customFormatErrorFn: (err) => {
-            console.log("err in index", err.originalError.message)
-            return formatError.getError(err)
+            console.log("err in index", err)
+            console.log("err in index CODE", err.originalError.code)
+            return {
+                message: err.message,
+                code: err.originalError && err.originalError.code,   // <--
+                locations: err.locations,
+                path: err.path
+            };
         }
     })))
 

@@ -7,7 +7,8 @@ const {
     GraphQLID,
     GraphQLList,
     GraphQLNonNull,
-    GraphQLBoolean
+    GraphQLBoolean,
+    GraphQLError
 } = graphql;
 
 const {
@@ -51,8 +52,6 @@ const RootQuery = new GraphQLObjectType({
             },
             resolve: async (parent, {username, password}, context) => {
                 try {
-                    const { errorName } = context
-                    throw new Error({err: "user already exists", statusCode: 401})
                     const res = await UserModel.findOne({username: username})
                     if (res === null) {
                         throw new Error("Your username or password was incorrect")
@@ -76,8 +75,7 @@ const RootQuery = new GraphQLObjectType({
                         return convertBalanceToNum
                     }
                 } catch (error) {
-                    console.error(error)
-                    throw new Error(error)
+                    throw new Error("Could not login")
                 }
             }
         },

@@ -45,7 +45,6 @@ function BakiyeHareketleriTable({item, eczaneName}) {
                   <tbody>
                     {
                       item.joiners.map((obj, i) => {
-                        console.log(i, obj)
                         if (obj.name === eczaneName)
                           return (
                               <tr key = {i} >
@@ -133,43 +132,6 @@ const BakiyeHareketleriniz = () => {
         default: return ''
       }
     }
-    // useEffect(() => {
-    //   const fetchData = async () => {
-    //     mainDispatch({type: "TOGGLE_LOADING_TRUE"})
-    //     const res = await fetch('/api/data/table/hareket', {
-    //           method: 'GET',
-    //           headers: {
-    //             'Content-Type': 'application/json',
-    //             'authorization': `Bearer ${document.cookie.slice(11)} `
-    //           }
-    //         })
-    //     if (res.status === 200) {
-    //       const fetchedData = await res.json()
-    //       // console.log(fetchedData)
-    //       const data = fetchedData.map(obj => {
-    //         return {
-    //           ID: obj.transaction_id,
-    //           application_id: obj.id,
-    //           İlaç: obj.product_name,
-    //           eczane: obj.seller,
-    //           tür: obj.seller === eczaneName ? "Satış" : "Alış",
-    //           hedef: obj.goal,
-    //           pledge: obj.poster_pledge,
-    //           tarih: new Date(obj.date),
-    //           total: parseFloat(obj.seller_amount, 10),
-    //           bakiye: parseFloat(obj.seller_balance_after, 10),
-    //           joiners: obj.verJoiners
-    //         }
-    //       })
-    //       setData(data)
-    //       mainDispatch({type: "TOGGLE_LOADING_FALSE"})
-    //     } else if (res.status === 401 ||res.status === 403) {
-    //       mainDispatch({type: "LOG_OUT"})
-    //     }
-    //   }
-    //   fetchData()
-    //   // eslint-disable-next-line
-    // }, [])
 
     const GET_BAKIYE_HAREKETLER = gql`
       query ($userTransactions: String) {
@@ -205,7 +167,6 @@ const BakiyeHareketleriniz = () => {
       variables: {userTransactions: eczaneName},
       onError: (err) => console.log(err),
       onCompleted: (data) => {
-        console.log(data)
         const mappedData = data.transaction.map(obj => {
           return {
             ID: obj.transaction_id,

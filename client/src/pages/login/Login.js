@@ -111,9 +111,6 @@ const Login = () => {
                         <CButton color="primary" className="px-4"
                           onClick = {() => getLogin({variables: {username, password}})}>Giriş yap</CButton>
                       </CCol>
-                      <CCol xs="6" className="text-right">
-                        <CButton color="link" className="px-0">Şifrenizi unuttunuz mu?</CButton>
-                      </CCol>
                     </CRow>
                   </CForm>
                 </CCardBody>

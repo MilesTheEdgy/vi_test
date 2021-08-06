@@ -22,7 +22,6 @@ function Modal(props) {
             </CModal>
         )
     } else {
-        console.log(props)
         return (
             <CModal 
             show={props.modalOn}

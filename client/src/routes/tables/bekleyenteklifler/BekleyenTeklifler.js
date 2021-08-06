@@ -82,48 +82,6 @@ const BekleyenTeklifler = () => {
         }
       }
     }, [loading, data])
-    const fetchData = async (tableAPIstring) => {
-      mainDispatch({type: "TOGGLE_LOADING_TRUE"})
-      const res = await fetch(tableAPIstring, {
-        headers: {
-          'Content-Type': 'application/json',
-          'authorization': `Bearer ${document.cookie.slice(11)} `
-        }
-      })
-
-      if (res.status === 200) {
-        const data = await res.json()
-        const dataArr = data.map((obj, i) => {
-          let bgColor = ""
-          switch (obj.status) {
-            case "APPROVED":
-              bgColor = "rgb(55, 229, 148, 0.25)";
-              break;
-            case "DELETED":
-              bgColor = "red";
-              break
-            default:
-              break;
-          }
-          return {
-            birimFiyat: obj.price,
-            durum: obj.status,
-            eczane: obj.submitter,
-            hedef: obj.goal,
-            ID: obj.id,
-            kampanya: obj.condition,
-            pledge: obj.poster_pledge,
-            sonTarih: obj.final_date,
-            İlaç: obj.product_name,
-            description: obj.description,
-            katılanlar: obj.joiners,
-            bgColor: bgColor
-          }
-        })
-        setTableData(dataArr)
-        mainDispatch({type: "TOGGLE_LOADING_FALSE"})
-      }
-    }
 
     useEffect(() => {
       if (order >= 0) {

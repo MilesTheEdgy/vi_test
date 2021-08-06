@@ -19,7 +19,8 @@ const {
     returnSellerBalance,
     returnBuyersList,
     updateSellerBalance,
-    updateBuyersBalance
+    updateBuyersBalance,
+    CustomError
      } = require("./helpers")
 const { authenticateToken } = require("../helpers/token")
 const ApplicationModel = require("../models/application")
@@ -41,20 +42,21 @@ const Mutation = new GraphQLObjectType({
             resolve: async (parent, args) => {
                 try {
                     const { username, password, pharmacy_name } = args
-                    const userExists = await UserModel.findOne({username, pharmacy_name})
-                    
+                    const userExists = await UserModel.findOne({username})
+                    if (userExists !== null) throw new CustomError("user already exists")
                     const hash = await bcrypt.hash(password, 10)
                     const user = new UserModel({
                         username,
                         pharmacy_name,
                         hash
                     })
-                    // console.log(user)
-                    // await user.save()
+                    await user.save()
                     return user
                 } catch (error) {
-                    console.log(error)
-                    throw new Error("Could not register")
+                    if (error.code === 451)
+                        throw new CustomError(error)
+                    else
+                        throw new Error("Could not register")
                 }
             }
         },
@@ -101,7 +103,6 @@ const Mutation = new GraphQLObjectType({
                         application_id: await getUpdateIDSequence(CounterModel, "application_id"),
                         transaction_id: await getUpdateIDSequence(CounterModel, "transaction_id")
                     });
-                    console.log(application)
                     await application.save();
                     return {
                         ...application._doc,

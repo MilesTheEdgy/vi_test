@@ -1,6 +1,12 @@
 const ProductModel = require("../models/product")
 const UserModel = require("../models/user")
 
+class CustomError extends Error {
+    code = 451;
+    message = this.message ||
+      'This content is not available in your country';
+}
+
 const getUpdateIDSequence = async (CounterModel, IDSequence) => {
     let counter
     if (IDSequence === "application_id")
@@ -123,7 +129,8 @@ module.exports = {
     updateSellerBalance,
     updateBuyersBalance,
     escapeStringRegexp,
-    mapUnitPriceToStringArray
+    mapUnitPriceToStringArray,
+    CustomError
 }
 
 

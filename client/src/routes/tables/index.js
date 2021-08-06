@@ -1,5 +1,7 @@
 import CollapseMine from "./CollapseMine"
 import CollapseJoin from "./CollapseJoin"
+import { client } from "../../index"
+import { gql } from "@apollo/client"
 
 export const initialState = {
   rows: [],
@@ -309,7 +311,31 @@ export function toggleDetails(index, details, setDetails, setOrder, setTotal, se
         newDetails = [index]
     }
     setDetails(newDetails)
+  }
+
+export async function refetchUserInfo() {
+  const GET_LOGIN = gql`
+    query{
+        currentUser {
+            username
+            pharmacy_name
+            balance
+        }
     }
+  `;
+  const res = await client.query({
+      query: GET_LOGIN,
+      fetchPolicy: "no-cache"
+    })
+    if (res.data.currentUser) {
+      // this.props.dispatch({type: 'LOG_IN'})
+      // this.props.dispatch({type: 'FILL_USER_SETTINGS', eczaneName: res.data.currentUser.pharmacy_name, username: res.data.currentUser.username})
+      // this.props.dispatch({type: 'FILL_USER_INFO', bakiye: res.data.currentUser.balance})
+      return res.data.currentUser
+  }
+}
+
+
 
 export function whichCollapsedToRender (reduxUser, dataUser, item, index, order, setOrder, total, bakiyeSonra, refetch) {
   if (reduxUser === dataUser) {
