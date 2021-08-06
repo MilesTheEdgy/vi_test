@@ -41,14 +41,16 @@ const Mutation = new GraphQLObjectType({
             resolve: async (parent, args) => {
                 try {
                     const { username, password, pharmacy_name } = args
+                    const userExists = await UserModel.findOne({username, pharmacy_name})
+                    
                     const hash = await bcrypt.hash(password, 10)
                     const user = new UserModel({
                         username,
                         pharmacy_name,
                         hash
                     })
-                    console.log(user)
-                    await user.save()
+                    // console.log(user)
+                    // await user.save()
                     return user
                 } catch (error) {
                     console.log(error)
@@ -71,7 +73,7 @@ const Mutation = new GraphQLObjectType({
             },
             resolve: async (parent, args, context) => {
                 try {
-                    const user = authenticateToken(context)
+                    const user = authenticateToken(context.reqHeaders)
                     const { goal, conditionOn, conditionGive, unit_price, totalPrice, submitter_pledge } = args
                     const product = sanitize(args.product)
                     const description = sanitize(args.description)
@@ -119,7 +121,7 @@ const Mutation = new GraphQLObjectType({
             },
             resolve: async (parent, args, context) => {
                 try {
-                    const user = authenticateToken(context)
+                    const user = authenticateToken(context.reqHeaders)
                     const { pledge } = args
                     const applicationID = sanitize(args.applicationID)
                     const app = await ApplicationModel.findOne({application_id: applicationID})
@@ -144,7 +146,7 @@ const Mutation = new GraphQLObjectType({
             },
             resolve: async (parent, args, context) => {
                 try {
-                    const user = authenticateToken(context)
+                    const user = authenticateToken(context.reqHeaders)
                     const applicationID = sanitize(args.applicationID)
                     const app = await ApplicationModel.findOne({application_id: applicationID, submitter: user.pharmacyName || null})
 
@@ -214,7 +216,7 @@ const Mutation = new GraphQLObjectType({
             },
             resolve: async (parent, args, context) => {
                 try {
-                    const user = authenticateToken(context)
+                    const user = authenticateToken(context.reqHeaders)
                     const applicationID = sanitize(args.applicationID)
                     const app = await ApplicationModel.findOneAndDelete({application_id: applicationID, submitter: user.pharmacyName},
                          {select: {application: "removed"}})
@@ -233,7 +235,7 @@ const Mutation = new GraphQLObjectType({
             },
             resolve: async (parent, args, context) => {
                 try {
-                    const user = authenticateToken(context)
+                    const user = authenticateToken(context.reqHeaders)
                     const applicationID = sanitize(args.applicationID)
                     const app = await ApplicationModel.findOne({
                         application_id: applicationID,

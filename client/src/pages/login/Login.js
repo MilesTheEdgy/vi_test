@@ -46,7 +46,7 @@ const Login = () => {
   `;
   const [getLogin, { loading }] = useLazyQuery(GET_LOGIN, {
     fetchPolicy: "network-only",
-    onError: () => setModal(true),
+    onError: (err) => console.log(err),
     onCompleted: (data) => {
       // console.log(data)
       const { token } = data.login

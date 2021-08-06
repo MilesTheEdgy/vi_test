@@ -22,10 +22,11 @@ function Modal(props) {
             </CModal>
         )
     } else {
+        console.log(props)
         return (
             <CModal 
-            show={props.modalclose}
-            onClose={() => props.modalclose}
+            show={props.modalOn}
+            onClose={() => props.setModal(!props.modalOn)}
             color={props.color}
             centered
             >
@@ -33,10 +34,10 @@ function Modal(props) {
                     <CModalTitle> {props.header} </CModalTitle>
                 </CModalHeader>
                 <CModalBody>
-                    <h5>{props.body}</h5>
+                    <h5 style = {{textAlign: "center"}}>{props.body}</h5>
                 </CModalBody>
                 <CModalFooter>
-                    <CButton color="secondary" onClick={() => props.modalclose}>Kapat</CButton>
+                    <CButton color="secondary" onClick={() => props.setModal(!props.modalOn)}>Kapat</CButton>
                 </CModalFooter>
             </CModal>
         )

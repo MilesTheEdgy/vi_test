@@ -49,8 +49,10 @@ const RootQuery = new GraphQLObjectType({
                 username: {type: new GraphQLNonNull(GraphQLString)},
                 password: {type: new GraphQLNonNull(GraphQLString)}
             },
-            resolve: async (parent, {username, password}) => {
+            resolve: async (parent, {username, password}, context) => {
                 try {
+                    const { errorName } = context
+                    throw new Error({err: "user already exists", statusCode: 401})
                     const res = await UserModel.findOne({username: username})
                     if (res === null) {
                         throw new Error("Your username or password was incorrect")
@@ -75,7 +77,7 @@ const RootQuery = new GraphQLObjectType({
                     }
                 } catch (error) {
                     console.error(error)
-                    throw new Error("Unable to verify your username and password, please check your info")
+                    throw new Error(error)
                 }
             }
         },
@@ -83,7 +85,7 @@ const RootQuery = new GraphQLObjectType({
             type: UserType,
             resolve: async (parent, args, context) => {
                 try {
-                    const user = authenticateToken(context)
+                    const user = authenticateToken(context.reqHeaders)
                     const query = await UserModel.findOne({pharmacy_name: user.pharmacyName})
                     return {
                         ...query._doc,
@@ -102,9 +104,9 @@ const RootQuery = new GraphQLObjectType({
             },
             resolve: async (parent, { pharmacyName }, context) => {
                 try {
-                    authenticateToken(context)
+                    authenticateToken(context.reqHeaders)
                     const query = await UserModel.findOne({pharmacy_name: pharmacyName})
-                    console.log(query)
+                    // console.log(query)
                     if (query == null) throw new Error ("your pharmacy name query did not match in database")
                     return {
                         ...query._doc,
@@ -119,7 +121,7 @@ const RootQuery = new GraphQLObjectType({
         users: {
             type: new GraphQLList(UserType),
             resolve: async (parent, args, context) => {
-                authenticateToken(context)
+                authenticateToken(context.reqHeaders)
                 const query = await UserModel.find({})
                 const mapped = query.map(obj => {
                     return {
@@ -137,7 +139,7 @@ const RootQuery = new GraphQLObjectType({
             },
             resolve: async (parent, args, context) => {
                 try {
-                    authenticateToken(context)
+                    authenticateToken(context.reqHeaders)
                     const searchCriteriaArr = args.searchCriteria.split("")
                     let isString = false
                     for (let i = 0; i < searchCriteriaArr.length; i++) {
@@ -168,7 +170,7 @@ const RootQuery = new GraphQLObjectType({
         products: {
             type: new GraphQLList(ProductType),
             resolve: async (parent, args, context) => {
-                // authenticateToken(context)
+                // authenticateToken(context.reqHeaders)
                 return await ProductModel.find({})
             }
         },
@@ -181,7 +183,7 @@ const RootQuery = new GraphQLObjectType({
             },
             resolve: async (parent, args, context) => {
                 try {
-                    authenticateToken(context)
+                    authenticateToken(context.reqHeaders)
                     if (args.onHold) {
                         if (args.submitter) {
                             const submitter = sanitize(args.submitter)
@@ -211,9 +213,9 @@ const RootQuery = new GraphQLObjectType({
             type: new GraphQLList(ApplicationType),
             resolve: async (parent, args, context) => {
                 try {
-                    authenticateToken(context)
+                    authenticateToken(context.reqHeaders)
                     const res = await ApplicationModel.find({})
-                    console.log(mapUnitPriceToStringArray(res))
+                    // console.log(mapUnitPriceToStringArray(res))
                     return mapUnitPriceToStringArray(res)
                 } catch (error) {
                     console.error(error)
@@ -238,7 +240,7 @@ const RootQuery = new GraphQLObjectType({
                         }
                         return mappedBuyers
                     }
-                    console.log(res)
+                    // console.log(res)
                     const mapped = res.map((obj) => {
                         let d = new Date(Number(obj._doc.date))
                         let date = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`
