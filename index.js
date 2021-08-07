@@ -12,7 +12,7 @@ mongoose.connection.once("open", () => {
     console.log('connecting has been made')
 })
 
-app.use(express.static(path.join(__dirname, '/client/build')));
+app.use(express.static(path.join(__dirname, 'client/build')));
 
 app.use("/graphql",
     graphqlHTTP(req => ({
@@ -34,9 +34,9 @@ app.use("/graphql",
     })))
 
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname+'client/build/index.html'));
+    res.sendFile(path.join(__dirname+'/client/build/index.html'));
     });
-
+      
 const port = process.env.PORT || 5000
 app.listen(port, () => {
     console.log(`app is listening on port ${port}`)
