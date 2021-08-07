@@ -9,7 +9,7 @@ import {
 } from '@coreui/react'
 
 import TheHeaderDropdown from "./TheHeaderDropdown"
-import TheHeaderDropdownNotif from "./TheHeaderDropdownNotif"
+// import TheHeaderDropdownNotif from "./TheHeaderDropdownNotif"
 
 // import CIcon from '@coreui/icons-react'
 import "./theheader.css"
@@ -52,10 +52,10 @@ const Header = () => {
           <CHeaderNavLink to="/users">Eczaneler</CHeaderNavLink>
         </CHeaderNavItem> */}
       </CHeaderNav>
-
+{/* 
       <CHeaderNav>
         <TheHeaderDropdownNotif/>
-      </CHeaderNav>
+      </CHeaderNav> */}
 
       <CHeaderNav className = "align-items-center " >
           <strong className = "px-3" >Bakiye:</strong>
@@ -71,4 +71,4 @@ const Header = () => {
   )
 }
 
-export default Header
+export default React.memo(Header)

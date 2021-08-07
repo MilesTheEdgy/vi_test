@@ -87,7 +87,7 @@ const SearchField = ({medicineSearch, dispatch}) => {
   )
 }
 
-const UrunEkle = () => {
+const YeniTeklif = () => {
 
   const [state, dispatch] = useReducer(yeniTeklifReducer, initialState);
   const { medicineSearch, goal, pledge, unit, total, condition, conditionGoal, description, date, verifyModal, pricesVerified } = state;
@@ -406,4 +406,4 @@ const UrunEkle = () => {
   )
 }
 
-export default UrunEkle
+export default React.memo(YeniTeklif)

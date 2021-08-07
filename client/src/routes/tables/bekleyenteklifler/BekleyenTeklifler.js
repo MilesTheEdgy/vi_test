@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { CDataTable, CBadge, CButton, CCollapse, CCol, CLabel, CRow } from "@coreui/react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { gql, useQuery } from "@apollo/client";
 import { fields, getBadge, getStatus, getCondition, toggleDetails, whichCollapsedToRender } from "../";
 import "../style.css"
@@ -15,7 +15,6 @@ const BekleyenTeklifler = () => {
   
     const eczaneName = useSelector(state => state.user.userSettings.eczaneName)
     const bakiye = useSelector(state => state.user.userInfo.bakiye)
-    const mainDispatch = useDispatch()
 
     const GET_APPLICATIONS_ONHOLD = gql`
       query {

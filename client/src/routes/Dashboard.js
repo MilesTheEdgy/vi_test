@@ -1,4 +1,4 @@
-import { lazy } from 'react'
+import { lazy, memo } from 'react'
 
 const WidgetsDropdown = lazy(() => import('./WidgetsDropdown'))
 const AnasayfaTable = lazy(() => import('./AnasayfaTable'));
@@ -13,4 +13,4 @@ const Dashboard = () => {
   )
 }
 
-export default Dashboard
+export default memo(Dashboard)

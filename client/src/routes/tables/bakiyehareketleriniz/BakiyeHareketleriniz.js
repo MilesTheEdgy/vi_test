@@ -51,8 +51,8 @@ function BakiyeHareketleriTable({item, eczaneName}) {
                                 <th scope="row">{i+1}</th>
                                 <td><b>{obj.name}</b></td>
                                 <td>{obj.amount}/<b>{item.hedef}</b></td>
-                                <td style = {{color: "red"}}>-{obj.total}</td>
-                                <td>{obj.balanceAfter}</td>
+                                <td style = {{color: "red"}}>{obj.total}</td>
+                                <td>{obj.balanceAfter.toFixed(2)}</td>
                               </tr>
                           )
                         return (
@@ -60,8 +60,8 @@ function BakiyeHareketleriTable({item, eczaneName}) {
                               <th scope="row">{i+1}</th>
                               <td>{obj.name}</td>
                               <td>{obj.amount}/<b>{item.hedef}</b></td>
-                              <td style = {{color: "red"}}>-{obj.total}</td>
-                              <td>{obj.balanceAfter}</td>
+                              <td style = {{color: "red"}}>{obj.total}</td>
+                              <td>{obj.balanceAfter.toFixed(2)}</td>
                           </tr>
                         )
                       })
@@ -120,7 +120,7 @@ const BakiyeHareketleriniz = () => {
     const plusOrMinus = (status) => {
       switch (status) {
         case 'Satış': return '+'
-        case 'Alış': return '-'
+        case 'Alış': return
         default: return 'bir sorun olmuştur'
       }
     }
@@ -167,21 +167,42 @@ const BakiyeHareketleriniz = () => {
       variables: {userTransactions: eczaneName},
       onError: (err) => console.log(err),
       onCompleted: (data) => {
+        function mapBuyersFindUserTotal(arr, user) {
+          const res = arr.filter(obj => obj.name === user)
+          return res[0].total
+        }
         const mappedData = data.transaction.map(obj => {
-          return {
-            ID: obj.transaction_id,
-            application_id: obj.application_id,
-            İlaç: obj.product.Product_name,
-            eczane: obj.seller.name,
-            tür: obj.seller.name === eczaneName ? "Satış" : "Alış",
-            hedef: obj.goal,
-            pledge: obj.seller.sellerPledge,
-            tarih: obj.date,
-            total: parseFloat(obj.seller.total, 10),
-            bakiye: parseFloat(obj.seller.balanceAfter, 10),
-            joiners: obj.buyers
+          if (obj.seller.name === eczaneName) {
+            return {
+              ID: obj.transaction_id,
+              application_id: obj.application_id,
+              İlaç: obj.product.Product_name,
+              eczane: obj.seller.name,
+              tür: "Satış",
+              hedef: obj.goal,
+              pledge: obj.seller.sellerPledge,
+              tarih: obj.date,
+              total: parseFloat(obj.seller.total, 10),
+              bakiye: parseFloat(obj.seller.balanceAfter, 10),
+              userTotal: parseFloat(obj.seller.total, 10),
+              joiners: obj.buyers
+            }
+          } else {
+            return {
+              ID: obj.transaction_id,
+              application_id: obj.application_id,
+              İlaç: obj.product.Product_name,
+              eczane: obj.seller.name,
+              tür: "Alış",
+              hedef: obj.goal,
+              pledge: obj.seller.sellerPledge,
+              tarih: obj.date,
+              total: parseFloat(obj.seller.total, 10),
+              bakiye: parseFloat(obj.seller.balanceAfter, 10),
+              userTotal: mapBuyersFindUserTotal(obj.buyers, eczaneName),
+              joiners: obj.buyers
           }
-        })
+        }})
         setData(mappedData)
       }
     })
@@ -231,7 +252,7 @@ const BakiyeHareketleriniz = () => {
                 (item)=>(
                   <td>
                     <CBadge style = {{minWidth: "50px", fontSize: "15px"}} color={bakiyeBadge(item.tür)}>
-                      {plusOrMinus(item.tür)}{item.total.toFixed(2)} TL
+                      {plusOrMinus(item.tür)}{item.userTotal.toFixed(2)} TL
                     </CBadge>
                   </td>
                 ),

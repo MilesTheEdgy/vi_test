@@ -121,4 +121,4 @@ const UrunEkle = () => {
   )
 }
 
-export default UrunEkle
+export default React.memo(UrunEkle)

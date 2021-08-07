@@ -203,7 +203,10 @@ const Mutation = new GraphQLObjectType({
                         await transac.save({session})
                       });
                     session.endSession()
-                    return app
+                    return {
+                        ...app._doc,
+                        specialField: sellerNewBalance.toString()
+                    }
                 } catch (error) {
                     console.log(error)
                     throw new Error("could not approve your application")

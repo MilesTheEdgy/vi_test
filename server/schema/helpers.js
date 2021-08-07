@@ -72,7 +72,10 @@ const returnBuyersList = async (unitPrice, verifiedJoiners) => {
         let user = await UserModel.findOne({pharmacy_name: verifiedJoiners[i].name})
         let currentBalance = user.balance.toString()
         let total = -Math.abs(Number(verifiedJoiners[i].pledge) * Number(unit_price))
-        let balanceAfter = total - Number(currentBalance)
+        let balanceAfter = total + Number(currentBalance)
+        console.log("currentBalance", currentBalance)
+        console.log("total", total)
+        console.log("balanceAfter", balanceAfter)
         returned.push({
             name: user.pharmacy_name,
             amount: verifiedJoiners[i].pledge,
@@ -93,7 +96,7 @@ const updateBuyersBalance = async (unitPrice, verifiedJoiners, session) => {
         let user = await UserModel.findOne({pharmacy_name: verifiedJoiners[i].name}, {}, {session})
         let currentBalance = user.balance.toString()
         let total = -Math.abs(Number(verifiedJoiners[i].pledge) * Number(unit_price))
-        let balanceAfter = total - Number(currentBalance)
+        let balanceAfter = total + Number(currentBalance)
         user.balance = balanceAfter
         await user.save({session})
     }

@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react'
+import React, { Suspense, lazy } from 'react'
 import {
   Redirect,
   Route,
@@ -6,9 +6,9 @@ import {
 } from 'react-router-dom'
 import { CContainer, CFade } from '@coreui/react'
 
-import UrunEkle from '../../routes/urunekle/UrunEkle'
-import Dashboard from '../../routes/Dashboard'
-import YeniTeklif from "../../routes/yeniteklif/YeniTeklif"
+const UrunEkle = lazy(() => import('../../routes/urunekle/UrunEkle'))
+const Dashboard = lazy(() => import('../../routes/Dashboard'))
+const YeniTeklif = lazy(() => import('../../routes/yeniteklif/YeniTeklif'))
   
 const loading = (
   <div className="pt-3 text-center">

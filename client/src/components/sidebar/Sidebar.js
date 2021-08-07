@@ -2,33 +2,36 @@ import React from 'react'
 import {
   CCreateElement,
   CSidebar,
-  CSidebarBrand,
   CSidebarNav,
   CSidebarNavDivider,
   CSidebarNavTitle,
   CSidebarMinimizer,
   CSidebarNavDropdown,
   CSidebarNavItem,
+  CSidebarBrand
 } from '@coreui/react'
+import PapyrumLogo from "../../assests/icons/PapyrumLogo.png"
 
 import CIcon from '@coreui/icons-react'
+
+import { useSelector, useDispatch } from 'react-redux'
 
 // sidebar nav config
 import navigation from './_nav'
 
 const Sidebar = () => {
+  const dispatch = useDispatch()
+  const show = useSelector(state => state.sidebarShow)
   return (
-    <CSidebar>
+    <CSidebar
+      show={show}
+      onShowChange={(val) => dispatch({type: 'set', sidebarShow: val })}
+    >
       <CSidebarBrand className="d-md-down-none" to="/">
         <CIcon
           className="c-sidebar-brand-full"
-          name="logo-negative"
-          height={35}
-        />
-        <CIcon
-          className="c-sidebar-brand-minimized"
-          name="sygnet"
-          height={35}
+          src = {PapyrumLogo}
+          height={100}
         />
       </CSidebarBrand>
       <CSidebarNav>
@@ -48,4 +51,4 @@ const Sidebar = () => {
   )
 }
 
-export default Sidebar
+export default React.memo(Sidebar)

@@ -6,7 +6,6 @@ import "./collapsed.css"
 import Modal from "../../components/modals/Modal";
 import { useDispatch } from "react-redux";
 import { gql, useMutation } from "@apollo/client";
-import { refetchUserInfo } from "../tables/index"
 
 function CollapseMineTable({item, state, dispatch}) {
     switch (item.durum) {
@@ -79,10 +78,6 @@ function CollapseMine ({item, refetch}) {
         onCompleted: (data) => {
             console.log(data)
             refetch()
-            refetchUserInfo().then(data => {
-                console.log("user data refetched is: ", data)
-                mainDispatch({type: "FILL_USER_INFO", bakiye: data.balance})
-            })
             mainDispatch({type: "TOGGLE_LOADING_FALSE"})
             dispatch({type: "MODAL_DISPLAY", payload : {type: "SUCCESS"}})
         }
@@ -92,6 +87,7 @@ function CollapseMine ({item, refetch}) {
         mutation($applicationID: ID!, $chosenJoiners: [JoinerArg]!) {
             approveApplication(applicationID: $applicationID, chosenJoiners: $chosenJoiners) {
                 application_id
+                specialField
             }
         }
     `;
@@ -105,6 +101,7 @@ function CollapseMine ({item, refetch}) {
         },
         onCompleted: (data) => {
             mainDispatch({type: "TOGGLE_LOADING_FALSE"})
+            mainDispatch({type: "FILL_USER_INFO", bakiye: Number(data.approveApplication.specialField)})
             dispatch({type: "MODAL_DISPLAY", payload : {type: "SUCCESS"}})
             refetch()
         }

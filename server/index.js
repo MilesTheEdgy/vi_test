@@ -4,13 +4,15 @@ const { graphqlHTTP } = require('express-graphql');
 const mongoose = require("mongoose")
 const schema = require("./schema/schema")
 const app = express()
-mongoose.connect("mongodb+srv://admin:admin@testing.vpwk7.mongodb.net/eczane?retryWrites=true&w=majority",
+const path = require('path');
+
+mongoose.connect(process.env.MONGODB_URL,
      {useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false})
 mongoose.connection.once("open", () => {
     console.log('connecting has been made')
 })
 
-// app.use(cors())
+app.use(express.static(path.join(__dirname, '../client/build')));
 
 app.use("/graphql",
     graphqlHTTP(req => ({
@@ -24,12 +26,16 @@ app.use("/graphql",
             console.log("err in index CODE", err.originalError.code)
             return {
                 message: err.message,
-                code: err.originalError && err.originalError.code,   // <--
+                code: err.originalError && err.originalError.code,
                 locations: err.locations,
                 path: err.path
             };
         }
     })))
+
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname+'../client/build/index.html'));
+    });
 
 app.listen(4000, () => {
     console.log('app is listening on port 4000')

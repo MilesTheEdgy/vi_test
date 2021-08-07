@@ -66,7 +66,8 @@ const ApplicationType = new GraphQLObjectType({
         joiners: {type: new GraphQLList(JoinersType)},
         submit_date: {type: GraphQLString},
         final_date: {type: GraphQLString},
-        status_change_date: {type: GraphQLString}
+        status_change_date: {type: GraphQLString},
+        specialField: {type: GraphQLString}
     })
 })
 

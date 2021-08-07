@@ -29,14 +29,14 @@ const TheHeaderDropdown = () => {
         >
           <strong>Hesap</strong>
         </CDropdownItem>
-        <CDropdownItem>
+        {/* <CDropdownItem>
           <CIcon name="cil-user" className="mfe-2" />Profil
         </CDropdownItem>
         <CDropdownItem>
           <CIcon name="cil-settings" className="mfe-2" />
           Ayarlar
         </CDropdownItem>
-        <CDropdownItem divider />
+        <CDropdownItem divider /> */}
         <CDropdownItem onClick = { () => {
           dispatch({type: "LOG_OUT"})
           }} >

@@ -20,6 +20,7 @@ function CollapseJoinTables ({item, state, dispatch}) {
                                     <td>
                                         <input type="checkbox" id='joiner1' name={element.name}
                                         onChange = {(e) => {
+                                            console.log("TOGGLE ECZANE DISPATCH", e.target.name)
                                             dispatch({type: "TOGGLE_ECZANE", payload: e.target.name})
                                         }} />
                                     </td>
@@ -67,34 +68,8 @@ function CollapseJoinTables ({item, state, dispatch}) {
 }
 
 function CollapseJoin ({ reduxUser, item, order, setOrder, total, bakiyeSonra, refetch}) {
-
     const [state, dispatch] = useReducer(reducer, initialState);
-
     const { modal, isLoading } = state;
-
-    // const deleteJoin = async () => {
-    //     dispatch({type: "APPROVE_BID", payload : {type: "LOADING_ON"}})
-    //     const res = await fetch('/api/bid/join', {
-    //           method: 'DELETE',
-    //           headers: {
-    //             'Content-Type': 'application/json',
-    //             'authorization': `Bearer ${document.cookie.slice(11)} `
-    //           },
-    //           body: JSON.stringify({
-    //             bid_id: item.ID
-    //           })
-    //         })
-    //     if (res.status === 200) {
-    //         console.log("sent userInputJoin to server successfully");
-    //         dispatch({type: "MODAL_DISPLAY", payload: {type: "SUCCESS"}})
-    //         await fetchData(tableAPIstring)
-    //     } else {
-    //         console.log("userInputJoin was not sent to server");
-    //         dispatch({type: "MODAL_DISPLAY", payload: {type: "FAILURE"}})
-    //     }
-    //     dispatch({type: "APPROVE_BID", payload : {type: "LOADING_OFF"}})
-    // }
-
     const DELETE_JOIN = gql`
         mutation($applicationID: ID) {
             deleteJoin(applicationID: $applicationID) {
@@ -102,7 +77,6 @@ function CollapseJoin ({ reduxUser, item, order, setOrder, total, bakiyeSonra, r
             }
         }
     `;
-
     const [deleteJoin] = useMutation(DELETE_JOIN, {
         fetchPolicy: "no-cache",
         variables: {applicationID: item.ID},
@@ -118,7 +92,6 @@ function CollapseJoin ({ reduxUser, item, order, setOrder, total, bakiyeSonra, r
             refetch()
         }
     })
-
     const JOIN_APPLICATON = gql`
         mutation($applicationID: ID!, $pledge: Int!) {
             joinApplication(applicationID: $applicationID, pledge: $pledge) {
@@ -155,10 +128,10 @@ function CollapseJoin ({ reduxUser, item, order, setOrder, total, bakiyeSonra, r
                 dispatch({type: "ADD_ROW", payload: {...itemCopy.katılanlar[i], clicked: false}})
             }
         }
-        dispatch({type: "HEDEF_HESAPLA_COLLAPSED_JOIN", payload: item.pledge, hedef: item.hedef})
+        dispatch({type: "HEDEF_HESAPLA_COLLAPSED_JOIN", payload: item.pledge, hedef: item.hedef, ID: item.ID})
         dispatch({type: "SET_STATUS", payload: item.durum})
         //eslint-disable-next-line
-    }, [])
+    }, [item])
 
     return (
         <Loader isLoading = {isLoading} >

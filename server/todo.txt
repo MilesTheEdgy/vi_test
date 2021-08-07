@@ -1,3 +1,0 @@
-
-
-#4: generate access token for User query route

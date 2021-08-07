@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { CDataTable, CBadge, CButton, CCollapse, CCol, CLabel, CRow } from "@coreui/react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { gql, useQuery } from "@apollo/client"
 import { fields, getBadge, getStatus, getCondition, toggleDetails, whichCollapsedToRender } from "../";
 import "../style.css"
@@ -12,7 +12,6 @@ const TumTeklifler = () => {
     const [order, setOrder] = useState(0)
     const [total, setTotal] = useState(0)
     const [bakiyeSonra, setBakiyeSonra] = useState(0)
-    const mainDispatch = useDispatch()
     
     const eczaneName = useSelector(state => state.user.userSettings.eczaneName)
     const bakiye = useSelector(state => state.user.userInfo.bakiye)
@@ -82,52 +81,6 @@ const TumTeklifler = () => {
         }
       }
     }, [loading, data])
-
-    const fetchData = async (tableAPIstring) => {
-      mainDispatch({type: "TOGGLE_LOADING_TRUE"})
-      const res = await fetch(tableAPIstring, {
-        headers: {
-          'Content-Type': 'application/json',
-          'authorization': `Bearer ${document.cookie.slice(11)} `
-        }
-      })
-
-      if (res.status === 200) {
-        const data = await res.json()
-        const dataArr = data.map((obj, i) => {
-          let bgColor = ""
-          switch (obj.status) {
-            case "APPROVED":
-              bgColor = "rgb(55, 229, 148, 0.25)";
-              break;
-            case "DELETED":
-              bgColor = "red";
-              break
-            default:
-              break;
-          }
-          return {
-            birimFiyat: obj.price,
-            durum: obj.status,
-            eczane: obj.submitter,
-            hedef: obj.goal,
-            ID: obj.id,
-            kampanya: obj.condition,
-            pledge: obj.poster_pledge,
-            sonTarih: obj.final_date,
-            İlaç: obj.product_name,
-            description: obj.description,
-            katılanlar: obj.joiners,
-            bgColor: bgColor
-          }
-        })
-        setTableData(dataArr)
-      } else if (res.status === 401 ||res.status === 403) {
-        mainDispatch({type: "LOG_OUT"})
-      }
-      mainDispatch({type: "TOGGLE_LOADING_FALSE"})
-    }
-
     useEffect(() => {
       if (order >= 0) {
         setTotal(order * tableData[clickedItemIndex]?.birimFiyat)
