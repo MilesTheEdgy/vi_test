@@ -5,9 +5,6 @@ node_modules
 # testing
 /client/coverage
 
-# production
-/client/build
-
 # misc
 /client/.eslintcache
 /client/.DS_Store
