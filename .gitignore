@@ -1,7 +1,7 @@
 # dependencies
 /client/node_modules
-/server/node_modules
-/server/.env
+node_modules
+.env
 /clientpackage-lock.json
 # testing
 /client/coverage

@@ -12,7 +12,7 @@ mongoose.connection.once("open", () => {
     console.log('connecting has been made')
 })
 
-app.use(express.static(path.join(__dirname, '../client/build')));
+app.use(express.static(path.join(__dirname, '/client/build')));
 
 app.use("/graphql",
     graphqlHTTP(req => ({
@@ -34,7 +34,7 @@ app.use("/graphql",
     })))
 
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname+'../client/build/index.html'));
+    res.sendFile(path.join(__dirname+'client/build/index.html'));
     });
 
 app.listen(4000, () => {
