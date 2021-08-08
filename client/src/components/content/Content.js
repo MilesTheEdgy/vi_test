@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react'
+import React, { Suspense } from 'react'
 import {
   Redirect,
   Route,
@@ -6,13 +6,14 @@ import {
 } from 'react-router-dom'
 import { CContainer, CFade } from '@coreui/react'
 
-const UrunEkle = lazy(() => import('../../routes/urunekle/UrunEkle'))
-const Dashboard = lazy(() => import('../../routes/Dashboard'))
-const YeniTeklif = lazy(() => import('../../routes/yeniteklif/YeniTeklif'))
+// routes config
+import routes from './routes'
   
 const loading = (
-  <div className="pt-3 text-center">
-    <div className="sk-spinner sk-spinner-pulse"></div>
+  <div className="apploader text-center">
+    <div className="spinner-border" role="status">
+      <span className="sr-only">Loading...</span>
+    </div>
   </div>
 )
 
@@ -22,11 +23,21 @@ const TheContent = () => {
       <CContainer fluid>
         <Suspense fallback={loading}>
           <Switch>
-            <Route path= "/" exact= {true} name= "Home" />
-            <Route path= "/dashboard" name= "Dashboard" render = {props => <CFade> <Dashboard {...props}/> </CFade>} />
-            <Route path= "/urunekle" name= "Ürün Ekle" render = {props => <CFade> <UrunEkle {...props}/> </CFade>} />
-            <Route path= "/yeniteklif" name= "Yeni Teklif" render = {props => <CFade> <YeniTeklif {...props}/> </CFade>} />
-            <Redirect from="/" to="/dashboard" />
+            {routes.map((route, idx) => {
+              return route.component && (
+                <Route
+                  key={idx}
+                  path={route.path}
+                  exact={route.exact}
+                  name={route.name}
+                  render={props => (
+                    <CFade>
+                      <route.component {...props} />
+                    </CFade>
+                  )} />
+              )
+            })}
+            <Redirect from="/" to="/anasayfa" />
           </Switch>
         </Suspense>
       </CContainer>

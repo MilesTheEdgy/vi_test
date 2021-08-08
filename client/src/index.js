@@ -1,52 +1,29 @@
+import 'react-app-polyfill/ie11'; // For IE 11 support
+import 'react-app-polyfill/stable';
+import 'core-js';
+import './polyfill'
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { HashRouter } from "react-router-dom";
 import App from './App';
-import reportWebVitals from './reportWebVitals';
-import 'core-js';
-import { icons } from './assests/icons/index'
-import store from "./store"
-import { Provider } from 'react-redux';
-import {
-  ApolloClient,
-  InMemoryCache,
-  ApolloProvider,
-  createHttpLink
-} from "@apollo/client";
-import { setContext } from '@apollo/client/link/context'
-import { HashRouter } from "react-router-dom"
+
+import icons from './icons'
+
+import { Provider } from 'react-redux'
+import store from './store'
+
 React.icons = icons
 
-const httpLink = createHttpLink({
-  uri: '/graphql',
-});
-
-const authLink = setContext((_, { headers }) => {
-  const token = document.cookie.slice(11)
-  return {
-    headers: {
-      ...headers,
-      authorization: token ? `Bearer ${token}` : "",
-    }
-  }
-});
-
-export const client = new ApolloClient({
-  link: authLink.concat(httpLink),
-  cache: new InMemoryCache()
-});
-
 ReactDOM.render(
-  <HashRouter>
-    <Provider store = {store}>
-      <ApolloProvider client = {client}>
-        <App/>
-      </ApolloProvider>
-    </Provider>
-  </HashRouter>,
+  <Provider store={store}>
+    <HashRouter>
+      <App/>
+    </HashRouter>
+  </Provider>,
   document.getElementById('root')
 );
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+// If you want your app to work offline and load faster, you can change
+// unregister() to register() below. Note this comes with some pitfalls.
+// Learn more about service workers: http://bit.ly/CRA-PWA
+serviceWorker.unregister();

@@ -1,70 +1,134 @@
 import React, { Component } from 'react';
 import { Route, Switch, withRouter } from 'react-router-dom';
-import { connect } from "react-redux"
-import Loader from './hoc/loader/Loader';
+import { connect } from "react-redux";
 import './scss/style.scss';
-import Layout from './components/layout/Layout';
-import AuthHOC from './hoc/authhoc/AuthHOC';
-import { client } from "./index"
-import { gql } from "@apollo/client"
+import "./app.css";
+import AuthHOC from './views/authHOC/AuthHOC';
 
-const loading = (
-  <div className="pt-3 text-center">
-    <div className="sk-spinner sk-spinner-pulse"></div>
-  </div>
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null, errorInfo: null };
+  }
+  
+  componentDidCatch(error, errorInfo) {
+    // Catch errors in any components below and re-render with error message
+    this.setState({
+      error: error,
+      errorInfo: errorInfo
+    })
+    // You can also log error messages to an error reporting service here
+  }
+  
+  render() {
+    if (this.state.errorInfo) {
+      // Error path
+      return (
+        <div>
+          <h2>Something went wrong.</h2>
+          <details style={{ whiteSpace: 'pre-wrap' }}>
+            {this.state.error && this.state.error.toString()}
+            <br />
+            {this.state.errorInfo.componentStack}
+          </details>
+        </div>
+      );
+    }
+    // Normally, just render children
+    return this.props.children;
+  }  
+}
+
+export const loading = (
+    <div className="apploader text-center">
+      <div className="spinner-border" role="status">
+        <span className="sr-only">Loading...</span>
+      </div>
+    </div>
 )
 
+
+// Containers
+const TheLayout = React.lazy(() => import('./components/layout/Layout'));
+
+// Pages
+const Login = React.lazy(() => import('./components/layout/Layout'));
+const Register = React.lazy(() => import('./views/pages/register/Register'));
+const Page404 = React.lazy(() => import('./views/pages/page404/Page404'));
+const Page500 = React.lazy(() => import('./views/pages/page500/Page500'));
+
 class App extends Component {
+  
+  validate = async () => {
+      //validating token on first start
+    // const res = await fetch("http://localhost:8080/", {
+      const res = await fetch("http://localhost:8080/", {
+
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        //slice the work 'vitoken' from document.cookie
+        'authorization' :`Bearer ${document.cookie.slice(8)} `
+      }
+    })
+    if (res.status < 405 && res.status > 400) {
+    return
+    } else if (res.status === 200) {
+      //set login to true
+    this.props.userLoggingin()
+      //pushing user to /anasayfa
+    this.props.history.push("/anasayfa")
+      //awaiting data regarding user info
+    let data = await res.json();
+      //sending user data to redux store
+    this.props.fillUserInfo(data)
+    }
+  }
 
   componentDidMount() {
-    //runs once to check if user is already logged in, so user doesn't attempt to re-login
-    const isUserCookieValid = async () => {
-      const GET_LOGIN = gql`
-          query{
-              currentUser {
-                  username
-                  pharmacy_name
-                  balance
-              }
-          }
-      `;
-      try {
-        const res = await client.query({
-          query: GET_LOGIN
-        })
-        const currentUser = res.data
-        this.props.dispatch({type: 'LOG_IN'})
-        this.props.dispatch({type: 'FILL_USER_SETTINGS', eczaneName: currentUser.pharmacy_name, username: currentUser.username})          
-        this.props.dispatch({type: 'FILL_USER_INFO', bakiye: currentUser.balance})
-        this.props.history.push('/dashboard')
-      } catch (error) {
-        this.props.dispatch({type: 'LOG_OUT'})
-      }
-    }
-    isUserCookieValid()
+    setTimeout(() => {
+      this.setState({compLoaded: true});
+    }, 3000)
+    this.validate();
   }
 
   render() {
     return (
-        <React.Suspense fallback={loading}>
-          <Loader isLoading = {this.props.isLoading}>
-            <Switch>
-              <AuthHOC>  {/* AuthHOC: if user has access: render layout, if not, render Login and Register pages */}
-                <Route path="/" name="Home" render={props => <Layout {...props}/>} />
-              </AuthHOC>
-            </Switch>
-          </Loader>
-        </React.Suspense>
+      <React.Suspense fallback={loading}>
+        <Switch>
+          <ErrorBoundary>
+          <Route exact path="/login" name="Login Page" render={props => <Login {...props}/>} />
+            <Route exact path="/register" name="Register Page" render={props => <Register {...props}/>} />
+            <Route exact path="/404" name="Page 404" render={props => <Page404 {...props}/>} />
+            <Route exact path="/500" name="Page 500" render={props => <Page500 {...props}/>} />
+            <AuthHOC>
+              <Route path="/" name="Home" render={props => <TheLayout {...props}/>} />
+            </AuthHOC>
+          </ErrorBoundary>
+        </Switch>
+      </React.Suspense>        
     );
   }
 }
 
-// getting the loading boolean value from REDUX STORE to use in LOADER component
-function mapStateToProps (state) {
-  return {
-    isLoading: state.isLoading
-  }
-}
+const mapStateToProps = (state) => ({
+  isUserLoggedIn: state.reducer.isUserLoggedIn
+});
 
-//binding redux STATE, redux DISPATCH and withRouter to APP component
-export default connect(mapStateToProps)(withRouter(App));
+const mapDispatchToProps = (dispatch) => {
+return {
+  userLoggingin : () => {
+      dispatch({type: "LOGIN"})
+    },
+  logoutUser : () => {
+      dispatch({type: "LOGOUT"})
+    },
+  fillUserInfo: (data) => {
+      console.log("data in the dispatch: ", data)
+      dispatch({type: "FILL_USER_INFO", payload: data})
+  }
+  }
+}  
+
+
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(App));

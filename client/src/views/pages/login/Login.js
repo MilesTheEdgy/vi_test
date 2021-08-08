@@ -93,7 +93,7 @@ class Login extends React.Component {
       let data = await res.json()
       // console.log("token from login: ", data.token)
       document.cookie = `vitoken=${data.token}`
-      console.log("cookie is: ", document.cookie)
+      // console.log("cookie is: ", document.cookie)
       let userData = {
         username: data.username,
         userRole: data.userRole

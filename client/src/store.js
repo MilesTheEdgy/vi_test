@@ -1,99 +1,101 @@
-import { createStore } from 'redux'
+import { createStore, combineReducers } from 'redux'
 import { devToolsEnhancer } from 'redux-devtools-extension';
-//Actions
-export const SIZIN_TEKLIFLERINIZ = "SIZIN_TEKLIFLERINIZ";
-export const BEKELEYEN_TEKLIFLER = "BEKELEYEN_TEKLIFLER";
-export const BAKIYE_HAREKETLERI = "BAKIYE_HAREKETLERI";
-export const TUM_TEKLIFLER = "TUM_TEKLIFLER";
-//
+
 
 const initialState = {
   sidebarShow: 'responsive',
-  isLoading: false,
-  dashboardTable: BEKELEYEN_TEKLIFLER,
-  user: {
-    session: {
-      isLogged: false
-    },
-    userSettings: {
-      eczaneName: "",
-      username: ""
-    },
-    userInfo: {
-      bakiye: 0
-    }
+  isUserLoggedIn: false,
+  loggedInUserInfo: {
+    loggedInUserName: "",
+    loggedInRole: "",
   },
-  medicineList: []
+  loginErr: false,
+  ///////////////////////
+
+  appsData: []
 }
 
-const changeState = (state = initialState, { type, ...rest }) => {
+const defaultUserInfo = {
+  loggedInUserName: "",
+  loggedInRole: "",
+  loggedInUserFullName: ""
+}
+
+// const BAYI = "BAYI";
+// const SATIS_DESTEK = "SATIS_DESTEK";
+// const SATIS_DESTEK_SEF = "SATIS_DESTEK_SEF";
+// const MUDUR = "MUDUR";
+// const SATIS_TEMSILCI = "SATIS_TEMSILCI";
+// const MUHASEBE = "MUHASEBE";
+// const AKSESUARCI = "AKSESUARCI";
+
+const sidebarState = (state = initialState, { type, ...rest }) => {
   switch (type) {
     case 'set':
       return {...state, ...rest }
-    case 'LOG_IN':
-      return {
-        ...state,
-        user: {
-          ...state.user,
-          session: {
-            ...state.user.session,
-            isLogged: true
-          }
-        }
-      }
-    case 'FILL_USER_SETTINGS':
-      return {
-        ...state,
-        user: {
-          ...state.user,
-          userSettings: {
-            ...state.user.userSettings,
-            ...rest
-          }
-        }
-      }
-    case 'FILL_USER_INFO':
-      return {
-        ...state,
-        user: {
-          ...state.user,
-          userInfo: {
-            ...state.user.userInfo,
-            ...rest
-          }
-        }
-      }
-    case 'LOG_OUT':
-      document.cookie = `pyecztoken=resetted`
-      return initialState
-
-    case "TOGGLE_LOADING_TRUE":
-      return {
-        ...state,
-        isLoading: true
-      }
-
-    case "TOGGLE_LOADING_FALSE":
-      return {
-        ...state,
-        isLoading: false
-      }
-
-    case 'SET_DASHBOARD_TABLE':
-      return {
-        ...state,
-        ...rest
-      }
-    case 'FILL_MEDICINE_LIST':
-      return {
-        ...state,
-        ...rest
-      }
-    
     default:
       return state
   }
 }
 
-const store = createStore(changeState, devToolsEnhancer({trace: true}))
+const reducer = (state = initialState, action) => {
+  switch(action.type) {
+    case "LOGIN":
+      // console.log(action.payload)
+      return {...state,
+        isUserLoggedIn: true,
+        loginErr: false
+      };
+
+    case "LOGIN-ERROR":
+      console.log(state.loginErr);
+      return {
+        ...state,
+        loginErr: true
+      };
+
+    case "LOGIN-ERROR-CLOSE":
+      return {
+        ...state,
+        loginErr: false
+      };
+
+    case "FILL_USER_INFO":
+      const { username, userRole } = action.payload;
+      // console.log("in the reducer, payload are: ", username, userRole, userFullName)
+      return {
+        ...state,
+        loggedInUserInfo: {
+          ...state.loggedInUserInfo,
+          loggedInUserName: username,
+          loggedInRole: userRole,
+        }
+      }
+    
+    case "LOGOUT":
+      return {...state,
+        isUserLoggedIn: false,
+        loggedInUserInfo: {
+          ...state.loggedInUserInfo,
+          ...defaultUserInfo
+        }
+      };
+    ///////////////////////////////////////////////
+    /* IN HERE LIES MY WEIRD FUNCTIONS */
+    case "FILL_APPS_DATA":
+      return {
+        ...state,
+        appsData: action.payload
+      }
+    default:
+      return state;
+  }
+}
+
+const combinedReducer = combineReducers({sidebarState, reducer})
+
+const store = createStore(combinedReducer, devToolsEnhancer({
+  trace: true
+}));
+
 export default store
