@@ -4,6 +4,7 @@ import CIcon from '@coreui/icons-react'
 import "./basvurudetay.css"
 import { useSelector } from 'react-redux'
 import { useHistory } from 'react-router-dom'
+import Modal from "../../components/modals/Modal"
 
 // const BasvuruDetay = ({match}) => {
 //     const data = useSelector(state => state.reducer.appsData)
@@ -43,43 +44,50 @@ import { useHistory } from 'react-router-dom'
 // }
 
 const BasvuruDetay = ({match}) => {
-  const yarakOnay = async () => {
-    const res = await fetch("http://localhost:8080/sd/basvurular/goruntule/degistir", {
-      method: 'POST',
+  const [isAppOnHold, setIsAppOnHold] = useState(false)
+  const updateApp = async (statusChange) => {
+    const res = await fetch(`http://localhost:8080/basvurular/${match.params.id}`, {
+      method: 'PUT',
       headers: {
         'content-type': 'application/json',
-        //slice the work 'vitoken' from document.cookie
         'authorization' :`Bearer ${document.cookie.slice(8)}`
       },
       body: JSON.stringify({
-            sdDetay: sdDetay,
-            durum: true
+            salesRepDetails: sdDetay,
+            statusChange: statusChange
             })
     })
-  }
-  const yarakIptal = async () => {
-    const res = await fetch("http://localhost:8080/sd/basvurular/goruntule/degistir", {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        //slice the work 'vitoken' from document.cookie
-        'authorization' :`Bearer ${document.cookie.slice(8)}`
-      },
-      body: JSON.stringify({
-            sdDetay: sdDetay,
-            durum: false
-            })
-    })
+    if (res.status === 200) {
+      setModalDetails(modalSuccess)
+      setModal(true)
+    } else {
+      setModalDetails(modalFailure)
+      setModal(true)
+    }
   }
   const data = useSelector(state => state.reducer.appsData)
   const user = data.find( user => user.ID.toString() === match.params.id)
   const [sdDetay, setSdDetay] = useState("")
+  const modalSuccess = {
+    header: "BAŞARILI",
+    body: "Başvurunuz başarıyla güncellenmiştir",
+    color: "success"
+  }
+  const modalFailure = {
+    header: "HATA",
+    body: "Bir hata olmuştur, lütfen sayfayı yenileyerek tekrar deneyin",
+    color: "danger"
+  }
+  const [modal, setModal] = useState(false)
+  const [modalDetails, setModalDetails] = useState({})
   const history = useHistory()
    
   const userDetails = user ? user : 
     [['ID', (<span><CIcon className="text-muted" name="cui-icon-ban" /> Başvuru bulunmadı</span>)]]
+  if (userDetails.ID)
   return (
     <CRow className = "justify-content-center align-items-center">
+      <Modal modalOn= {modal} setModal = {setModal} color = {modalDetails.color} header = {modalDetails.header} body = {modalDetails.body} />
       <CCol xs="12" sm="8">
         <CCard>
           <CCardHeader className = "basvuru-detay-header">
@@ -142,11 +150,11 @@ const BasvuruDetay = ({match}) => {
               />
             </CFormGroup>
             <CFormGroup row className = "basvuru-detay-submit-buttons my-0" >
-              <CCol sm = "2">
-                <CButton onClick = {() => yarakIptal()} type="reset" size="md" color="danger"><CIcon name="cil-ban" /> İPTAL</CButton>
-              </CCol>
-              <CCol sm = "2">
-                <CButton onClick = {()=> yarakOnay()} type="submit" size="md" color="primary" className = "basvuru-detay-submit-buttons-submit" ><CIcon name="cil-scrubber" /> İŞLE</CButton>
+              <CCol sm = "3">
+                <div id = "basvuruDetay-footerButtons">
+                  <CButton onClick = {() => updateApp("İptal edildi")} size="md" color="danger"><i className="fas fa-ban"></i> İPTAL</CButton>
+                  <CButton onClick = {()=> updateApp("İşleniyor")} size="md" color="success" className = "basvuru-detay-submit-buttons-submit" ><i className="fas fa-check"></i> İŞLE</CButton>
+                </div>
               </CCol>
             </CFormGroup>
           </CCardBody>
