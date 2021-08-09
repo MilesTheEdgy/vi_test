@@ -1,0 +1,1 @@
+{"version":3,"sources":["webpack://src/routes/urunekle/urunekle.css"],"names":[],"mappings":"AAAA,cACI,eAAgB,CAChB,0CAAgD,CAChD,kBACJ,CAEA,QACI,iBACJ","file":"4.799e0fb8.chunk.css","sourcesContent":[".split-margin {\r\n    margin-top: 35px;\r\n    border-top: 1px solid rgba(128, 128, 128, 0.466);\r\n    margin-bottom: 35px;\r\n}\r\n\r\n.hidden {\r\n    visibility: hidden;\r\n}"]}

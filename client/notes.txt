@@ -1,0 +1,2 @@
+You need to override the sass folder in the coreui node module with the original coreui sass folder from a previous version
+anyways I added the folder in src

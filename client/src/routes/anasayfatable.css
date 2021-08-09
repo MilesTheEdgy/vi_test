@@ -1,0 +1,54 @@
+.anasayfaTable-center {
+    display: flex;
+    justify-content: center;
+}
+
+.anasayfaTableDetails-flex {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 150px;
+}
+
+.anasayfaTableKatilButton {
+    max-width: 100px;
+    min-height: 50px;
+}
+
+.ansayfaTalepFormControl {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    margin: 50px auto 0 auto;
+}
+
+.anasayfaClientAdetInput {
+    margin-left: 20px;
+    max-width: 120px;
+    /* height: 50px; */
+}
+
+.tableLabel {
+    font-size: large;
+    border-radius: 1%;
+    color: white;
+    padding: 8px 20px 8px 80px;
+    width: 100%;
+
+}
+
+.tumtekliflerGradient {
+    background: radial-gradient(circle, rgba(185,49,68,1) 0%, rgba(229,83,83,1) 100%);
+}
+
+.sizintekliflerinizGradient {
+    background: radial-gradient(circle, rgb(31, 155, 113) 0% ,rgb(41, 165, 83) 100% );
+}
+
+.bekleyentekliflerGradient {
+    background: radial-gradient(circle, rgba(52,127,203,1) 0%, rgba(55,145,230,1) 100%);
+}
+
+.bakiyehareketlerinizGradient {
+    background: radial-gradient(circle, rgba(215,170,73,1) 0%, rgba(220,172,52,1) 100%);
+}
