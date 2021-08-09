@@ -1,2 +1,0 @@
-(this.webpackJsonptest=this.webpackJsonptest||[]).push([[11],{735:function(t,e,n){"use strict";n.r(e);var c=n(1),s=n(8),u=Object(c.lazy)((function(){return n.e(10).then(n.bind(null,726))})),r=Object(c.lazy)((function(){return n.e(9).then(n.bind(null,728))})),b=function(){return Object(s.jsxs)(s.Fragment,{children:[Object(s.jsx)(u,{}),Object(s.jsx)(r,{})]})};e.default=Object(c.memo)(b)}}]);
-//# sourceMappingURL=11.55db17f7.chunk.js.map

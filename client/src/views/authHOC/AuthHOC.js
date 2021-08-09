@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Redirect, Route, useHistory } from "react-router";
+import { Route, useHistory } from "react-router";
 import { useSelector, useDispatch } from "react-redux";
 import SafeHOC from "../safehoc/SafeHOC";
 

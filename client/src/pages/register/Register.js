@@ -17,7 +17,7 @@ import CIcon from '@coreui/icons-react'
 import { gql, useMutation } from "@apollo/client"
 import Modal from '../../components/modals/Modal'
 import Toaster from '../../components/toaster/Toaster'
-import Loader from "../../hoc/loader/Loader"
+import Loader from "../../components/loader/Loader"
 
 const Register = () => {
   const missingInfo = "Lütfen tüm alanları doldurunuz"

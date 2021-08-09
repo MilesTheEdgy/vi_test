@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 import './scss/style.scss';
 import "./app.css";
 import AuthHOC from './views/authHOC/AuthHOC';
+import Loader from './components/loader/Loader';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -89,11 +90,11 @@ class App extends Component {
     return (
       <React.Suspense fallback={loading}>
         <Switch>
-          {/* <ErrorBoundary> */}
-            <AuthHOC>
-              <Route path="/" name="Home" render={props => <TheLayout {...props}/>} />
-            </AuthHOC>
-          {/* </ErrorBoundary> */}
+            <ErrorBoundary>
+              <AuthHOC>
+                <Route path="/" name="Home" render={props => <TheLayout {...props}/>} />
+              </AuthHOC>
+            </ErrorBoundary>
         </Switch>
       </React.Suspense>        
     );

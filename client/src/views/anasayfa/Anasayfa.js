@@ -10,7 +10,7 @@ import {
   CCallout
 } from '@coreui/react'
 
-import MainChartExample from '../../routes/charts/MainChartExample'
+import MainChartExample from '../charts/MainChartExample'
 
 const WidgetsDropdown = lazy(() => import('../widgets/WidgetsDropdown.js'))
 

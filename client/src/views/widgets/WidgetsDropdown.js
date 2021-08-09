@@ -8,8 +8,8 @@ import {
   CDropdownItem,
   CDropdownToggle
 } from '@coreui/react'
-import ChartLineSimple from '../../routes/charts/ChartLineSimple'
-import ChartBarSimple from '../../routes/charts/ChartBarSimple'
+import ChartLineSimple from '../charts/ChartLineSimple'
+import ChartBarSimple from '../charts/ChartBarSimple'
 
 const WidgetsDropdown = () => {
   // const [unsoldDevices, setUnsoldDevices] = useState(0);
