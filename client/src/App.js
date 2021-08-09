@@ -61,7 +61,6 @@ class App extends Component {
   
   validate = async () => {
       //validating token on first start
-    // const res = await fetch("http://localhost:8080/", {
       const res = await fetch("http://localhost:8080/", {
 
       method: 'POST',
@@ -96,15 +95,11 @@ class App extends Component {
     return (
       <React.Suspense fallback={loading}>
         <Switch>
-          <ErrorBoundary>
-          <Route exact path="/login" name="Login Page" render={props => <Login {...props}/>} />
-            <Route exact path="/register" name="Register Page" render={props => <Register {...props}/>} />
-            <Route exact path="/404" name="Page 404" render={props => <Page404 {...props}/>} />
-            <Route exact path="/500" name="Page 500" render={props => <Page500 {...props}/>} />
+          {/* <ErrorBoundary> */}
             <AuthHOC>
               <Route path="/" name="Home" render={props => <TheLayout {...props}/>} />
             </AuthHOC>
-          </ErrorBoundary>
+          {/* </ErrorBoundary> */}
         </Switch>
       </React.Suspense>        
     );

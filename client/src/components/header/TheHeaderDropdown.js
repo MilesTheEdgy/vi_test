@@ -1,51 +1,53 @@
-import React from 'react'
+import React from 'react';
+import { useDispatch } from 'react-redux';
 import {
   CDropdown,
   CDropdownItem,
   CDropdownMenu,
-  CDropdownToggle
+  CDropdownToggle,
+  CBadge
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { useSelector, useDispatch } from 'react-redux'
 
 const TheHeaderDropdown = () => {
-  const userSettings = useSelector(state => state.user.userSettings)
-  const dispatch = useDispatch();
+  const dispatch = useDispatch()
   return (
     <CDropdown
       inNav
-      className="c-header-nav-items mx-2"
+      className="c-header-nav-items mx-0"
       direction="down"
     >
-      <CDropdownToggle className="c-header-nav-link" caret={true}>
-        <strong> {userSettings.eczaneName} </strong>
+      <CDropdownToggle className="c-header-nav-link" caret={false}>
+        <div className="c-avatar">
+          <CIcon name="cil-user" className="mfe-2" />
+        </div>
       </CDropdownToggle>
       <CDropdownMenu className="pt-0" placement="bottom-end">
-        <CDropdownItem
-          header
-          tag="div"
-          color="light"
-          className="text-center"
-        >
-          <strong>Hesap</strong>
-        </CDropdownItem>
-        {/* <CDropdownItem>
-          <CIcon name="cil-user" className="mfe-2" />Profil
+        <CDropdownItem>
+          <CIcon name="cil-envelope-open" className="mfe-2" />
+          Messages
+          <CBadge color="success" className="mfs-auto">42</CBadge>
         </CDropdownItem>
         <CDropdownItem>
           <CIcon name="cil-settings" className="mfe-2" />
-          Ayarlar
+          Settings
         </CDropdownItem>
-        <CDropdownItem divider /> */}
-        <CDropdownItem onClick = { () => {
-          dispatch({type: "LOG_OUT"})
-          }} >
+        <CDropdownItem>
+          <CIcon name="cil-file" className="mfe-2" />
+          Projects
+          <CBadge color="primary" className="mfs-auto">42</CBadge>
+        </CDropdownItem>
+        <CDropdownItem divider />
+        <CDropdownItem onClick = {() => {
+            document.cookie = 'vitoken=eggkdjsewad67hgzshr6r0987rah68r0z76rh0z5075df7zh';
+            dispatch({type: "LOGOUT"})
+          }}>
           <CIcon name="cil-lock-locked" className="mfe-2" />
-          Çıkış yap
+          Çıkış Yap
         </CDropdownItem>
       </CDropdownMenu>
     </CDropdown>
-  )
+  ) 
 }
 
 export default TheHeaderDropdown
