@@ -150,6 +150,27 @@ app.get("/sd/basvurular/goruntule", serverFunction.authenticateToken, async (req
     }
 })
 
+app.put("/basvurular/:applicationID", async (req, res) => {
+    const client = await pool.connect()
+    try {
+        // if an ID that doesn't exist in database gets sent, nothing get's updated but no error get's triggered.
+        const { applicationID } = req.params
+        const { salesRepDetails, statusChange } = req.body
+        console.log(applicationID, salesRepDetails, statusChange)
+        await client.query('BEGIN')
+        await client.query("UPDATE sales_applications_details SET sales_rep_details = $1 WHERE id = $2", [salesRepDetails, applicationID])
+        await client.query("UPDATE sales_applications SET status = $1 WHERE id = $2", [statusChange, applicationID])
+        await client.query('COMMIT')
+        res.status(200).json("Application was updated successfully")
+      } catch (e) {
+        console.log(e)
+        await client.query('ROLLBACK')
+        return res.status(500).json("An error occurred while attempting to update application")
+      } finally {
+        client.release()
+      }
+})
+
 app.get("/", (req, res) => res.json("app worksssssssssss"))
 
 
