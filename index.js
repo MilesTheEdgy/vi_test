@@ -293,6 +293,24 @@ app.put("/basvurular/:applicationID/sp", serverFunction.authenticateToken, async
       }
 })
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////// SATIŞ DESTEK ÇEF///////////////////////////////////////////////////////////////////////////////////////
+
+app.get("/sdc/users", serverFunction.authenticateToken, async (req, res) => {
+    const userInfo = res.locals.userInfo
+    if (userInfo.role !== "sales_assistant_chef")
+        return res.status(401).json("this user does not have sales assistant premission")
+    try {
+        const query = await pool.query("SELECT id, username, role FROM login")
+        res.status(200).json(query.rows)
+      } catch (e) {
+        console.log(e)
+        await client.query('ROLLBACK')
+        return res.status(500).json("An error occurred while attempting to update application")
+      }
+})
+
 app.get("/", (req, res) => res.json("app worksssssssssss"))
 
 

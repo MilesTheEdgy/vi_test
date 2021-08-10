@@ -11,6 +11,8 @@ const BasvuruDetay = React.lazy(() => import('../../views/basvurulargoruntule/Ba
 const RaporOnaylanan = React.lazy(() => import('../../views/rapor/onaylanan/RaporOnaylanan'))
 const RaporIptal= React.lazy(() => import('../../views/rapor/iptal/RaporIptal'))
 const RaporBekleyen= React.lazy(() => import('../../views/rapor/beklemede/RaporBekleyen'))
+const SdcKullanicilar = React.lazy(() => import('../../views/sdckullanıcılar/SdcKullanicilar'))
+const SdcKullanici = React.lazy(() => import('../../views/sdckullanıcılar/SdcKullanici'))
 
 const routes = [
   { path: '/', exact: true, name: 'Home' },
@@ -23,7 +25,9 @@ const routes = [
   { path: "/rapor/islemler/beklemede", name: "Beklemede başvurular", component: RaporBekleyen},
   { path: '/basvurular/goruntule', name: 'basvurular goruntule', component: BasvurularGoruntule},
   { path: '/basvurular/detay/:id', exact: true, name: 'Basvuru detay', component: BasvuruDetay},
-  { path: '/muhasebe/stok/cihazekle', exact: true, name: 'Cihaz Ekle', component: CihazEkle}
+  { path: '/muhasebe/stok/cihazekle', exact: true, name: 'Cihaz Ekle', component: CihazEkle},
+  { path: '/sdc/kullanicilar', name: 'SDC Kullanıcılar', component: SdcKullanicilar},
+  { path: '/sdc/kullanicilar/:id', exact: true, name: 'Basvuru detay', component: SdcKullanici},
 ];
 
 export default routes;

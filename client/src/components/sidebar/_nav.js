@@ -569,7 +569,7 @@ export const satisdestekchef_nav =  [
   {
     _tag: 'CSidebarNavItem',
     name: 'Kullanıcılar',
-    to: '/sdc/kullanıcılar',
+    to: '/sdc/kullanicilar',
     icon: <i className="fas fa-home c-sidebar-nav-icon"></i>
   },
   {
