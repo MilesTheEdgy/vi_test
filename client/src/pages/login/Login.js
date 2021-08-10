@@ -46,7 +46,7 @@ const LoginErrModal = () => {
         <CModalFooter>
           <CButton 
             color="secondary" 
-            // onClick={() => closeModal(false)}
+            onClick={() => closeModal(false)}
           >Kapat
           </CButton>
         </CModalFooter>

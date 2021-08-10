@@ -4,7 +4,6 @@ import { connect } from "react-redux";
 import './scss/style.scss';
 import "./app.css";
 import AuthHOC from './views/authHOC/AuthHOC';
-import Loader from './components/loader/Loader';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {

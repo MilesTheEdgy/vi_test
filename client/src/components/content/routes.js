@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 
@@ -14,7 +15,7 @@ const routes = [
   { path: '/anasayfa', name: 'anasayfa', component: Anasayfa },
   { path: '/duyurular', name: 'duyurular', component: Duyurular },
   { path: '/basvuru/yeni', name: 'yeni basvuru', component: YeniBasvuru },
-  { path: '/basvuru/takip', name: 'basvuru takibi', component: BasvuruTakibi},
+  { path: '/basvuru/takip/sayfa=1', name: 'basvuru takibi', component: BasvuruTakibi},
   { path: '/basvurular/goruntule', name: 'basvurular goruntule', component: BasvurularGoruntule},
   { path: '/basvurular/detay/:id', exact: true, name: 'Basvuru detay', component: BasvuruDetay},
   { path: '/muhasebe/stok/cihazekle', exact: true, name: 'Cihaz Ekle', component: CihazEkle}

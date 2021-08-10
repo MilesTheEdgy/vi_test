@@ -2,51 +2,93 @@ import React, { useState } from 'react'
 import { CCard, CCardBody, CCardHeader, CCol, CRow, CFormGroup, CLabel, CInput, CTextarea, CButton } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import "./basvurudetay.css"
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import { useHistory } from 'react-router-dom'
 import Modal from "../../components/modals/Modal"
-
-// const BasvuruDetay = ({match}) => {
-//     const data = useSelector(state => state.reducer.appsData)
-//     const user = data.find( user => user.ID.toString() === match.params.id)
-//     console.log("user obj: ", user);
-//     const userDetails = user ? Object.entries(user) : 
-//       [['ID', (<span><CIcon className="text-muted" name="cui-icon-ban" /> Başvuru bulunmadı</span>)]]
-//     console.log(userDetails);
-//     return (
-//       <CRow>
-//         <CCol lg={6}>
-//           <CCard>
-//             <CCardHeader>
-//               User ID: {match.params.ID}
-//             </CCardHeader>
-//             <CCardBody>
-//                 <table className="table table-striped table-hover">
-//                   <tbody>
-//                     {
-//                       userDetails.map(([key, value], index) => {
-//                         {/* console.log("key is : ", key, "value is : ", value) */}
-//                         return (
-//                           <tr key={index.toString()}>
-//                             <td>{`${key}:`}</td>
-//                             <td><strong>{value}</strong></td>
-//                           </tr>
-//                         )
-//                       })
-//                     }
-//                   </tbody>
-//                 </table>
-//             </CCardBody>
-//           </CCard>
-//         </CCol>
-//       </CRow>
-//     )
-// }
+import { fetchData } from './BasvurularGoruntule'
 
 const BasvuruDetay = ({match}) => {
-  const [isAppOnHold, setIsAppOnHold] = useState(false)
-  const updateApp = async (statusChange) => {
-    const res = await fetch(`http://localhost:8080/basvurular/${match.params.id}`, {
+  // RENDER FOOTER BUTTONS CONDITONALLY
+  const renderBasvuruDetayFooter = (details) => {
+    // if the application is on Hold (first status change)
+    if (details.submitProcessNum === 2) {
+      return (
+        <div id = "basvuruDetay-footerButtons">
+          {/* Here "true" in updateApp refers to sp optional parameter, if true it modifies the urlString in fetch */}
+          <CButton onClick = {() => updateApp("İptal", true)} size="md" color="danger"><i className="fas fa-ban"></i> İPTAL</CButton>
+          <CButton onClick = {()=> updateApp("Onaylandı", true)} size="md" color="success" className = "">
+          <i className="fas fa-check-circle"></i> ONAYLA</CButton>
+        </div>
+      )
+    }
+    // if the applications has been approved or denied (second status change)
+    else if (details.submitProcessNum === 3) {
+      return null
+    // else return first process submission
+    } else {
+      return (
+        <div id = "basvuruDetay-footerButtons">
+          <CButton onClick = {() => updateApp("İptal")} size="md" color="danger"><i className="fas fa-ban"></i> İPTAL</CButton>
+          <CButton onClick = {()=> updateApp("İşleniyor")} size="md" color="warning" className = "basvuru-detay-submit-buttons-submit" >
+          <i className="fas fa-arrow-circle-up"></i> İŞLE</CButton>
+        </div>
+      )
+    }
+  }
+  const renderTextArea = (details) => {
+    if (details.submitProcessNum === 2) {
+      return (
+          <CFormGroup row>
+            <CCol>
+              <CLabel>Bayi Açıklama</CLabel>
+              <CTextarea 
+                rows="8"
+                placeholder={userDetails.Açıklama}
+                readOnly
+              />
+            </CCol>
+            <CCol>
+              <CLabel>Önceki Notlarınız</CLabel>
+              <CTextarea
+                rows="8"
+                placeholder={userDetails.salesRepDetails}
+                readOnly
+              />
+            </CCol>
+          </CFormGroup>
+      )
+    }
+    else if (details.submitProcessNum === 3) {
+      return (
+        <CFormGroup>
+        <CLabel>Önceki Notlarınız</CLabel>
+        <CTextarea 
+          rows="4"
+          placeholder={userDetails.Açıklama}
+          readOnly
+        />
+      </CFormGroup>
+      )
+    } else {
+      return (
+        <CFormGroup>
+          <CLabel>Bayi Açıklama</CLabel>
+          <CTextarea 
+            rows="4"
+            placeholder={userDetails.Açıklama}
+            readOnly
+          />
+        </CFormGroup>
+      )
+    }
+  }
+  // UPDATE APPLICATION FETCH REQUEST
+  const updateApp = async (statusChange, sp = false) => {
+    let urlString
+    if (sp)
+      urlString= `http://localhost:8080/basvurular/${match.params.id}/sp`
+    else urlString= `http://localhost:8080/basvurular/${match.params.id}`
+    const res = await fetch(urlString, {
       method: 'PUT',
       headers: {
         'content-type': 'application/json',
@@ -58,6 +100,7 @@ const BasvuruDetay = ({match}) => {
             })
     })
     if (res.status === 200) {
+      await fetchData(dispatch)
       setModalDetails(modalSuccess)
       setModal(true)
     } else {
@@ -65,8 +108,6 @@ const BasvuruDetay = ({match}) => {
       setModal(true)
     }
   }
-  const data = useSelector(state => state.reducer.appsData)
-  const user = data.find( user => user.ID.toString() === match.params.id)
   const [sdDetay, setSdDetay] = useState("")
   const modalSuccess = {
     header: "BAŞARILI",
@@ -81,7 +122,10 @@ const BasvuruDetay = ({match}) => {
   const [modal, setModal] = useState(false)
   const [modalDetails, setModalDetails] = useState({})
   const history = useHistory()
-   
+  const dispatch = useDispatch()
+  // fetches data from redux store
+  const data = useSelector(state => state.reducer.appsData)
+  const user = data.find( user => user.ID.toString() === match.params.id)
   const userDetails = user ? user : 
     [['ID', (<span><CIcon className="text-muted" name="cui-icon-ban" /> Başvuru bulunmadı</span>)]]
   if (userDetails.ID)
@@ -133,28 +177,30 @@ const BasvuruDetay = ({match}) => {
                 </CFormGroup>
               </CCol>
             </CFormGroup>
-            <CFormGroup>
-              <CLabel>Bayi Açıklama</CLabel>
-              <CTextarea 
-                rows="4"
-                placeholder={userDetails.Açıklama}
-                readOnly
-              />
-            </CFormGroup>
-            <CFormGroup>
-              <CLabel>Notlarınız</CLabel>
-              <CTextarea 
-                rows="6"
-                placeholder="işlemle alakalı notlarınız..."
-                onChange = {(e) => setSdDetay(e.target.value)}
-              />
-            </CFormGroup>
+            {renderTextArea(userDetails)}
+            {
+              userDetails.submitProcessNum === 3 ?
+              <CFormGroup>
+                <CLabel>Son notlarınız</CLabel>
+                  <CTextarea 
+                    rows="6"
+                    placeholder={userDetails.finalSalesRepDetails}
+                    readOnly
+                  />
+              </CFormGroup>
+              :
+              <CFormGroup>
+                <CLabel>Notlarınız</CLabel>
+                  <CTextarea 
+                    rows="6"
+                    placeholder="işlemle alakalı notlarınız..."
+                    onChange = {(e) => setSdDetay(e.target.value)}
+                  />
+              </CFormGroup>
+            }
             <CFormGroup row className = "basvuru-detay-submit-buttons my-0" >
-              <CCol sm = "3">
-                <div id = "basvuruDetay-footerButtons">
-                  <CButton onClick = {() => updateApp("İptal edildi")} size="md" color="danger"><i className="fas fa-ban"></i> İPTAL</CButton>
-                  <CButton onClick = {()=> updateApp("İşleniyor")} size="md" color="success" className = "basvuru-detay-submit-buttons-submit" ><i className="fas fa-check"></i> İŞLE</CButton>
-                </div>
+              <CCol sm = "4">
+                {renderBasvuruDetayFooter(userDetails)}
               </CCol>
             </CFormGroup>
           </CCardBody>
