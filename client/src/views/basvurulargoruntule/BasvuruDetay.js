@@ -82,6 +82,7 @@ const BasvuruDetay = ({match}) => {
       )
     }
   }
+
   // UPDATE APPLICATION FETCH REQUEST
   const updateApp = async (statusChange, sp = false) => {
     let urlString
@@ -108,6 +109,19 @@ const BasvuruDetay = ({match}) => {
       setModal(true)
     }
   }
+  const setHeaderColor = (details) => {
+    switch (details.Statü) {
+      case "İşleniyor":
+        return "rgb(214, 160, 11)"
+      case "İptal":
+        return "rgb(212, 69, 13)"
+      case "Onaylandı":
+        return "rgb(55, 150, 55)"
+      default:
+        return "rgb(120, 138, 151)"
+    }
+  }
+
   const [sdDetay, setSdDetay] = useState("")
   const modalSuccess = {
     header: "BAŞARILI",
@@ -134,7 +148,7 @@ const BasvuruDetay = ({match}) => {
       <Modal modalOn= {modal} setModal = {setModal} color = {modalDetails.color} header = {modalDetails.header} body = {modalDetails.body} />
       <CCol xs="12" sm="8">
         <CCard>
-          <CCardHeader className = "basvuru-detay-header">
+          <CCardHeader className = "basvuru-detay-header" style = {{backgroundColor: setHeaderColor(userDetails)}}>
             <h4>Başvuru Detay</h4>
             <CCol sm = "2" className = "basvuru-detay-header-buttonCol">
               <CButton active block color="secondary" aria-pressed="true" onClick = {() => {

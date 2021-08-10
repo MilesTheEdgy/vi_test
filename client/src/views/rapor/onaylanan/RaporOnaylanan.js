@@ -147,7 +147,7 @@ function Modal(props) {
     )
 }
 
-const BasvuruTakibi = () => {
+const RaporOnaylanan = () => {
   const history = useHistory()
   const queryPage = useLocation().search.match(/sayfa=([0-9]+)/, '')
   const currentPage = Number(queryPage && queryPage[1] ? queryPage[1] : 1)
@@ -163,7 +163,7 @@ const BasvuruTakibi = () => {
   useEffect(() => {
     currentPage !== page && setPage(currentPage)
     const getData = async () => {
-      const res = await fetch("http://localhost:8080/bayi/basvuru/takip", {
+      const res = await fetch("http://localhost:8080/bayi/rapor/onaylanan", {
         method: 'GET',
         headers: {
           'content-type': 'application/json',
@@ -211,15 +211,18 @@ const BasvuruTakibi = () => {
         usersData ? 
         <CCard>
           <CCardHeader>
-            Başvurularınız
+            Raporunuz
+            <small className="text-muted"> onaylanan işlemler</small>
           </CCardHeader>
           <CCardBody>
             <CDataTable
+                sorter
                 items={usersData}
                 fields={[
                 { key: 'İsim', _classes: 'font-weight-bold' },
                 'Tarih', 'Tip', 'Statü'
                 ]}
+                tableFilter
                 hover
                 striped
                 itemsPerPage={30}
@@ -255,4 +258,4 @@ const BasvuruTakibi = () => {
   )
 }
 
-export default BasvuruTakibi;
+export default RaporOnaylanan;

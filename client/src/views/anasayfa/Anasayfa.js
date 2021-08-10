@@ -10,7 +10,7 @@ import {
   CCallout
 } from '@coreui/react'
 
-import MainChartExample from '../charts/MainChartExample'
+// import MainChartExample from '../charts/MainChartExample'
 
 const WidgetsDropdown = lazy(() => import('../widgets/WidgetsDropdown.js'))
 
@@ -23,7 +23,7 @@ const Anasayfa = () => {
 
 
       <CCard>
-        <CCardBody>
+        {/* <CCardBody>
           <CRow>
 
             <CCol sm="5">
@@ -37,7 +37,7 @@ const Anasayfa = () => {
           <MainChartExample style={{height: '300px', marginTop: '40px'}}/>
 
 
-        </CCardBody>
+        </CCardBody> */}
 
 
         
@@ -55,7 +55,7 @@ const Anasayfa = () => {
               />
             </CCol>
 
-            <CCol md sm="12" className="mb-sm-2 mb-0 d-md-down-none">
+            <CCol md sm="12" className="mb-sm-2 mb-0">
               <div className="text-muted">Faturalı</div>
               <strong>13 (20%)</strong>
               <CProgress
@@ -88,7 +88,7 @@ const Anasayfa = () => {
               />
             </CCol>
 
-            <CCol md sm="12" className="mb-sm-2 mb-0 d-md-down-none">
+            <CCol md sm="12" className="mb-sm-2 mb-0">
               <div className="text-muted">Tivibu</div>
               <strong>3 (40.15%)</strong>
               <CProgress
@@ -126,7 +126,7 @@ const Anasayfa = () => {
                   </CCallout>
                 </CCol>
 
-                <CCol md sm="12" className="mb-sm-2 mb-0 d-md-down-none">
+                <CCol md sm="12" className="mb-sm-2 mb-0">
                   <CCallout color="info">
                     <small className="text-muted">Faturalı</small>
                     <br />
@@ -150,7 +150,7 @@ const Anasayfa = () => {
                   </CCallout>
                 </CCol>
 
-                <CCol md sm="12" className="mb-sm-2 mb-0 d-md-down-none">
+                <CCol md sm="12" className="mb-sm-2 mb-0">
                   <CCallout color = "primary">
                     <small className="text-muted">Tivibu</small>
                     <br />

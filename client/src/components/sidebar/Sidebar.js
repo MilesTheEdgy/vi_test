@@ -17,7 +17,7 @@ import VarolLogo from "../../icons/VarolLogo.png"
 import VarolLogoText from "../../icons/VarolLogoText.png"
 
 // sidebar nav config
-import { bayi_nav, satisdestek_nav, muhasebe_nav } from './_nav'
+import { bayi_nav, satisdestek_nav, satisdestekchef_nav } from './_nav'
 
 import "./sidebar.css"
 
@@ -32,8 +32,8 @@ const TheSidebar = () => {
       case "sales_assistant":
         setNav(satisdestek_nav)
         break;
-      case "muhasebe":
-        setNav(muhasebe_nav)
+      case "sales_assistant_chef":
+        setNav(satisdestekchef_nav)
         break;
       default:
         break;

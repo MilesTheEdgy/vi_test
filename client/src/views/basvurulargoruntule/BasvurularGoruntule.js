@@ -13,6 +13,7 @@ export const fetchData = async(dispatch) => {
     }
   })
   const fetchData = await res.json()
+  console.log(fetchData)
   const resData = fetchData.map(obj => {
     const { finalSalesRepDetails, lastChangeDate, salesRepDetails, statusChangeDate } = obj
     let submitProcessNum = 0

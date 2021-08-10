@@ -1,11 +1,7 @@
-.basvuru-detay {
-    border: 1px solid rgba(179, 224, 16, 0.486);
-}
 
 .basvuru-detay-header {
     display: flex;
     justify-content: center;
-    background-color: rgba(12, 209, 12, 0.486);
 }
 
 .basvuru-detay-header-buttonCol {
