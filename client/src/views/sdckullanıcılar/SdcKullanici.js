@@ -5,7 +5,8 @@ import { useSelector, useDispatch } from 'react-redux'
 import { useHistory } from 'react-router-dom'
 
 const SdcKullanici = ({match}) => {
-  console.log(match.params.id)
+  console.log("Sdckullanici rendered")
+  console.log(match.params.id, "IN THE THING")
   const history = useHistory()
   const data = useSelector(state => state.reducer.appsData)
   const user = data.find( user => user.ID.toString() === match.params.id)

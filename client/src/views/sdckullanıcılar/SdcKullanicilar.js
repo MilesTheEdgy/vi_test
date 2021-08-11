@@ -37,11 +37,9 @@ const SdcKullanicilar = () => {
   const currentPage = Number(queryPage && queryPage[1] ? queryPage[1] : 1)
   const [page, setPage] = useState(currentPage)
   const [usersData, setUsersData] = useState(undefined)
-  const [modal, setModal] = useState(false)
-  const [modalData, setModalData] = useState({})
 
   const pageChange = newPage => {
-    currentPage !== newPage && history.push(`/basvuru/takip?sayfa=${newPage}`)
+    currentPage !== newPage && history.push(`/sdc/kullanicilar?sayfa=${newPage}`)
   }
 
   useEffect(() => {
@@ -100,7 +98,7 @@ const SdcKullanicilar = () => {
                 itemsPerPage={30}
                 activePage={page}
                 clickableRows
-                onRowClick={(item) => history.push(`sdc/kullanicilar/${item.ID}`)}
+                onRowClick={(item) => history.push(`/sdc/kullanicilar/${item.ID}`)}
             />
             <CPagination
                 activePage={page}
