@@ -12,7 +12,10 @@ const initialState = {
   loginErr: false,
   ///////////////////////
 
-  appsData: []
+  appsData: [],
+  sdc: {
+    users: []
+  }
 }
 
 const defaultUserInfo = {
@@ -87,6 +90,14 @@ const reducer = (state = initialState, action) => {
         ...state,
         appsData: action.payload
       }
+    case "FILL_SDC_USERS_DATA":
+    return {
+      ...state,
+      sdc: {
+        ...state.sdc,
+        users: action.payload
+      }
+    }
     default:
       return state;
   }

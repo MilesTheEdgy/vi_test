@@ -20,6 +20,7 @@ import {
   CInput,
   CTextarea
 } from '@coreui/react'
+import { useDispatch } from 'react-redux'
 
 const getBadge = (status)=>{
   switch (status) {
@@ -37,6 +38,7 @@ const SdcKullanicilar = () => {
   const currentPage = Number(queryPage && queryPage[1] ? queryPage[1] : 1)
   const [page, setPage] = useState(currentPage)
   const [usersData, setUsersData] = useState(undefined)
+  const dispatch = useDispatch()
 
   const pageChange = newPage => {
     currentPage !== newPage && history.push(`/sdc/kullanicilar?sayfa=${newPage}`)
@@ -78,6 +80,7 @@ const SdcKullanicilar = () => {
             }
         })
         setUsersData(resData)
+        dispatch({type: "FILL_SDC_USERS_DATA", payload: resData})
       }
     };
     getData();
@@ -98,7 +101,7 @@ const SdcKullanicilar = () => {
                 itemsPerPage={30}
                 activePage={page}
                 clickableRows
-                onRowClick={(item) => history.push(`/sdc/kullanicilar/${item.ID}`)}
+                onRowClick={(item) => history.push(`/sdc/kullanici/${item.ID}`)}
             />
             <CPagination
                 activePage={page}

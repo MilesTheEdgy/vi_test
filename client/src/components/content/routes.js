@@ -27,7 +27,7 @@ const routes = [
   { path: '/basvurular/detay/:id', exact: true, name: 'Basvuru detay', component: BasvuruDetay},
   { path: '/muhasebe/stok/cihazekle', exact: true, name: 'Cihaz Ekle', component: CihazEkle},
   { path: '/sdc/kullanicilar', name: 'SDC Kullanıcılar', component: SdcKullanicilar},
-  { path: '/sdc/kullanicilar/:id', exact: true, name: 'Basvuru detay', component: SdcKullanici},
+  { path: '/sdc/kullanici/:id', exact: true, name: 'SDC Kullanıcı', component: SdcKullanici},
 ];
 
 export default routes;
