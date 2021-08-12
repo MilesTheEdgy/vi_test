@@ -5,6 +5,16 @@ import { useSelector, useDispatch } from 'react-redux'
 import { useHistory } from 'react-router-dom'
 import "./style.css"
 
+const operationTypes = [
+  ["Faturasız", "faturasiz"],
+  ["Faturalı", "faturali"],
+  ["DSL", "dsl"],
+  ["PSTN", "pstn"],
+  ["Taahüt", "taahut"],
+  ["Tivibu", "tivibu"],
+  ["Diğer işlem", "digerislem"]
+]
+
 const SdcKullanici = ({match}) => {
   const history = useHistory()
   const data = useSelector(state => state.reducer.sdc.users)
@@ -32,7 +42,7 @@ const SdcKullanici = ({match}) => {
               <CCol lg="12" xl = "2" >
                 <CFormGroup>
                   <CLabel>ID</CLabel>
-                  <CInput placeholder= "4444" readOnly />
+                  <CInput placeholder= {user.ID} readOnly />
                 </CFormGroup>
               </CCol>
               <CCol lg="12" xl = "4">
@@ -44,7 +54,7 @@ const SdcKullanici = ({match}) => {
               <CCol lg="12" xl = "3">
                 <CFormGroup>
                   <CLabel>Röl</CLabel>
-                  <CInput placeholder={user.Kullanıcı} readOnly />
+                  <CInput placeholder={user.Röl} readOnly />
                 </CFormGroup>
               </CCol>
               <CCol lg="12" xl = "3">
@@ -54,27 +64,41 @@ const SdcKullanici = ({match}) => {
                 </CFormGroup>
               </CCol>
             </CFormGroup>
-            <CFormGroup row className="my-0 p-2">
+            <CFormGroup className="my-0 p-2">
               <h5>işlemler</h5>
-              <CCol xs="2">
-                <CFormGroup>
-                  <CLabel>Tarih</CLabel>
-                  <CInput placeholder= {user.Röl} readOnly />
-                </CFormGroup>
-              </CCol>
-              <CCol xs="3">
-                <CFormGroup>
-                  <CLabel>Hizmet</CLabel>
-                  <CInput placeholder={user.Tip} readOnly />
-                </CFormGroup>
-              </CCol>
-              <CCol xs="7">
-                <CFormGroup>
-                  <CLabel>Kampanya</CLabel>
-                  <CInput placeholder={user.Kampanya} readOnly />
-                </CFormGroup>
-              </CCol>
             </CFormGroup>
+            {
+              operationTypes.map(operationName => {
+                return (
+                  <CFormGroup row className="my-0 p-2 justify-content-center">              
+                    <CCol xs="3">
+                      <CFormGroup>
+                        <CLabel> {operationName[0]} sayısı</CLabel>
+                        <CInput placeholder= {user.Röl} readOnly />
+                      </CFormGroup>
+                    </CCol>
+                    <CCol xs="3">
+                      <CFormGroup>
+                        <CLabel>Onaylanan</CLabel>
+                        <CInput placeholder={user.Tip} readOnly />
+                      </CFormGroup>
+                    </CCol>
+                    <CCol xs="3">
+                      <CFormGroup>
+                        <CLabel>Iptal edilen</CLabel>
+                        <CInput placeholder={user.Kampanya} readOnly />
+                      </CFormGroup>
+                    </CCol>
+                    <CCol xs="2" >
+                      <CFormGroup>
+                        <CLabel>&#8205; &#8205; &#8205; &#8205; &#8205; &#8205; &#8205; &#8205; &#8205; &#8205; &#8205; &#8205; &#8205; &#8205; &#8205; &#8205; </CLabel>
+                        <CButton onClick = {() => history.push(`/sdc/islemler?query=yoyobaby`)} color = "success" ><i className="fas fa-arrow-right"></i></CButton>
+                      </CFormGroup>
+                    </CCol>
+                  </CFormGroup>
+                )
+              })
+            }
           </CCardBody>
         </CCard>
       </CCol>

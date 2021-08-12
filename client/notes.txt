@@ -1,2 +1,23 @@
-You need to override the sass folder in the coreui node module with the original coreui sass folder from a previous version
-anyways I added the folder in src
+handle route query params: https://learnwithparam.com/blog/how-to-handle-query-params-in-react-router/
+
+
+
+
+
+STYLE FIX IF COREUI UPDATES BY MISTAKE:
+
+npm uninstall @coreui/coreui
+npm install @coreui/coreui@3.4.0
+--- CHECK VERSION
+
+npm uninstall sass
+npm install sass@1.32.8
+--- CHECK VERSION
+
+
+
+
+
+npm uninstall @coreui/icons
+npm install @coreui/icons@2.0.0
+CHECK VERSION

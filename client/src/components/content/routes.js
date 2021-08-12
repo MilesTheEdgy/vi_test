@@ -13,6 +13,7 @@ const RaporIptal= React.lazy(() => import('../../views/rapor/iptal/RaporIptal'))
 const RaporBekleyen= React.lazy(() => import('../../views/rapor/beklemede/RaporBekleyen'))
 const SdcKullanicilar = React.lazy(() => import('../../views/sdckullanıcılar/SdcKullanicilar'))
 const SdcKullanici = React.lazy(() => import('../../views/sdckullanıcılar/SdcKullanici'))
+const SdcIslem = React.lazy(() => import('../../views/sdckullanıcılar/SdcIslem'))
 
 const routes = [
   { path: '/', exact: true, name: 'Home' },
@@ -28,6 +29,7 @@ const routes = [
   { path: '/muhasebe/stok/cihazekle', exact: true, name: 'Cihaz Ekle', component: CihazEkle},
   { path: '/sdc/kullanicilar', name: 'SDC Kullanıcılar', component: SdcKullanicilar},
   { path: '/sdc/kullanici/:id', exact: true, name: 'SDC Kullanıcı', component: SdcKullanici},
+  { path: '/sdc/islemler', name: 'SDC İşlem', component: SdcIslem},
 ];
 
 export default routes;
