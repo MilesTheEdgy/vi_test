@@ -56,7 +56,6 @@ const SdcKullanicilar = () => {
       })
       if (res.status === 200) {
         const fetchData = await res.json()
-        console.log(fetchData)
         const resData = fetchData.map(obj => {
           let role = ""
           switch (obj.role) {
@@ -68,8 +67,10 @@ const SdcKullanicilar = () => {
               break
             case "sales_assistant":
               role = "Satış Destek"
+              break
             case "sales_assistant_chef":
               role = "Satış Destek Şefi"
+              break
             default:
               break;
           }

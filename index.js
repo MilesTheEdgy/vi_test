@@ -8,7 +8,7 @@ const serverFunction = require("./functions");
 const { 
     FOR_SDC_GET_USER_APPS_ACCORDINGTO,
     FOR_SDC_GET_USER_CRITERIA_APPS,
-    FOR_SDC_GET_APPLICATION_CRITERIA_COUNT
+    fetchUserAppsCount
 } = require("./database/queries")
 
 
@@ -348,12 +348,13 @@ app.get("/sdc/user/:id", serverFunction.authenticateToken, async (req, res) => {
       }
 })
 
-app.get("/sdc/user/:id/count", serverFunction.authenticateToken, async (req, res) => {
-    const userInfo = res.locals.userInfo
-    if (userInfo.role !== "sales_assistant_chef")
-        return res.status(401).json("this user does not have sales assistant premission")
+app.get("/sdc/user/:id/count", async (req, res) => {
+    // const userInfo = res.locals.userInfo
+    // if (userInfo.role !== "sales_assistant_chef")
+    //     return res.status(401).json("this user does not have sales assistant premission")
     try {
         const { service, status } = req.query
+        const { id } = req.params
         let q_service = "INSERT SERVICE TYPE"
         let q_status = "INSERT STATUS TYPE"
         switch (status) {
@@ -366,7 +367,7 @@ app.get("/sdc/user/:id/count", serverFunction.authenticateToken, async (req, res
             case "sent":
                 q_status = "Gönderildi"; break;
             default:
-                break;
+                q_status = status; break;
         }
         switch (service) {
             case "Faturasiz":
@@ -380,8 +381,9 @@ app.get("/sdc/user/:id/count", serverFunction.authenticateToken, async (req, res
             default:
                 q_service = service;
         }
-        const approvedAppsCountQuery = await pool.query(FOR_SDC_GET_APPLICATION_CRITERIA_COUNT, [q_status, q_service, req.params.id])
-        res.status(200).json(approvedAppsCountQuery.rows[0])
+        console.log(id, q_status, q_service)
+        const approvedAppsCountQuery = await fetchUserAppsCount(id, q_status, q_service)
+        res.status(200).json(approvedAppsCountQuery.rows)
         // res.status(200).json("okey")
       } catch (e) {
         console.log(e)
