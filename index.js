@@ -381,9 +381,8 @@ app.get("/sdc/user/:id/count", async (req, res) => {
             default:
                 q_service = service;
         }
-        console.log(id, q_status, q_service)
         const approvedAppsCountQuery = await fetchUserAppsCount(id, q_status, q_service)
-        res.status(200).json(approvedAppsCountQuery.rows)
+        res.status(200).json(approvedAppsCountQuery)
         // res.status(200).json("okey")
       } catch (e) {
         console.log(e)

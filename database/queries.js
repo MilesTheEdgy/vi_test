@@ -24,12 +24,29 @@ const fetchUserAppsCount = async (id, status, service) => {
             }
             return result
         }
-        if (status === "ALL")
-            return await pool.query("SELECT COUNT(sales_applications.submitter) FROM sales_applications WHERE sales_applications.id IN (SELECT id FROM sales_applications_details WHERE selected_service = $1) AND sales_applications.submitter = (SELECT username FROM login WHERE id = $2)",
+        if (status === "ALL") {
+            const deniedCount = await pool.query("SELECT COUNT(sales_applications.submitter) FROM sales_applications WHERE sales_applications.status = 'İptal' AND sales_applications.id IN (SELECT id FROM sales_applications_details WHERE selected_service = $1) AND sales_applications.submitter = (SELECT username FROM login WHERE id = $2)",
              [service, id])
-        if (service === "ALL")
-            return await pool.query("SELECT COUNT(sales_applications.submitter) FROM sales_applications WHERE sales_applications.status = $1 AND sales_applications.submitter = (SELECT username FROM login WHERE id = $2)",
-            [status, id])
+            const approvedCount = await pool.query("SELECT COUNT(sales_applications.submitter) FROM sales_applications WHERE sales_applications.status = 'Onaylandı' AND sales_applications.id IN (SELECT id FROM sales_applications_details WHERE selected_service = $1) AND sales_applications.submitter = (SELECT username FROM login WHERE id = $2)",
+             [service, id])
+            return {
+                approved: approvedCount.rows[0].count,
+                denied: deniedCount.rows[0].count
+            }
+        }
+        if (service === "ALL") {
+            const services = await pool.query("SELECT (name) FROM services WHERE active = true")
+            let result = []
+            for (let i = 0; i < services.rows.length; i++) {
+                let approvedQuery = await pool.query(FOR_SDC_GET_APPLICATION_CRITERIA_COUNT,
+                [status, services.rows[i].name, id])
+                result.push({
+                    service: services.rows[i].name,
+                    count: approvedQuery.rows[0].count
+                })
+            }
+            return result
+        }
         return await pool.query(FOR_SDC_GET_APPLICATION_CRITERIA_COUNT, [status, service, id])
     } catch (error) {
         console.error(error)

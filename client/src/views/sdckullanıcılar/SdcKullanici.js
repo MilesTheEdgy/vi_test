@@ -32,33 +32,64 @@ const fetchUserLoginDate = async (id) => {
 }
 
 const fetchSalesData = async (id, service, status) => {
-  const res = await fetch(`http://localhost:8080/sdc/user/${id}/count/?service=${service}&status=${status}`, {
-    method: 'GET',
-    headers: {
-      'content-type': 'application/json',
-      'authorization' :`Bearer ${document.cookie.slice(8)} `
+  try {
+    const res = await fetch(`http://localhost:8080/sdc/user/${id}/count/?service=${service}&status=${status}`, {
+      method: 'GET',
+      headers: {
+        'content-type': 'application/json',
+        'authorization' :`Bearer ${document.cookie.slice(8)} `
+      }
+    })
+    if (res.status === 200) {
+      const data = await res.json()
+      console.log(`data from ${service} fetch is `, data)
+      return data
     }
-  })
-  if (res.status === 200) {
-    const data = await res.json()
-    console.log(`data from ${service} fetch is `, data)
-    return data
+  } catch (error) {
+    console.log(error)
   }
 }
 
 const SdcKullanici = ({match}) => {
   const { id } = match.params
   const history = useHistory()
+  const [userLoginDataLoading, setUserLoginDataLoading] = useState(true)
   const [userLoginData, setUserLoginData] = useState({id: 0, username:"", role:""})
-  const [salesdata, setSalesData] = []
+  const [salesdata, setSalesData] = useState([])
   useEffect(() => {
     const fetchAllData = async () => {
-      const faturasizData = await fetchSalesData(id, "ALL", "ALL")
-    }
-    fetchUserLoginDate(id)
-      .then(data => {
-        setUserLoginData(data)
+      const userDataFetch = await fetchUserLoginDate(id)
+      setUserLoginData(userDataFetch)
+      setUserLoginDataLoading(false)
+      const allData = await fetchSalesData(id, "ALL", "ALL")
+      console.log(allData)
+      let digerIslemApproved = 0
+      let digerIslemDenied = 0
+      const allDataMapped = allData.map((obj) => {
+        let noObj = {}
+        switch (obj.service) {
+          case "İptal":
+            digerIslemApproved = digerIslemApproved + obj.approveCount
+            digerIslemDenied = digerIslemDenied + obj.deniedCount
+            break;
+          case "Devir":
+            digerIslemApproved = digerIslemApproved + obj.approveCount
+            digerIslemDenied = digerIslemDenied + obj.deniedCount
+            break;
+          case "Nakil":
+            digerIslemApproved = digerIslemApproved + obj.approveCount
+            digerIslemDenied = digerIslemDenied + obj.deniedCount
+            break;
+          default:
+            noObj = obj
+            break;
+        }
+        if (obj.service=== "İptal") return
+        else return obj
       })
+      console.log(allDataMapped)
+      setSalesData(allData)
+    }
     fetchAllData()
   }, [])
   const data = useSelector(state => state.reducer.sdc.users)
@@ -67,7 +98,6 @@ const SdcKullanici = ({match}) => {
   return (
       <CRow className = "justify-content-center align-items-center">
         <CCol xs="12" sm="8">
-          <HocLoader isLoading = {true}>
             <CCard>
               <CCardHeader>
                 <CRow>
@@ -79,35 +109,37 @@ const SdcKullanici = ({match}) => {
                       history.push("/sdc/kullanicilar")
                     }}>Geri</CButton>
                   </CCol>
-                </CRow> 
+                </CRow>
               </CCardHeader>
               <CCardBody className = "basvuru-detay" >
-                <CFormGroup row className="my-0">
-                  <CCol lg="12" xl = "2" >
-                    <CFormGroup>
-                      <CLabel>ID</CLabel>
-                      <CInput placeholder= {userLoginData.id} readOnly />
-                    </CFormGroup>
-                  </CCol>
-                  <CCol lg="12" xl = "4">
-                    <CFormGroup>
-                      <CLabel>İsim</CLabel>
-                      <CInput placeholder={userLoginData.username} readOnly />
-                    </CFormGroup>
-                  </CCol>
-                  <CCol lg="12" xl = "3">
-                    <CFormGroup>
-                      <CLabel>Röl</CLabel>
-                      <CInput placeholder={userLoginData.role} readOnly />
-                    </CFormGroup>
-                  </CCol>
-                  <CCol lg="12" xl = "3">
-                    <CFormGroup>
-                      <CLabel>Kayıt tarihi</CLabel>
-                      <CInput placeholder="2021.02.06" readOnly />
-                    </CFormGroup>
-                  </CCol>
-                </CFormGroup>
+                <HocLoader isLoading = {userLoginDataLoading}>
+                  <CFormGroup row className="my-0">
+                    <CCol lg="12" xl = "2" >
+                      <CFormGroup>
+                        <CLabel>ID</CLabel>
+                        <CInput placeholder= {userLoginData.id} readOnly />
+                      </CFormGroup>
+                    </CCol>
+                    <CCol lg="12" xl = "4">
+                      <CFormGroup>
+                        <CLabel>İsim</CLabel>
+                        <CInput placeholder={userLoginData.username} readOnly />
+                      </CFormGroup>
+                    </CCol>
+                    <CCol lg="12" xl = "3">
+                      <CFormGroup>
+                        <CLabel>Röl</CLabel>
+                        <CInput placeholder={userLoginData.role} readOnly />
+                      </CFormGroup>
+                    </CCol>
+                    <CCol lg="12" xl = "3">
+                      <CFormGroup>
+                        <CLabel>Kayıt tarihi</CLabel>
+                        <CInput placeholder="2021.02.06" readOnly />
+                      </CFormGroup>
+                    </CCol>
+                  </CFormGroup>
+                </HocLoader>
                 <CFormGroup className="my-0 p-2">
                   <h5>işlemler</h5>
                 </CFormGroup>
@@ -147,7 +179,6 @@ const SdcKullanici = ({match}) => {
                 }
               </CCardBody>
             </CCard>
-          </HocLoader>
         </CCol>
       </CRow>
   ) 
