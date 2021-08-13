@@ -3,8 +3,9 @@ import { CDataTable, CBadge, CButton } from "@coreui/react";
 import { useHistory } from 'react-router-dom'
 import { useDispatch, useSelector } from "react-redux";
 import XLSX from "xlsx";
+import qs from "qs"
 
-export const fetchData = async(dispatch) => {
+const fetchData = async(dispatch) => {
   const res = await fetch("http://localhost:8080/sdc/users", {
     method: 'GET',
     headers: {
@@ -13,7 +14,6 @@ export const fetchData = async(dispatch) => {
     }
   })
   const fetchData = await res.json()
-  console.log(fetchData)
   const resData = fetchData.map(obj => {
     const { finalSalesRepDetails, lastChangeDate, salesRepDetails, statusChangeDate } = obj
     let submitProcessNum = 0
@@ -41,10 +41,14 @@ export const fetchData = async(dispatch) => {
   dispatch({type: 'FILL_APPS_DATA', payload: resData})
  }
 
-const SdcIslem = () => {
+const SdcIslem = ({match, location}) => {
+  console.log("match", match)
+  console.log("location", location)
   const history = useHistory()
   const dispatch = useDispatch()
   const data = useSelector(state => state.reducer.appsData)
+  const temp = qs.parse(location.search)
+  console.log("parsed", temp)
 
   const exportFile = () => {
     let cols = ["ID", "İsim", "Tarih", "Hizmet", "Kampanya", "Açıklama", "Statü"]

@@ -5,6 +5,11 @@ const bcrypt = require("bcrypt");
 // const client = require("./db");
 const pool = require("./db");
 const serverFunction = require("./functions");
+const { 
+    FOR_SDC_GET_USER_APPS_ACCORDINGTO,
+    FOR_SDC_GET_USER_CRITERIA_APPS,
+    FOR_SDC_GET_APPLICATION_CRITERIA_COUNT
+} = require("./database/queries")
 
 
 app.use(cors());
@@ -306,7 +311,108 @@ app.get("/sdc/users", serverFunction.authenticateToken, async (req, res) => {
         res.status(200).json(query.rows)
       } catch (e) {
         console.log(e)
-        await client.query('ROLLBACK')
+        return res.status(500).json("An error occurred while attempting to update application")
+      }
+})
+
+// app.get("/sdc/user/:id/details", async (req, res) => {
+//     // const userInfo = res.locals.userInfo
+//     // if (userInfo.role !== "sales_assistant_chef")
+//     //     return res.status(401).json("this user does not have sales assistant premission")
+//     try {
+
+//         // const approvedAppsCountQuery = await pool.query(FOR_SDC_GET_USER_CRITERIA_APPS, ['Onaylandı', req.params.id])
+//         // const rejectedAppsCountQuery = await pool.query(FOR_SDC_GET_USER_CRITERIA_APPS, ['İptal', req.params.id])
+//         // res.status(200).json({
+//         //     approved: approvedAppsCountQuery.rows,
+//         //     rejected: rejectedAppsCountQuery.rows
+//         // })
+//       } catch (e) {
+//         console.log(e)
+//         await client.query('ROLLBACK')
+//         return res.status(500).json("An error occurred while attempting to update application")
+//       }
+// })
+
+app.get("/sdc/user/:id", serverFunction.authenticateToken, async (req, res) => {
+    const userInfo = res.locals.userInfo
+    if (userInfo.role !== "sales_assistant_chef")
+        return res.status(401).json("this user does not have sales assistant premission")
+    const { id } = req.params
+    try {
+        const query = await pool.query("SELECT id, username, role FROM login WHERE id = $1", [id])
+        res.status(200).json(query.rows[0])
+      } catch (e) {
+        console.log(e)
+        return res.status(500).json("An error occurred while attempting to update application")
+      }
+})
+
+app.get("/sdc/user/:id/count", serverFunction.authenticateToken, async (req, res) => {
+    const userInfo = res.locals.userInfo
+    if (userInfo.role !== "sales_assistant_chef")
+        return res.status(401).json("this user does not have sales assistant premission")
+    try {
+        const { service, status } = req.query
+        let q_service = "INSERT SERVICE TYPE"
+        let q_status = "INSERT STATUS TYPE"
+        switch (status) {
+            case "approved":
+                q_status = "Onaylandı"; break;
+            case "denied":
+                q_status = "İptal"; break;
+            case "onhold":
+                q_status = "İşleniyor"; break;
+            case "sent":
+                q_status = "Gönderildi"; break;
+            default:
+                break;
+        }
+        switch (service) {
+            case "Faturasiz":
+                q_service = "Faturasız"; break;
+            case "Faturali":
+                q_service = "Faturalı"; break;
+            case "Taahut":
+                q_service = "Taahüt"; break;
+            case "Iptal":
+                q_service = "İptal"; break;
+            default:
+                q_service = service;
+        }
+        const approvedAppsCountQuery = await pool.query(FOR_SDC_GET_APPLICATION_CRITERIA_COUNT, [q_status, q_service, req.params.id])
+        res.status(200).json(approvedAppsCountQuery.rows[0])
+        // res.status(200).json("okey")
+      } catch (e) {
+        console.log(e)
+        return res.status(500).json("An error occurred while attempting to update application")
+      }
+})
+
+app.get("/sdc/user/:id/details", serverFunction.authenticateToken, async (req, res) => {
+    const userInfo = res.locals.userInfo
+    if (userInfo.role !== "sales_assistant_chef")
+        return res.status(401).json("this user does not have sales assistant premission")
+    const { service } = req.query
+    const { id } = req.params
+    let q_service = "INSERT SERVICE TYPE"
+    switch (service) {
+        case "Faturasiz":
+            q_service = "Faturasız"; break;
+        case "Faturali":
+            q_service = "Faturalı"; break;
+        case "Taahut":
+            q_service = "Taahüt"; break;
+        case "Iptal":
+            q_service = "İptal"; break;
+        default:
+            q_service = service;
+    }
+    try {
+        const query = await pool.query(FOR_SDC_GET_USER_APPS_ACCORDINGTO, [q_service, id])
+        res.status(200).json(query.rows)
+      } catch (e) {
+        console.log(e)
         return res.status(500).json("An error occurred while attempting to update application")
       }
 })

@@ -2,3 +2,9 @@
 #sdcKullanici-backButton {
     min-width: 53px;
 }
+
+
+.sdcKullainici-divider {
+    width: 95%;
+	border-bottom: 1px solid #d8dbe0;
+}
