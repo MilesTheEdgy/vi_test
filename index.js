@@ -131,6 +131,33 @@ app.get("/bayi/basvuru/takip", serverFunction.authenticateToken, async(req, res)
     }
 })
 
+app.get("/applications/:id", async(req, res) => {
+    try {
+        const { id } = req.params
+        let query = await pool.query("SELECT sales_applications.id, sales_applications.client_name, sales_applications.submit_time, sales_applications_details.selected_service, sales_applications_details.selected_offer, sales_applications_details.description, sales_applications.status, sales_applications_details.sales_rep_details, sales_applications_details.status_change_date, sales_applications_details.final_sales_rep_details, sales_applications.last_change_date FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id WHERE sales_applications.id = $1",
+        [id])
+        const resArr = query.rows.map(client => {
+            return {
+                id: client.id,
+                name: client.client_name,
+                service: client.selected_service,
+                offer: client.selected_offer,
+                status: client.status,
+                description: client.description,
+                salesRepDetails: client.sales_rep_details,
+                finalSalesRepDetails: client.final_sales_rep_details,
+                date: client.submit_time.toISOString().slice(0, 10),
+                statusChangeDate: client.status_change_date ? client.status_change_date.toISOString().slice(0, 10) : null,
+                lastChangeDate: client.last_change_date ? client.last_change_date.toISOString().slice(0, 10) : null
+            }
+        })
+        res.status(200).json(resArr[0])
+    } catch (error) {
+        console.error(error)
+        res.status(500)
+    }
+})
+
 app.get("/bayi/rapor/onaylanan", serverFunction.authenticateToken, async(req, res) => {
     try {
         let query = await pool.query("SELECT sales_applications.id, sales_applications.client_name, sales_applications.submit_time, sales_applications_details.selected_service, sales_applications_details.selected_offer, sales_applications_details.description, sales_applications.status, sales_applications_details.sales_rep_details, sales_applications_details.status_change_date, sales_applications_details.final_sales_rep_details, sales_applications.last_change_date FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id WHERE sales_applications.status = 'Onaylandı'")
@@ -348,10 +375,15 @@ app.get("/sdc/user/:id", serverFunction.authenticateToken, async (req, res) => {
       }
 })
 
-app.get("/sdc/user/:id/count", async (req, res) => {
-    // const userInfo = res.locals.userInfo
-    // if (userInfo.role !== "sales_assistant_chef")
-    //     return res.status(401).json("this user does not have sales assistant premission")
+app.get("/sdc/user/:id/count", serverFunction.authenticateToken, async (req, res) => {
+    
+    // Returns the COUNT of user total sent applications
+    // can be filtered through specific criteria in fetchUserAppsCount args
+    // EG: fetchUserAppsCount(id, approved, DSL) OR fetchUserAppsCount(id, ALL, ALL)
+
+    const userInfo = res.locals.userInfo
+    if (userInfo.role !== "sales_assistant_chef")
+        return res.status(401).json("this user does not have sales assistant premission")
     try {
         const { service, status } = req.query
         const { id } = req.params
@@ -390,10 +422,10 @@ app.get("/sdc/user/:id/count", async (req, res) => {
       }
 })
 
-app.get("/sdc/user/:id/details", serverFunction.authenticateToken, async (req, res) => {
-    const userInfo = res.locals.userInfo
-    if (userInfo.role !== "sales_assistant_chef")
-        return res.status(401).json("this user does not have sales assistant premission")
+app.get("/sdc/user/:id/details", async (req, res) => {
+    // const userInfo = res.locals.userInfo
+    // if (userInfo.role !== "sales_assistant_chef")
+    //     return res.status(401).json("this user does not have sales assistant premission")
     const { service } = req.query
     const { id } = req.params
     let q_service = "INSERT SERVICE TYPE"
