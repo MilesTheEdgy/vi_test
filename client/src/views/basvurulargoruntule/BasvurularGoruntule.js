@@ -3,6 +3,7 @@ import { CDataTable, CBadge, CButton } from "@coreui/react";
 import { useHistory } from 'react-router-dom'
 import { useDispatch, useSelector } from "react-redux";
 import XLSX from "xlsx";
+import { mapDataToTurkish } from ".";
 
 export const fetchData = async(dispatch) => {
   const res = await fetch("http://localhost:8080/sd/basvurular/goruntule", {
@@ -13,31 +14,7 @@ export const fetchData = async(dispatch) => {
     }
   })
   const fetchData = await res.json()
-  console.log(fetchData)
-  const resData = fetchData.map(obj => {
-    const { finalSalesRepDetails, lastChangeDate, salesRepDetails, statusChangeDate } = obj
-    let submitProcessNum = 0
-    if (obj.status === "Onaylandı" || obj.status === "İptal")
-      submitProcessNum = 3
-    else if (obj.status === "İşleniyor")
-      submitProcessNum = 2
-    else
-      submitProcessNum = 1
-    return {
-        ID: obj.id,
-        İsim: obj.name,
-        Tarih: obj.date,
-        Tip: obj.service,
-        Kampanya: obj.offer,
-        Açıklama: obj.description,
-        Statü: obj.status,
-        finalSalesRepDetails,
-        lastChangeDate,
-        salesRepDetails,
-        statusChangeDate,
-        submitProcessNum
-      }
-  })
+  const resData = mapDataToTurkish(fetchData)
   dispatch({type: 'FILL_APPS_DATA', payload: resData})
  }
 

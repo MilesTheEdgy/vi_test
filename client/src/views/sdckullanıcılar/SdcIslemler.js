@@ -14,7 +14,6 @@ const fetchData = async(service, id) => {
     }
   })
   const fetchData = await res.json()
-  console.log("fetchData", fetchData)
   const resData = fetchData.map(obj => {
     const { finalSalesRepDetails, lastChangeDate, salesRepDetails, statusChangeDate } = obj
     let submitProcessNum = 0
@@ -49,7 +48,6 @@ const SdcIslemler = ({match, location}) => {
   const temp = qs.parse(location.search)
   const [data, setData] = useState([])
   // const data = useSelector(state => state.reducer.appsData)
-  console.log("parsed", temp)
 
   // const exportFile = () => {
   //   let cols = ["ID", "İsim", "Tarih", "Hizmet", "Kampanya", "Açıklama", "Statü"]
@@ -68,7 +66,6 @@ const SdcIslemler = ({match, location}) => {
  useEffect(() => {
    const fetchAllData = async () => {
      const res = await fetchData(temp["?islem"], temp.id);
-     console.log("res", res)
      setData(res)
    }
    fetchAllData()

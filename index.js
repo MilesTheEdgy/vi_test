@@ -105,26 +105,12 @@ app.post("/bayi/basvuru/yeni", serverFunction.authenticateToken, async(req, res)
     }
 })
 
-app.get("/bayi/basvuru/takip", serverFunction.authenticateToken, async(req, res) => {
+app.get("/bayi/applications", serverFunction.authenticateToken, async(req, res) => {
     try {
-        let query = await pool.query("SELECT sales_applications.id, sales_applications.client_name, sales_applications.submit_time, sales_applications_details.selected_service, sales_applications_details.selected_offer, sales_applications_details.description, sales_applications.status, sales_applications_details.sales_rep_details, sales_applications_details.status_change_date, sales_applications_details.final_sales_rep_details, sales_applications.last_change_date FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id")
-        const resArr = query.rows.map(client => {
-            return {
-                id: client.id,
-                name: client.client_name,
-                date: client.submit_time.toISOString().slice(0, 10),
-                description: client.description,
-                service: client.selected_service,
-                offer: client.selected_offer,
-                status: client.status,
-                salesRepDetails: client.sales_rep_details,
-                statusChangeDate: client.status_change_date ? client.status_change_date.toISOString().slice(0, 10) : null,
-                finalSalesRepDetails: client.final_sales_rep_details,
-                lastChangeDate: client.last_change_date ? client.last_change_date.toISOString().slice(0, 10) : null
-            }
-        })
-        console.log(resArr);
-        res.status(200).json(resArr)
+        const username = res.locals.userInfo.username
+        let query = await pool.query("SELECT sales_applications.id, sales_applications.client_name, sales_applications.submit_time, sales_applications_details.selected_service, sales_applications_details.selected_offer, sales_applications_details.description, sales_applications.status, sales_applications_details.sales_rep_details, sales_applications_details.status_change_date, sales_applications_details.final_sales_rep_details, sales_applications.last_change_date FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id WHERE sales_applications.submitter = $1",
+        [username])
+        res.status(200).json(query.rows)
     } catch (error) {
         console.error(error)
         res.status(500)
@@ -244,23 +230,7 @@ app.get("/sd/basvurular/goruntule", serverFunction.authenticateToken, async (req
         if (userInfo.role !== "sales_assistant")
             return res.status(401).json("this user does not have sales assistant premission")
         let query = await pool.query("SELECT sales_applications.id, sales_applications.client_name, sales_applications.submit_time, sales_applications_details.selected_service, sales_applications_details.selected_offer, sales_applications_details.description, sales_applications.status, sales_applications_details.sales_rep_details, sales_applications_details.status_change_date, sales_applications_details.final_sales_rep_details, sales_applications.last_change_date FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id")
-        const resArr = query.rows.map(client => {
-            return {
-                id: client.id,
-                name: client.client_name,
-                date: client.submit_time.toISOString().slice(0, 10),
-                description: client.description,
-                service: client.selected_service,
-                offer: client.selected_offer,
-                status: client.status,
-                salesRepDetails: client.sales_rep_details,
-                statusChangeDate: client.status_change_date ? client.status_change_date.toISOString().slice(0, 10) : null,
-                finalSalesRepDetails: client.final_sales_rep_details,
-                lastChangeDate: client.last_change_date ? client.last_change_date.toISOString().slice(0, 10) : null
-            }
-        })
-        console.log(resArr);
-        res.status(200).json(resArr)
+        res.status(200).json(query.rows)
     } catch (error) {
         console.error(error);
     }
@@ -278,8 +248,9 @@ app.put("/basvurular/:applicationID", serverFunction.authenticateToken, async (r
     const d = new Date()
     try {
         const query = await client.query("SELECT last_change_date FROM sales_applications WHERE id = $1", [applicationID])
-        if (query.rows[0].last_change_date !== null)
-            return res.status(401).json("You cannot set application status to approved without first procedures")
+        console.log(query.rows)
+        // if (query.rows[0].last_change_date !== null)
+        //     return res.status(401).json("You cannot set application status to approved without first procedures")
         console.log("query", query.rows)
         const currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`
         await client.query('BEGIN')
@@ -308,8 +279,8 @@ app.put("/basvurular/:applicationID/sp", serverFunction.authenticateToken, async
     const currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`
     try {
         const query = await client.query("SELECT last_change_date FROM sales_applications WHERE id = $1", [applicationID])
-        if (query.rows[0].last_change_date !== null)
-            return res.status(401).json("You cannot set application status to approved without first procedures")
+        // if (query.rows[0].last_change_date !== null)
+        //     return res.status(401).json("You cannot set application status to approved without first procedures")
         await client.query('BEGIN')
         await client.query("UPDATE sales_applications_details SET final_sales_rep_details = $1 WHERE id = $2",
          [salesRepDetails, applicationID])

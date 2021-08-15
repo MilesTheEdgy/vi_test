@@ -31,7 +31,7 @@ const routes = [
   { path: '/sdc/kullanicilar', exact: true, name: 'SDC Kullanıcılar', component: SdcKullanicilar},
   { path: '/sdc/kullanici/:id', exact: true, name: 'SDC Kullanıcı', component: SdcKullanici},
   { path: '/sdc/islemler', exact: true, name: 'SDC İşlemler', component: SdcIslemler},
-  { path: '/sdc/islem/:id', exact: true, name: 'SDC İşlemler', component: SdcIslem}
+  { path: '/sd/islem/:id', exact: true, name: 'SDC İşlemler', component: SdcIslem}
 ];
 
 export default routes;

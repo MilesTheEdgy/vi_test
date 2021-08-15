@@ -93,7 +93,7 @@ const sendApplication = async (userInfo, selectedService, selectedOffer, clientW
         await client.query('BEGIN')
         //begin the query transaction
         const query = await client.query("INSERT INTO sales_applications(submitter, submit_time, activator, representative, client_name, status) VALUES($1, $2, $3, $4, $5, $6) RETURNING id"
-            , [username, currentDate, "Abdullah Kara", "Erdem Mutlu", clientName, 'Gönderildi'])
+            , [username, currentDate, "Abdullah Kara", "Erdem Mutlu", clientName, 'sent'])
         await client.query("INSERT INTO sales_applications_details(client_name, selected_service, selected_offer, description, client_wants_router, id) VALUES($1, $2, $3, $4, $5, $6)"
             , [clientName, selectedService, selectedOffer, clientDescription, clientWantsRouter, query.rows[0].id])
         await client.query('COMMIT')
