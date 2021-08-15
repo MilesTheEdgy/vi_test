@@ -248,7 +248,6 @@ app.put("/basvurular/:applicationID", serverFunction.authenticateToken, async (r
     const d = new Date()
     try {
         const query = await client.query("SELECT last_change_date FROM sales_applications WHERE id = $1", [applicationID])
-        console.log(query.rows)
         // if (query.rows[0].last_change_date !== null)
         //     return res.status(401).json("You cannot set application status to approved without first procedures")
         console.log("query", query.rows)
