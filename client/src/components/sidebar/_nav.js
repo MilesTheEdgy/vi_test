@@ -688,17 +688,17 @@ export const bayi_nav =  [
       {
         _tag: 'CSidebarNavItem',
         name: "Onaylayan işlemler",
-        to: '/rapor/islemler/onaylanan',
+        to: '/bayi/islemler/rapor?status=approved',
       },
       {
         _tag: 'CSidebarNavItem',
         name: 'İptal edilen işlemler',
-        to: '/rapor/islemler/iptal',
+        to: '/bayi/islemler/rapor?status=rejected',
       },
       {
         _tag: 'CSidebarNavItem',
         name: 'Beklemede olan işlemler',
-        to: '/rapor/islemler/beklemede',
+        to: '/bayi/islemler/rapor?status=processing',
       }
     ],
   }

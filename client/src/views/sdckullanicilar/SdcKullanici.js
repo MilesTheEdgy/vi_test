@@ -1,21 +1,9 @@
 import React, { useEffect, useState } from 'react'
-import { CCard, CCardBody, CCardHeader, CCol, CRow, CFormGroup, CLabel, CInput, CTextarea, CButton } from '@coreui/react'
-import CIcon from '@coreui/icons-react'
-import { useSelector, useDispatch } from 'react-redux'
+import { CCard, CCardBody, CCardHeader, CCol, CRow, CFormGroup, CLabel, CInput, CButton } from '@coreui/react'
 import { useHistory } from 'react-router-dom'
 import HocLoader from '../hocloader/HocLoader'
 import "./style.css"
 import { filterAndMapAppData } from '.'
-
-const operationTypes = [
-  ["Faturasız", "faturasiz"],
-  ["Faturalı", "faturali"],
-  ["DSL", "dsl"],
-  ["PSTN", "pstn"],
-  ["Taahüt", "taahut"],
-  ["Tivibu", "tivibu"],
-  ["Diğer işlem", "digerislem"]
-]
 
 const fetchUserLoginDate = async (id) => {
   const res = await fetch(`http://localhost:8080/sdc/user/${id}`, {
@@ -27,7 +15,7 @@ const fetchUserLoginDate = async (id) => {
   })
   if (res.status === 200) {
     const data = await res.json()
-    console.log("data from fetchuserlogin", data)
+    // console.log("data from fetchuserlogin", data)
     return data
   }
 }
@@ -43,7 +31,6 @@ const fetchSalesData = async (id, service, status) => {
     })
     if (res.status === 200) {
       const data = await res.json()
-      console.log(`data from ${service} fetch is `, data)
       return data
     }
   } catch (error) {
@@ -67,10 +54,8 @@ const SdcKullanici = ({match}) => {
       setSalesData(filteredData)
     }
     fetchAllData()
-  }, [])
-  const data = useSelector(state => state.reducer.sdc.users)
-  const user = data.find( user => user.ID.toString() === match.params.id)
-  if (user !== undefined)
+  }, [id])
+  if (userLoginData !== undefined)
   return (
       <CRow className = "justify-content-center align-items-center">
         <CCol xs="12" sm="8">
@@ -117,40 +102,59 @@ const SdcKullanici = ({match}) => {
                   </CFormGroup>
                 </HocLoader>
                 <CFormGroup className="my-0 p-2">
-                  <h5>işlemler</h5>
+                  <h5>İşlem Raporu</h5>
                 </CFormGroup>
 
                 {
                   salesdata.map((obj, i) => {
                     return (
-                      <CFormGroup row className="my-0 p-2 justify-content-center" key = {i} >              
-                        <CCol sm = "6" lg="3">
+                      <div key = {i+10}>
+                      <CFormGroup row>
+                        <CCol>
+                          <CLabel><strong>{obj.service}</strong></CLabel>
+                        </CCol>
+                      </CFormGroup>
+                      <CFormGroup row className="justify-content-center"> 
+                        <CCol sm = "6" lg="2">
                           <CFormGroup>
-                            <CLabel> {obj.service} sayısı</CLabel>
-                            <CInput placeholder= {Number(obj.approvedCount) + Number(obj.deniedCount)} readOnly />
+                            <CLabel> Toplam</CLabel>
+                            <CInput placeholder= {Number(obj.approvedCount) + Number(obj.rejectedCount)} readOnly />
                           </CFormGroup>
                         </CCol>
-                        <CCol sm = "6" lg="3">
+                        <CCol sm = "6" lg="2">
                           <CFormGroup>
                             <CLabel>Onaylanan</CLabel>
                             <CInput placeholder={obj.approvedCount} readOnly />
                           </CFormGroup>
                         </CCol>
-                        <CCol sm = "6" lg="3">
+                        <CCol sm = "6" lg="2">
                           <CFormGroup>
-                            <CLabel>Iptal edilen</CLabel>
-                            <CInput placeholder={obj.deniedCount} readOnly />
+                            <CLabel>Gönderilen</CLabel>
+                            <CInput placeholder={obj.sentCount} readOnly />
+                          </CFormGroup>
+                        </CCol>
+                        <CCol sm = "6" lg="2">
+                          <CFormGroup>
+                            <CLabel>İşlenen</CLabel>
+                            <CInput placeholder={obj.processingCount} readOnly />
+                          </CFormGroup>
+                        </CCol>
+                        <CCol sm = "6" lg="2">
+                          <CFormGroup>
+                            <CLabel>İptal edilen</CLabel>
+                            <CInput placeholder={obj.rejectedCount} readOnly />
                           </CFormGroup>
                         </CCol>
                         <CCol sm = "6" lg="2" >
                           <CFormGroup>
                             <CLabel col></CLabel>
-                            <CButton onClick = {() => history.push(`/sdc/islemler?islem=${obj.routeName}&id=${user.ID}`)} color = "success" ><i className="fas fa-arrow-right"></i></CButton>
+                            <CButton onClick = {() => history.push(`/sdc/islemler?islem=${obj.routeName}&id=${userLoginData.id}`)} color = "success" ><i className="fas fa-arrow-right"></i></CButton>
                           </CFormGroup>
                         </CCol>
                         <div className = "sdcKullainici-divider"></div>
                         
                       </CFormGroup>
+                      </div>
                     )
                   })
                 }

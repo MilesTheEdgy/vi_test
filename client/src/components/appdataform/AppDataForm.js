@@ -1,8 +1,12 @@
-import { CCard, CCardBody, CCardHeader, CCol, CRow, CFormGroup, CLabel, CInput, CTextarea, CButton } from '@coreui/react'
-import { setHeaderColor, renderTextArea, renderBasvuruDetayFooter } from '.'
+import { CCard, CCardBody, CCardHeader, CCol, CRow, CFormGroup, CLabel, CInput, CButton } from '@coreui/react'
+import { setHeaderColor, renderMiddleTextArea, forRoleSetFormLabel, renderFooterTextArea } from '.'
+import { useSelector } from "react-redux"
+import "./AppDataForm.css"
 import { useHistory } from 'react-router'
 
 const AppDataForm = ({isEditable, userDetails, setSdDetay}) => {
+    const userRole = useSelector(state => state.reducer.loggedInUserInfo.loggedInRole)
+    const forRoleSetFields = forRoleSetFormLabel(userRole)
     const history = useHistory()
     return(
     <CRow className = "justify-content-center align-items-center">
@@ -11,7 +15,7 @@ const AppDataForm = ({isEditable, userDetails, setSdDetay}) => {
             <CCardHeader className = "basvuru-detay-header" style = {{backgroundColor: setHeaderColor(userDetails)}}>
               <h4>Başvuru Detay</h4>
               <CCol sm = "2" className = "basvuru-detay-header-buttonCol">
-                <CButton active block color="secondary" aria-pressed="true" onClick = {() => history.push("/basvurular/goruntule")}>
+                <CButton active block color="secondary" aria-pressed="true" onClick = {() => history.goBack()}>
                     Geri
                  </CButton>
               </CCol>
@@ -51,32 +55,8 @@ const AppDataForm = ({isEditable, userDetails, setSdDetay}) => {
                   </CFormGroup>
                 </CCol>
               </CFormGroup>
-              {renderTextArea(userDetails)}
-              {
-                userDetails.submitProcessNum === 3 ?
-                <CFormGroup>
-                  <CLabel>Son notlarınız</CLabel>
-                    <CTextarea 
-                      rows="6"
-                      placeholder={userDetails.finalSalesRepDetails}
-                      readOnly
-                    />
-                </CFormGroup>
-                :
-                <CFormGroup>
-                  <CLabel>Notlarınız</CLabel>
-                    <CTextarea 
-                      rows="6"
-                      placeholder="işlemle alakalı notlarınız..."
-                      onChange = {(e) => setSdDetay(e.target.value)}
-                    />
-                </CFormGroup>
-              }
-              {/* <CFormGroup row className = "basvuru-detay-submit-buttons my-0" >
-                <CCol sm = "4">
-                  {renderBasvuruDetayFooter(userDetails)}
-                </CCol>
-              </CFormGroup> */}
+              {renderMiddleTextArea(userDetails)}
+              {renderFooterTextArea(setSdDetay, userRole, userDetails, forRoleSetFields)}
             </CCardBody>
           </CCard>
         </CCol>

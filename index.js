@@ -8,8 +8,12 @@ const serverFunction = require("./functions");
 const { 
     FOR_SDC_GET_USER_APPS_ACCORDINGTO,
     FOR_SDC_GET_USER_CRITERIA_APPS,
-    fetchUserAppsCount
+    fetchUserAppsCount,
+    fetchUserAppsDetails
 } = require("./database/queries")
+const { 
+    forDealerGetApplications
+} = require("./database/dealerqueries")
 
 
 app.use(cors());
@@ -108,8 +112,22 @@ app.post("/bayi/basvuru/yeni", serverFunction.authenticateToken, async(req, res)
 app.get("/bayi/applications", serverFunction.authenticateToken, async(req, res) => {
     try {
         const username = res.locals.userInfo.username
-        let query = await pool.query("SELECT sales_applications.id, sales_applications.client_name, sales_applications.submit_time, sales_applications_details.selected_service, sales_applications_details.selected_offer, sales_applications_details.description, sales_applications.status, sales_applications_details.sales_rep_details, sales_applications_details.status_change_date, sales_applications_details.final_sales_rep_details, sales_applications.last_change_date FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id WHERE sales_applications.submitter = $1",
-        [username])
+        const { status } = req.query
+        const response = await forDealerGetApplications(username, status)
+        res.status(200).json(response)
+    } catch (error) {
+        console.error(error)
+        res.status(500)
+    }
+})
+
+app.get("/applications/:applicationID", async(req, res) => {
+    try {
+        console.log("route hit")
+        const { applicationID } = req.params
+        let query = await pool.query("SELECT sales_applications.id, sales_applications.client_name, sales_applications.submit_time, sales_applications_details.selected_service, sales_applications_details.selected_offer, sales_applications_details.description, sales_applications.status, sales_applications_details.sales_rep_details, sales_applications_details.status_change_date, sales_applications_details.final_sales_rep_details, sales_applications.last_change_date FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id WHERE sales_applications.id = $1",
+        [applicationID])
+        console.log(query.rows)
         res.status(200).json(query.rows)
     } catch (error) {
         console.error(error)
@@ -117,110 +135,6 @@ app.get("/bayi/applications", serverFunction.authenticateToken, async(req, res) 
     }
 })
 
-app.get("/applications/:id", async(req, res) => {
-    try {
-        const { id } = req.params
-        let query = await pool.query("SELECT sales_applications.id, sales_applications.client_name, sales_applications.submit_time, sales_applications_details.selected_service, sales_applications_details.selected_offer, sales_applications_details.description, sales_applications.status, sales_applications_details.sales_rep_details, sales_applications_details.status_change_date, sales_applications_details.final_sales_rep_details, sales_applications.last_change_date FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id WHERE sales_applications.id = $1",
-        [id])
-        const resArr = query.rows.map(client => {
-            return {
-                id: client.id,
-                name: client.client_name,
-                service: client.selected_service,
-                offer: client.selected_offer,
-                status: client.status,
-                description: client.description,
-                salesRepDetails: client.sales_rep_details,
-                finalSalesRepDetails: client.final_sales_rep_details,
-                date: client.submit_time.toISOString().slice(0, 10),
-                statusChangeDate: client.status_change_date ? client.status_change_date.toISOString().slice(0, 10) : null,
-                lastChangeDate: client.last_change_date ? client.last_change_date.toISOString().slice(0, 10) : null
-            }
-        })
-        res.status(200).json(resArr[0])
-    } catch (error) {
-        console.error(error)
-        res.status(500)
-    }
-})
-
-app.get("/bayi/rapor/onaylanan", serverFunction.authenticateToken, async(req, res) => {
-    try {
-        let query = await pool.query("SELECT sales_applications.id, sales_applications.client_name, sales_applications.submit_time, sales_applications_details.selected_service, sales_applications_details.selected_offer, sales_applications_details.description, sales_applications.status, sales_applications_details.sales_rep_details, sales_applications_details.status_change_date, sales_applications_details.final_sales_rep_details, sales_applications.last_change_date FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id WHERE sales_applications.status = 'Onaylandı'")
-        const resArr = query.rows.map(client => {
-            return {
-                id: client.id,
-                name: client.client_name,
-                date: client.submit_time.toISOString().slice(0, 10),
-                description: client.description,
-                service: client.selected_service,
-                offer: client.selected_offer,
-                status: client.status,
-                salesRepDetails: client.sales_rep_details,
-                statusChangeDate: client.status_change_date ? client.status_change_date.toISOString().slice(0, 10) : null,
-                finalSalesRepDetails: client.final_sales_rep_details,
-                lastChangeDate: client.last_change_date ? client.last_change_date.toISOString().slice(0, 10) : null
-            }
-        })
-        console.log(resArr);
-        res.status(200).json(resArr)
-    } catch (error) {
-        console.error(error)
-        res.status(500)
-    }
-})
-
-app.get("/bayi/rapor/iptal", serverFunction.authenticateToken, async(req, res) => {
-    try {
-        let query = await pool.query("SELECT sales_applications.id, sales_applications.client_name, sales_applications.submit_time, sales_applications_details.selected_service, sales_applications_details.selected_offer, sales_applications_details.description, sales_applications.status, sales_applications_details.sales_rep_details, sales_applications_details.status_change_date, sales_applications_details.final_sales_rep_details, sales_applications.last_change_date FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id WHERE sales_applications.status = 'İptal'")
-        const resArr = query.rows.map(client => {
-            return {
-                id: client.id,
-                name: client.client_name,
-                date: client.submit_time.toISOString().slice(0, 10),
-                description: client.description,
-                service: client.selected_service,
-                offer: client.selected_offer,
-                status: client.status,
-                salesRepDetails: client.sales_rep_details,
-                statusChangeDate: client.status_change_date ? client.status_change_date.toISOString().slice(0, 10) : null,
-                finalSalesRepDetails: client.final_sales_rep_details,
-                lastChangeDate: client.last_change_date ? client.last_change_date.toISOString().slice(0, 10) : null
-            }
-        })
-        console.log(resArr);
-        res.status(200).json(resArr)
-    } catch (error) {
-        console.error(error)
-        res.status(500)
-    }
-})
-
-app.get("/bayi/rapor/bekleyen", serverFunction.authenticateToken, async(req, res) => {
-    try {
-        let query = await pool.query("SELECT sales_applications.id, sales_applications.client_name, sales_applications.submit_time, sales_applications_details.selected_service, sales_applications_details.selected_offer, sales_applications_details.description, sales_applications.status, sales_applications_details.sales_rep_details, sales_applications_details.status_change_date, sales_applications_details.final_sales_rep_details, sales_applications.last_change_date FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id WHERE sales_applications.status = 'İşleniyor'")
-        const resArr = query.rows.map(client => {
-            return {
-                id: client.id,
-                name: client.client_name,
-                date: client.submit_time.toISOString().slice(0, 10),
-                description: client.description,
-                service: client.selected_service,
-                offer: client.selected_offer,
-                status: client.status,
-                salesRepDetails: client.sales_rep_details,
-                statusChangeDate: client.status_change_date ? client.status_change_date.toISOString().slice(0, 10) : null,
-                finalSalesRepDetails: client.final_sales_rep_details,
-                lastChangeDate: client.last_change_date ? client.last_change_date.toISOString().slice(0, 10) : null
-            }
-        })
-        console.log(resArr);
-        res.status(200).json(resArr)
-    } catch (error) {
-        console.error(error)
-        res.status(500)
-    }
-})
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////// SATIŞ DESTEK///////////////////////////////////////////////////////////////////////////////////////
 
@@ -240,7 +154,6 @@ app.put("/basvurular/:applicationID", serverFunction.authenticateToken, async (r
     const client = await pool.connect()
     // if an ID that doesn't exist in database gets sent, nothing get's updated but no error get's triggered.
     const userInfo = res.locals.userInfo
-    // console.log(userInfo.role);
     if (userInfo.role !== "sales_assistant")
         return res.status(401).json("this user does not have sales assistant premission")
     const { applicationID } = req.params
@@ -248,6 +161,7 @@ app.put("/basvurular/:applicationID", serverFunction.authenticateToken, async (r
     const d = new Date()
     try {
         const query = await client.query("SELECT last_change_date FROM sales_applications WHERE id = $1", [applicationID])
+        // *** because I updated the status records of the database manually, I temporarily commented the lines of code below, I need to uncomment them again
         // if (query.rows[0].last_change_date !== null)
         //     return res.status(401).json("You cannot set application status to approved without first procedures")
         console.log("query", query.rows)
@@ -304,7 +218,7 @@ app.get("/sdc/users", serverFunction.authenticateToken, async (req, res) => {
     if (userInfo.role !== "sales_assistant_chef")
         return res.status(401).json("this user does not have sales assistant premission")
     try {
-        const query = await pool.query("SELECT id, username, role FROM login")
+        const query = await pool.query("SELECT id, username, role, register_date, active FROM login")
         res.status(200).json(query.rows)
       } catch (e) {
         console.log(e)
@@ -312,32 +226,13 @@ app.get("/sdc/users", serverFunction.authenticateToken, async (req, res) => {
       }
 })
 
-// app.get("/sdc/user/:id/details", async (req, res) => {
-//     // const userInfo = res.locals.userInfo
-//     // if (userInfo.role !== "sales_assistant_chef")
-//     //     return res.status(401).json("this user does not have sales assistant premission")
-//     try {
-
-//         // const approvedAppsCountQuery = await pool.query(FOR_SDC_GET_USER_CRITERIA_APPS, ['Onaylandı', req.params.id])
-//         // const rejectedAppsCountQuery = await pool.query(FOR_SDC_GET_USER_CRITERIA_APPS, ['İptal', req.params.id])
-//         // res.status(200).json({
-//         //     approved: approvedAppsCountQuery.rows,
-//         //     rejected: rejectedAppsCountQuery.rows
-//         // })
-//       } catch (e) {
-//         console.log(e)
-//         await client.query('ROLLBACK')
-//         return res.status(500).json("An error occurred while attempting to update application")
-//       }
-// })
-
-app.get("/sdc/user/:id", serverFunction.authenticateToken, async (req, res) => {
+app.get("/sdc/user/:userID", serverFunction.authenticateToken, async (req, res) => {
     const userInfo = res.locals.userInfo
     if (userInfo.role !== "sales_assistant_chef")
         return res.status(401).json("this user does not have sales assistant premission")
-    const { id } = req.params
+    const { userID } = req.params
     try {
-        const query = await pool.query("SELECT id, username, role FROM login WHERE id = $1", [id])
+        const query = await pool.query("SELECT id, username, role FROM login WHERE id = $1", [userID])
         res.status(200).json(query.rows[0])
       } catch (e) {
         console.log(e)
@@ -357,63 +252,25 @@ app.get("/sdc/user/:id/count", serverFunction.authenticateToken, async (req, res
     try {
         const { service, status } = req.query
         const { id } = req.params
-        let q_service = "INSERT SERVICE TYPE"
-        let q_status = "INSERT STATUS TYPE"
-        switch (status) {
-            case "approved":
-                q_status = "Onaylandı"; break;
-            case "denied":
-                q_status = "İptal"; break;
-            case "onhold":
-                q_status = "İşleniyor"; break;
-            case "sent":
-                q_status = "Gönderildi"; break;
-            default:
-                q_status = status; break;
-        }
-        switch (service) {
-            case "Faturasiz":
-                q_service = "Faturasız"; break;
-            case "Faturali":
-                q_service = "Faturalı"; break;
-            case "Taahut":
-                q_service = "Taahüt"; break;
-            case "Iptal":
-                q_service = "İptal"; break;
-            default:
-                q_service = service;
-        }
-        const approvedAppsCountQuery = await fetchUserAppsCount(id, q_status, q_service)
+        const approvedAppsCountQuery = await fetchUserAppsCount(id, status, service)
         res.status(200).json(approvedAppsCountQuery)
-        // res.status(200).json("okey")
       } catch (e) {
         console.log(e)
         return res.status(500).json("An error occurred while attempting to update application")
       }
 })
 
-app.get("/sdc/user/:id/details", async (req, res) => {
-    // const userInfo = res.locals.userInfo
-    // if (userInfo.role !== "sales_assistant_chef")
-    //     return res.status(401).json("this user does not have sales assistant premission")
+app.get("/sdc/user/:id/details", serverFunction.authenticateToken, async (req, res) => {
+    const userInfo = res.locals.userInfo
+    if (userInfo.role !== "sales_assistant_chef")
+        return res.status(401).json("this user does not have sales assistant premission")
     const { service } = req.query
     const { id } = req.params
-    let q_service = "INSERT SERVICE TYPE"
-    switch (service) {
-        case "Faturasiz":
-            q_service = "Faturasız"; break;
-        case "Faturali":
-            q_service = "Faturalı"; break;
-        case "Taahut":
-            q_service = "Taahüt"; break;
-        case "Iptal":
-            q_service = "İptal"; break;
-        default:
-            q_service = service;
-    }
     try {
-        const query = await pool.query(FOR_SDC_GET_USER_APPS_ACCORDINGTO, [q_service, id])
-        res.status(200).json(query.rows)
+        console.log("service and id", service, id)
+        const result = await fetchUserAppsDetails(service, id)
+        console.log(result)
+        res.status(200).json(result)
       } catch (e) {
         console.log(e)
         return res.status(500).json("An error occurred while attempting to update application")

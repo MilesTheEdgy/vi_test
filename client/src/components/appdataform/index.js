@@ -1,6 +1,25 @@
 import { CCol, CFormGroup, CLabel, CTextarea, CButton } from '@coreui/react'
 
-export const renderBasvuruDetayFooter = (details, updateApp) => {
+export const forRoleSetFormLabel = (role) => {
+    switch (role) {
+        case "dealer":
+            return {
+                field3: "Satış Destek Son Notları"
+            }
+        case "sales_assistant":
+            return {
+                field3: "Son notlarınız"
+            }
+        case "sales_assistant_chef":
+            return {
+                field3: "Satış Destek Son Notları"
+            }    
+        default:
+            break;
+    }
+}
+
+export const renderBasvuruDetayFooterButtons = (details, updateApp) => {
     // if the application is on Hold (first status change)
     if (details.submitProcessNum === 2) {
         return (
@@ -27,36 +46,48 @@ export const renderBasvuruDetayFooter = (details, updateApp) => {
     }
 }
 
-export const renderTextArea = (details, userDetails) => {
-    if (details.submitProcessNum === 2) {
+export const renderMiddleTextArea = (applicationDetails, userRole) => {
+    if (applicationDetails.submitProcessNum === 2) {
         return (
             <CFormGroup row>
             <CCol>
-                <CLabel>Bayi Açıklama</CLabel>
+                <CLabel>Bayi Açıklaması</CLabel>
                 <CTextarea 
                 rows="8"
-                placeholder={userDetails.Açıklama}
+                placeholder={applicationDetails.Açıklama}
                 readOnly
                 />
             </CCol>
-            <CCol>
-                <CLabel>Önceki Notlarınız</CLabel>
-                <CTextarea
-                rows="8"
-                placeholder={userDetails.salesRepDetails}
-                readOnly
-                />
-            </CCol>
+            {
+                userRole === "sales_assistant" ?
+                <CCol>
+                    <CLabel>Önceki Notlarınız</CLabel>
+                    <CTextarea
+                    rows="8"
+                    placeholder={applicationDetails.salesRepDetails}
+                    readOnly
+                    />
+                </CCol>
+                :
+                <CCol>
+                    <CLabel>Satış Destek Notları</CLabel>
+                    <CTextarea
+                    rows="8"
+                    placeholder={applicationDetails.salesRepDetails}
+                    readOnly
+                    />
+                </CCol>
+            }
             </CFormGroup>
         )
     }
-    else if (details.submitProcessNum === 3) {
+    else if (applicationDetails.submitProcessNum === 3) {
         return (
         <CFormGroup>
-        <CLabel>Önceki Notlarınız</CLabel>
+        <CLabel>Bayi Açıklaması</CLabel>
         <CTextarea 
             rows="4"
-            placeholder={userDetails.Açıklama}
+            placeholder={applicationDetails.Açıklama}
             readOnly
         />
         </CFormGroup>
@@ -64,14 +95,52 @@ export const renderTextArea = (details, userDetails) => {
     } else {
         return (
         <CFormGroup>
-            <CLabel>Bayi Açıklama</CLabel>
+            <CLabel>Bayi Açıklaması</CLabel>
             <CTextarea 
             rows="4"
-            placeholder={userDetails.Açıklama}
+            placeholder={applicationDetails.Açıklama}
             readOnly
             />
         </CFormGroup>
         )
+    }
+}
+
+export const renderFooterTextArea = (setSdDetay, userRole, userDetails, forRoleSetFields) => {
+    if (userDetails.submitProcessNum === 3)
+        return (
+            <CFormGroup>
+                <CLabel>{forRoleSetFields.field3}</CLabel>
+                    <CTextarea 
+                    rows="6"
+                    placeholder={userDetails.finalSalesRepDetails}
+                    readOnly
+                    />
+            </CFormGroup>
+        )
+    else {
+        if (userRole === "sales_assistant")
+            return (
+                <CFormGroup>
+                    <CLabel>Notlarınız</CLabel>
+                    <CTextarea 
+                        rows="6"
+                        placeholder="işlemle alakalı notlarınız..."
+                        onChange = {(e) => setSdDetay(e.target.value)}
+                    />
+                </CFormGroup>
+            )
+        else
+            return (
+                <CFormGroup>
+                    <CLabel>Satış Destek Son Notları</CLabel>
+                    <CTextarea 
+                        rows="6"
+                        placeholder={userDetails.finalSalesRepDetails}
+                        readOnly
+                    />
+                </CFormGroup>
+            )
     }
 }
 

@@ -26,7 +26,7 @@ const TheSidebar = () => {
   const [nav, setNav] = useState([]);
   useEffect(() => {
     switch (role) {
-      case "bayi":
+      case "dealer":
         setNav(bayi_nav)
         break;
       case "sales_assistant":

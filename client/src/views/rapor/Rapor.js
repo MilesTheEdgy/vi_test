@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useHistory, useLocation } from 'react-router-dom'
+import qs from "qs"
 import {
   CBadge,
   CCard,
@@ -10,19 +11,16 @@ import {
   CRow,
   CPagination
 } from '@coreui/react'
-import ApplicationViewModal from '.'
-import { mapDataToTurkish, getBadge } from "../../components/index"
+import { getBadge, mapDataToTurkish } from '../../components'
+import { switchRaporHeader } from "."
 
-const BasvuruTakibi = () => {
-  // code lines for setting up pagnation
+const RaporOnaylanan = ({match, location}) => {
+  const history = useHistory()
   const queryPage = useLocation().search.match(/sayfa=([0-9]+)/, '')
   const currentPage = Number(queryPage && queryPage[1] ? queryPage[1] : 1)
   const [page, setPage] = useState(currentPage)
-  
-  const history = useHistory()
   const [usersData, setUsersData] = useState(undefined)
-  const [modal, setModal] = useState(false)
-  const [modalData, setModalData] = useState({})
+  const qsQuery = qs.parse(location.search)
 
   const pageChange = newPage => {
     currentPage !== newPage && history.push(`/basvuru/takip?sayfa=${newPage}`)
@@ -30,8 +28,8 @@ const BasvuruTakibi = () => {
 
   useEffect(() => {
     currentPage !== page && setPage(currentPage)
-    const getData = async () => {
-      const res = await fetch("http://localhost:8080/bayi/applications", {
+    const fetchData = async () => {
+      const res = await fetch(`http://localhost:8080/bayi/applications?status=${qsQuery["?status"]}`, {
         method: 'GET',
         headers: {
           'content-type': 'application/json',
@@ -40,36 +38,39 @@ const BasvuruTakibi = () => {
       })
       if (res.status === 200) {
         const fetchData = await res.json()
-        const resData = mapDataToTurkish(fetchData)
-        setUsersData(resData)
+        const mappedData = mapDataToTurkish(fetchData)
+        setUsersData(mappedData)
       }
     };
-    getData();
-  }, [currentPage, page])
+    fetchData();
+    // eslint-disable-next-line
+  }, [qsQuery["?status"]])
 
   return (
     <CRow className = "d-flex justify-content-center">
-      <ApplicationViewModal show = {modal} userDetails = {modalData} onClose = {setModal} />
       <CCol xl={10}>
       {
         usersData ? 
         <CCard>
           <CCardHeader>
-            Başvurularınız
+            Raporunuz
+            <small className="text-muted"> {switchRaporHeader(qsQuery["?status"])} işlemler</small>
           </CCardHeader>
           <CCardBody>
             <CDataTable
+                sorter
                 items={usersData}
                 fields={[
                 { key: 'İsim', _classes: 'font-weight-bold' },
                 'Tarih', 'Tip', 'Statü'
                 ]}
+                tableFilter
                 hover
                 striped
                 itemsPerPage={30}
                 activePage={page}
                 clickableRows
-                onRowClick={(item) => { setModal(true); setModalData(item)}}
+                onRowClick={(item) => history.push(`/islem/${item.ID}`)}
                 scopedSlots = {{
                 'Statü':
                     (item)=>(
@@ -99,4 +100,4 @@ const BasvuruTakibi = () => {
   )
 }
 
-export default BasvuruTakibi;
+export default RaporOnaylanan;

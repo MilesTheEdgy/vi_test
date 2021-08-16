@@ -72,7 +72,7 @@ const loadAnasayfa = async (username, role) => {
     
 const sendApplication = async (userInfo, selectedService, selectedOffer, clientWantsRouter, clientDescription, clientName, res) => {
     console.log("client name is: ", clientName);
-    if (!selectedService.match(/^(DSL|Taahüt|Tivibu|PSTN|İptal|Nakit|Devir)$/)) {
+    if (!selectedService.match(/^(DSL|Taahüt|Tivibu|PSTN|İptal|Nakil|Devir)$/)) {
         console.error("Selected service doesn't match the criteria");
         return res.status(406).json("Selected service doesn't match the criteria")
     }

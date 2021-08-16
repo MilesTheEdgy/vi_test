@@ -1,27 +1,12 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { CDataTable, CBadge, CButton } from "@coreui/react";
 import { useHistory } from 'react-router-dom'
-import { useDispatch, useSelector } from "react-redux";
 import XLSX from "xlsx";
-import { mapDataToTurkish } from ".";
-
-export const fetchData = async(dispatch) => {
-  const res = await fetch("http://localhost:8080/sd/basvurular/goruntule", {
-    method: 'GET',
-    headers: {
-      'content-type': 'application/json',
-      'authorization' :`Bearer ${document.cookie.slice(8)} `
-    }
-  })
-  const fetchData = await res.json()
-  const resData = mapDataToTurkish(fetchData)
-  dispatch({type: 'FILL_APPS_DATA', payload: resData})
- }
+import { mapDataToTurkish, getBadge } from '../../components/index'
 
 const BasvurularGoruntule = () => {
   const history = useHistory()
-  const dispatch = useDispatch()
-  const data = useSelector(state => state.reducer.appsData)
+  const [data, setData] = useState([])
 
   const exportFile = () => {
     let cols = ["ID", "İsim", "Tarih", "Hizmet", "Kampanya", "Açıklama", "Statü"]
@@ -38,8 +23,20 @@ const BasvurularGoruntule = () => {
   };
 
  useEffect(() => {
-   fetchData(dispatch);
- }, [dispatch])
+  const fetchData = async() => {
+    const res = await fetch("http://localhost:8080/sd/basvurular/goruntule", {
+      method: 'GET',
+      headers: {
+        'content-type': 'application/json',
+        'authorization' :`Bearer ${document.cookie.slice(8)} `
+      }
+    })
+    const fetchData = await res.json()
+    const resData = mapDataToTurkish(fetchData)
+    setData(resData)
+   }
+   fetchData();
+ }, [])
 
  const fields = [
    { key: 'İsim', _style: { width: '25%'} },
@@ -54,16 +51,6 @@ const BasvurularGoruntule = () => {
      filter: false
    }
  ]
-
- const getBadge = (status)=>{
-   switch (status) {
-      case 'Onaylandı': return 'success'
-      case 'İşleniyor': return 'warning'
-      case 'İptal': return 'danger'
-      case 'Gönderildi': return 'secondary'
-      default: return 'primary'
-   }
- }
 
      return (
 <>

@@ -1,36 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import { useHistory, useLocation } from 'react-router-dom'
 import {
-  CBadge,
   CCard,
   CCardBody,
   CCardHeader,
   CCol,
   CDataTable,
   CRow,
-  CPagination,
-  CModal,
-  CModalTitle,
-  CModalHeader,
-  CModalBody,
-  CModalFooter,
-  CButton,
-  CFormGroup,
-  CLabel,
-  CInput,
-  CTextarea
+  CPagination
 } from '@coreui/react'
-import { useDispatch } from 'react-redux'
-
-const getBadge = (status)=>{
-  switch (status) {
-     case 'Onaylandı': return 'success'
-     case 'İşleniyor': return 'warning'
-     case 'İptal': return 'danger'
-     case 'Gönderildi': return 'secondary'
-     default: return 'primary'
-  }
-}
+import "./style.css"
 
 const SdcKullanicilar = () => {
   const history = useHistory()
@@ -38,7 +17,6 @@ const SdcKullanicilar = () => {
   const currentPage = Number(queryPage && queryPage[1] ? queryPage[1] : 1)
   const [page, setPage] = useState(currentPage)
   const [usersData, setUsersData] = useState(undefined)
-  const dispatch = useDispatch()
 
   const pageChange = newPage => {
     currentPage !== newPage && history.push(`/sdc/kullanicilar?sayfa=${newPage}`)
@@ -56,13 +34,16 @@ const SdcKullanicilar = () => {
       })
       if (res.status === 200) {
         const fetchData = await res.json()
-        const resData = fetchData.map(obj => {
+        console.log(fetchData)
+        const mappedData = fetchData.map(obj => {
+          let rawDate = new Date(obj.register_date)
+          let date = rawDate.toISOString().slice(0, 10)
           let role = ""
           switch (obj.role) {
             case "admin":
               role = "Admin"
               break;
-            case "bayi":
+            case "dealer":
               role = "Bayi"
               break
             case "sales_assistant":
@@ -77,11 +58,12 @@ const SdcKullanicilar = () => {
           return {
               ID: obj.id,
               Kullanıcı: obj.username,
-              Röl: role
+              Röl: role,
+              Kayıt_tarihi: date,
+              actif: obj.active ? "Evet" : "Hayır"
             }
         })
-        setUsersData(resData)
-        dispatch({type: "FILL_SDC_USERS_DATA", payload: resData})
+        setUsersData(mappedData)
       }
     };
     getData();
@@ -94,15 +76,15 @@ const SdcKullanicilar = () => {
           <CCardHeader>
             Başvurularınız
           </CCardHeader>
+
           <CCardBody>
             <CDataTable
                 items={usersData}
                 hover
-                striped
                 itemsPerPage={30}
                 activePage={page}
                 clickableRows
-                onRowClick={(item) => history.push(`/sdc/kullanici/${item.ID}`)}
+                onRowClick={(user) => history.push(`/sdc/kullanici/${user.ID}`)}
             />
             <CPagination
                 activePage={page}

@@ -25,8 +25,7 @@ import {
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import "./yenibasvuru.css";
-import Loader from "../loader/Loader";
-
+import Loader from "../../components/loader/Loader"
 
 const MissingInfoModal = ({reset}) => {
     const [modalShow, setModalShow] = useState(true)

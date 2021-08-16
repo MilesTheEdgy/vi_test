@@ -2,27 +2,42 @@
 
 export const filterAndMapAppData = (allData) => {
     let digerIslemApproved = 0
-    let digerIslemDenied = 0
+    let digerIslemSent = 0
+    let digerIslemProcessing = 0
+    let digerIslemRejected = 0
+    // eslint-disable-next-line
     const allDataFiltered = allData.filter(obj => {
       switch (obj.service) {
         case "İptal":
           digerIslemApproved = digerIslemApproved + Number(obj.approvedCount)
-          digerIslemDenied = digerIslemDenied + Number(obj.deniedCount)
+          digerIslemSent = digerIslemSent + Number(obj.sentCount)
+          digerIslemProcessing = digerIslemProcessing + Number(obj.processingCount)
+          digerIslemRejected = digerIslemRejected + Number(obj.rejectedCount)
           break;
         case "Devir":
           digerIslemApproved = digerIslemApproved + Number(obj.approvedCount)
-          digerIslemDenied = digerIslemDenied + Number(obj.deniedCount)
+          digerIslemSent = digerIslemSent + Number(obj.sentCount)
+          digerIslemProcessing = digerIslemProcessing + Number(obj.processingCount)
+          digerIslemRejected = digerIslemRejected + Number(obj.rejectedCount)
           break;
         case "Nakil":
           digerIslemApproved = digerIslemApproved + Number(obj.approvedCount)
-          digerIslemDenied = digerIslemDenied + Number(obj.deniedCount)
+          digerIslemSent = digerIslemSent + Number(obj.sentCount)
+          digerIslemProcessing = digerIslemProcessing + Number(obj.processingCount)
+          digerIslemRejected = digerIslemRejected + Number(obj.rejectedCount)
           break;
         default:
           return obj
-          break;
       }
     })
-    allDataFiltered.push({service: "Diğer", routeName: "diğer", approvedCount: digerIslemApproved, deniedCount: digerIslemDenied})
+    allDataFiltered.push({
+      service: "Diğer", 
+      routeName: "diger", 
+      approvedCount: digerIslemApproved, 
+      sentCount: digerIslemSent,
+      processingCount: digerIslemProcessing,
+      rejectedCount: digerIslemRejected
+    })
     const allDataMapped = allDataFiltered.map(obj => {
       switch (obj.service) {
         case "Faturasız":

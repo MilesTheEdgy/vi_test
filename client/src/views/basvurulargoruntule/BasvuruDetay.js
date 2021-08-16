@@ -1,14 +1,28 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { CCard, CCardBody, CCardHeader, CCol, CRow, CFormGroup, CLabel, CInput, CTextarea, CButton } from '@coreui/react'
-import CIcon from '@coreui/icons-react'
 import "./basvurudetay.css"
-import { useSelector, useDispatch } from 'react-redux'
 import { useHistory } from 'react-router-dom'
 import Modal from "../../components/modals/Modal"
-import { fetchData } from './BasvurularGoruntule'
+import { mapDataToTurkish } from '../../components/index'
 
 const BasvuruDetay = ({match}) => {
-  // RENDER FOOTER BUTTONS CONDITONALLY
+  const applicationID = match.params.id
+
+  const fetchData = async (setUserDetails) => {
+    const res = await fetch(`http://localhost:8080/applications/${applicationID}`, {
+      method: 'GET',
+      headers: {
+        'content-type': 'application/json',
+        'authorization' :`Bearer ${document.cookie.slice(8)} `
+      }
+    })
+    if (res.status === 200) {
+      const data = await res.json()
+      const mappedData = mapDataToTurkish(data)
+      setUserDetails(mappedData[0])
+    }
+  }
+
   const renderBasvuruDetayFooter = (details) => {
     // if the application is on Hold (first status change)
     if (details.submitProcessNum === 2) {
@@ -40,7 +54,7 @@ const BasvuruDetay = ({match}) => {
       return (
           <CFormGroup row>
             <CCol>
-              <CLabel>Bayi Açıklama</CLabel>
+              <CLabel>Bayi Açıklaması</CLabel>
               <CTextarea 
                 rows="8"
                 placeholder={userDetails.Açıklama}
@@ -61,7 +75,7 @@ const BasvuruDetay = ({match}) => {
     else if (details.submitProcessNum === 3) {
       return (
         <CFormGroup>
-        <CLabel>Önceki Notlarınız</CLabel>
+        <CLabel>Bayi Açıklaması</CLabel>
         <CTextarea 
           rows="4"
           placeholder={userDetails.Açıklama}
@@ -72,7 +86,7 @@ const BasvuruDetay = ({match}) => {
     } else {
       return (
         <CFormGroup>
-          <CLabel>Bayi Açıklama</CLabel>
+          <CLabel>Bayi Açıklaması</CLabel>
           <CTextarea 
             rows="4"
             placeholder={userDetails.Açıklama}
@@ -101,7 +115,7 @@ const BasvuruDetay = ({match}) => {
             })
     })
     if (res.status === 200) {
-      await fetchData(dispatch)
+      await fetchData(setUserDetails)
       setModalDetails(modalSuccess)
       setModal(true)
     } else {
@@ -121,7 +135,6 @@ const BasvuruDetay = ({match}) => {
         return "rgb(120, 138, 151)"
     }
   }
-
   const [sdDetay, setSdDetay] = useState("")
   const modalSuccess = {
     header: "BAŞARILI",
@@ -135,14 +148,12 @@ const BasvuruDetay = ({match}) => {
   }
   const [modal, setModal] = useState(false)
   const [modalDetails, setModalDetails] = useState({})
+  const [userDetails, setUserDetails] = useState({})
   const history = useHistory()
-  const dispatch = useDispatch()
-  // fetches data from redux store
-  const data = useSelector(state => state.reducer.appsData)
-  const user = data.find( user => user.ID.toString() === match.params.id)
-  const userDetails = user ? user : 
-    [['ID', (<span><CIcon className="text-muted" name="cui-icon-ban" /> Başvuru bulunmadı</span>)]]
-  if (userDetails.ID)
+  useEffect(() => {
+    fetchData(setUserDetails)
+    // eslint-disable-next-line
+  }, [])
   return (
     <CRow className = "justify-content-center align-items-center">
       <Modal modalOn= {modal} setModal = {setModal} color = {modalDetails.color} header = {modalDetails.header} body = {modalDetails.body} />
