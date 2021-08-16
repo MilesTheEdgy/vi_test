@@ -10,6 +10,7 @@ import {
   CPagination
 } from '@coreui/react'
 import "./style.css"
+import ToggleSwitch from '../../components/toggleswitch/ToggleSwitch'
 
 const SdcKullanicilar = () => {
   const history = useHistory()
@@ -17,9 +18,22 @@ const SdcKullanicilar = () => {
   const currentPage = Number(queryPage && queryPage[1] ? queryPage[1] : 1)
   const [page, setPage] = useState(currentPage)
   const [usersData, setUsersData] = useState(undefined)
+  const [userActive, setUserActive] = useState([]);
 
   const pageChange = newPage => {
     currentPage !== newPage && history.push(`/sdc/kullanicilar?sayfa=${newPage}`)
+  }
+
+  const toggleUserActive = (setState, itemID, state) => {
+    console.log("original state", state)
+    const stateCopy = [...state]
+    console.log("copied state ", stateCopy)
+    const i = stateCopy.findIndex(obj => obj.ID === itemID)
+    console.log("itemID ", itemID, " state", stateCopy )
+    console.log("found index is: ", i)
+    stateCopy[i].active = !stateCopy[i].active
+    console.log("new 'state' ", stateCopy)
+    setState(stateCopy)
   }
 
   useEffect(() => {
@@ -35,7 +49,9 @@ const SdcKullanicilar = () => {
       if (res.status === 200) {
         const fetchData = await res.json()
         console.log(fetchData)
+        let usersActiveArr = []
         const mappedData = fetchData.map(obj => {
+          usersActiveArr.push({active: obj.active, userID: obj.id})
           let rawDate = new Date(obj.register_date)
           let date = rawDate.toISOString().slice(0, 10)
           let role = ""
@@ -60,10 +76,12 @@ const SdcKullanicilar = () => {
               Kullanıcı: obj.username,
               Röl: role,
               Kayıt_tarihi: date,
-              actif: obj.active ? "Evet" : "Hayır"
+              Aktif: obj.active
             }
         })
         setUsersData(mappedData)
+        console.log(usersActiveArr)
+        setUserActive(usersActiveArr)
       }
     };
     getData();
@@ -76,7 +94,7 @@ const SdcKullanicilar = () => {
           <CCardHeader>
             Başvurularınız
           </CCardHeader>
-
+          <button onClick = {() => console.log(usersData)}>dummy</button>
           <CCardBody>
             <CDataTable
                 items={usersData}
@@ -84,7 +102,22 @@ const SdcKullanicilar = () => {
                 itemsPerPage={30}
                 activePage={page}
                 clickableRows
-                onRowClick={(user) => history.push(`/sdc/kullanici/${user.ID}`)}
+                // onRowClick={(user) => history.push(`/sdc/kullanici/${user.ID}`)}
+                scopedSlots = {{
+                  "Aktif":
+                    (item, index) => (
+                      <td>
+                        <ToggleSwitch
+                          id={`userActive${item.ID}`}
+                          checked={item.Aktif}
+                          onChange={() => {
+                            console.log(userActive)
+                            toggleUserActive(setUsersData, item.ID, usersData)
+                            }}
+                        />
+                      </td>
+                    ) 
+                }}
             />
             <CPagination
                 activePage={page}

@@ -14,10 +14,10 @@ const RaporIptal= lazy(() => import('../../views/rapor/iptal/RaporIptal'))
 const RaporBekleyen= lazy(() => import('../../views/rapor/beklemede/RaporBekleyen'))
 //////////////////
 const Rapor= lazy(() => import('../../views/rapor/Rapor'))
-const SdcKullanicilar = lazy(() => import('../../views/sdckullanıcılar/SdcKullanicilar'))
-const SdcKullanici = lazy(() => import('../../views/sdckullanıcılar/SdcKullanici'))
-const SdcIslemler = lazy(() => import('../../views/sdckullanıcılar/SdcIslemler'))
-const SdcIslem = lazy(() => import('../../views/sdckullanıcılar/SdcIslem'))
+const SdcKullanicilar = lazy(() => import('../../views/sdckullanicilar/SdcKullanicilar'))
+const SdcKullanici = lazy(() => import('../../views/sdckullanicilar/SdcKullanici'))
+const SdcIslemler = lazy(() => import('../../views/sdckullanicilar/SdcIslemler'))
+const SdcIslem = lazy(() => import('../../views/sdckullanicilar/SdcIslem'))
 const BasvuruID = lazy(() => import('../../views/basvuruid/BasvuruID'))
 
 const routes = [
