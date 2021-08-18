@@ -40,11 +40,12 @@ class ErrorBoundary extends React.Component {
 }
 
 export const loading = (
-    <div className="apploader text-center">
-      <div className="spinner-border" role="status">
-        <span className="sr-only">Loading...</span>
-      </div>
-    </div>
+    // <div className="apploader text-center">
+    //   <div className="spinner-border" role="status">
+    //     <span className="sr-only">Loading...</span>
+    //   </div>
+    // </div>
+    <h1>HELLO YO</h1>
 )
 
 

@@ -3,7 +3,7 @@ import { CCard, CCardBody, CCardHeader, CCol, CRow, CFormGroup, CLabel, CInput, 
 import { useHistory } from 'react-router-dom'
 import HocLoader from '../hocloader/HocLoader'
 import "./style.css"
-import { filterAndMapAppData } from '.'
+import { filterAndMapAppData, mapUsersData } from '.'
 
 const fetchUserLoginDate = async (id) => {
   const res = await fetch(`http://localhost:8080/sdc/user/${id}`, {
@@ -38,6 +38,34 @@ const fetchSalesData = async (id, service, status) => {
   }
 }
 
+const onImageChange =  async (event) => {
+  if (event.target.files && event.target.files[0]) {
+    console.log("event.target.files", event.target.files)
+
+    let img = event.target.files[0];
+    console.log("img before using createobjecturl", img)
+    console.log("img before using createobjecturl", URL.createObjectURL(img))
+
+    const formData = new FormData()
+    formData.append("myFile", img, img.name)
+    const plainFormData = Object.fromEntries(formData.entries());
+    const formDataJsonString = JSON.stringify(plainFormData);
+    const res = await fetch("http://localhost:8080/upload", {
+      method: "POST",
+      headers: {
+        'authorization' :`Bearer ${document.cookie.slice(8)} `
+        },
+      body: formDataJsonString
+    })
+    if (res.status === 200) {
+      const data = await res.json()
+      console.log("data from fetch", data)
+    } else {
+      console.log("err")
+    }
+  }
+};
+
 const SdcKullanici = ({match}) => {
   const { id } = match.params
   const history = useHistory()
@@ -47,7 +75,8 @@ const SdcKullanici = ({match}) => {
   useEffect(() => {
     const fetchAllData = async () => {
       const userDataFetch = await fetchUserLoginDate(id)
-      setUserLoginData(userDataFetch)
+      const mappedUserData = mapUsersData([userDataFetch])
+      setUserLoginData(mappedUserData[0])
       setUserLoginDataLoading(false)
       const allData = await fetchSalesData(id, "ALL", "ALL")
       const filteredData = filterAndMapAppData(allData)
@@ -73,30 +102,30 @@ const SdcKullanici = ({match}) => {
                 </CRow>
               </CCardHeader>
               <CCardBody className = "basvuru-detay" >
-                <HocLoader isLoading = {userLoginDataLoading}>
+                <HocLoader isLoading = {userLoginDataLoading} absolute = {true}>
                   <CFormGroup row className="my-0">
-                    <CCol lg="12" xl = "2" >
+                    <CCol lg="12" xl = "3" >
                       <CFormGroup>
                         <CLabel>ID</CLabel>
-                        <CInput placeholder= {userLoginData.id} readOnly />
+                        <CInput placeholder= {userLoginData.ID} readOnly />
                       </CFormGroup>
                     </CCol>
-                    <CCol lg="12" xl = "4">
+                    <CCol lg="12" xl = "3">
                       <CFormGroup>
                         <CLabel>İsim</CLabel>
-                        <CInput placeholder={userLoginData.username} readOnly />
+                        <CInput placeholder={userLoginData.Kullanıcı} readOnly />
                       </CFormGroup>
                     </CCol>
                     <CCol lg="12" xl = "3">
                       <CFormGroup>
                         <CLabel>Röl</CLabel>
-                        <CInput placeholder={userLoginData.role} readOnly />
+                        <CInput placeholder={userLoginData.Röl} readOnly />
                       </CFormGroup>
                     </CCol>
                     <CCol lg="12" xl = "3">
                       <CFormGroup>
                         <CLabel>Kayıt tarihi</CLabel>
-                        <CInput placeholder="2021.02.06" readOnly />
+                        <CInput placeholder={userLoginData.Kayıt_tarihi} readOnly />
                       </CFormGroup>
                     </CCol>
                   </CFormGroup>
@@ -148,7 +177,7 @@ const SdcKullanici = ({match}) => {
                         <CCol sm = "6" lg="2" >
                           <CFormGroup>
                             <CLabel col></CLabel>
-                            <CButton onClick = {() => history.push(`/sdc/islemler?islem=${obj.routeName}&id=${userLoginData.id}`)} color = "success" ><i className="fas fa-arrow-right"></i></CButton>
+                            <CButton onClick = {() => history.push(`/sdc/islemler?islem=${obj.routeName}&id=${userLoginData.ID}`)} color = "success" ><i className="fas fa-arrow-right"></i></CButton>
                           </CFormGroup>
                         </CCol>
                         <div className = "sdcKullainici-divider"></div>

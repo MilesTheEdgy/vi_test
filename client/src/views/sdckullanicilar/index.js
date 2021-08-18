@@ -76,3 +76,44 @@ export const filterAndMapAppData = (allData) => {
     })
     return allDataMapped
 }
+
+export const mapUsersData = (fetchData) => {
+  return fetchData.map(obj => {
+    let rawDate = new Date(obj.register_date)
+    let date = rawDate.toISOString().slice(0, 10)
+    let role = ""
+    switch (obj.role) {
+      case "admin":
+        role = "Admin"
+        break;
+      case "dealer":
+        role = "Bayi"
+        break
+      case "sales_assistant":
+        role = "Satış Destek"
+        break
+      case "sales_assistant_chef":
+        role = "Satış Destek Şefi"
+        break
+      default:
+        break;
+    }
+    return {
+        ID: obj.user_id,
+        Kullanıcı: obj.username,
+        Röl: role,
+        Kayıt_tarihi: date,
+        Aktif: obj.active
+      }
+  })
+}
+
+export const compare = ( a, b ) => {
+  if ( a.ID < b.ID ){
+    return -1;
+  }
+  if ( a.ID > b.ID ){
+    return 1;
+  }
+  return 0;
+}

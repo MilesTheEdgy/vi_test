@@ -4,10 +4,16 @@ const cors = require("cors");
 const bcrypt = require("bcrypt");
 // const client = require("./db");
 const pool = require("./db");
-const serverFunction = require("./functions");
+var uniqid = require('uniqid');
+const {
+    authenticateToken,
+    checkCredentials,
+    generateAccessToken,
+    loadAnasayfa,
+    sendApplication
+} = require("./functions");
+
 const { 
-    FOR_SDC_GET_USER_APPS_ACCORDINGTO,
-    FOR_SDC_GET_USER_CRITERIA_APPS,
     fetchUserAppsCount,
     fetchUserAppsDetails
 } = require("./database/queries")
@@ -28,13 +34,13 @@ pool.on('error', (err, client) => {
 
 // app.post("/superuser", async (req, res) => {
 //     try {
-//         let token = serverFunction.generateAccessToken({username: "superuser", status: "admin"})
+//         let token = generateAccessToken({username: "superuser", status: "admin"})
 //         res.json({token})
 //     } catch (error) {
 //         console.error(error);
 //     }
 // });
-app.post("/", serverFunction.authenticateToken, async (req, res) => {
+app.post("/", authenticateToken, async (req, res) => {
     try {
         const dbUserTable = await pool.query("SELECT username, role FROM login WHERE username = $1", [res.locals.userInfo.username]);
         const { username, role } = dbUserTable.rows[0];
@@ -51,10 +57,10 @@ app.post("/", serverFunction.authenticateToken, async (req, res) => {
 app.post("/login", async(req, res) => {
     try {
         const { username, password } = req.body;
-        let checkCredentialsResult = await serverFunction.checkCredentials(username, password)
+        let checkCredentialsResult = await checkCredentials(username, password)
         console.log("checkCredentialsResult", checkCredentialsResult)
         if (checkCredentialsResult.ok) {
-            let token = serverFunction.generateAccessToken({username: username, role: checkCredentialsResult.userRole})
+            let token = generateAccessToken({username: username, role: checkCredentialsResult.userRole})
             // console.log("token from login: ", token)
             console.log(checkCredentialsResult.userRole);
             return res.status(200).json({
@@ -74,6 +80,7 @@ app.post("/login", async(req, res) => {
 app.post("/register", async(req, res) => {
     try {
         const { username, password } = req.body;
+        const uniqueID = uniqid()
         bcrypt.hash(password, 10, function(err, hash) {
             res.json({username, hash})
         });
@@ -85,9 +92,9 @@ app.post("/register", async(req, res) => {
 
 
 
-app.get("/bayi/anasayfa", serverFunction.authenticateToken, async(req, res) => {
+app.get("/bayi/anasayfa", authenticateToken, async(req, res) => {
     try {
-        let query = await serverFunction.loadAnasayfa(res.locals.userInfo.username, res.locals.userInfo.role)
+        let query = await loadAnasayfa(res.locals.userInfo.username, res.locals.userInfo.role)
         if (query.ok) 
             return res.status(200).json(query.result)
         else
@@ -98,18 +105,18 @@ app.get("/bayi/anasayfa", serverFunction.authenticateToken, async(req, res) => {
     }
 })
 
-app.post("/bayi/basvuru/yeni", serverFunction.authenticateToken, async(req, res) => {
+app.post("/bayi/basvuru/yeni", authenticateToken, async(req, res) => {
     try {
         const { selectedService, selectedOffer, clientDescription, clientWantsRouter, clientName} = req.body;
         const userInfo = res.locals.userInfo
-        await serverFunction.sendApplication(userInfo, selectedService, selectedOffer, clientWantsRouter, clientDescription, clientName, res) 
+        await sendApplication(userInfo, selectedService, selectedOffer, clientWantsRouter, clientDescription, clientName, res) 
     } catch (error) {
         console.error(error)
         res.status(500)
     }
 })
 
-app.get("/bayi/applications", serverFunction.authenticateToken, async(req, res) => {
+app.get("/bayi/applications", authenticateToken, async(req, res) => {
     try {
         const username = res.locals.userInfo.username
         const { status } = req.query
@@ -138,7 +145,7 @@ app.get("/applications/:applicationID", async(req, res) => {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////// SATIŞ DESTEK///////////////////////////////////////////////////////////////////////////////////////
 
-app.get("/sd/basvurular/goruntule", serverFunction.authenticateToken, async (req, res) => {
+app.get("/sd/basvurular/goruntule", authenticateToken, async (req, res) => {
     try {
         const userInfo = res.locals.userInfo
         if (userInfo.role !== "sales_assistant")
@@ -150,7 +157,7 @@ app.get("/sd/basvurular/goruntule", serverFunction.authenticateToken, async (req
     }
 })
 
-app.put("/basvurular/:applicationID", serverFunction.authenticateToken, async (req, res) => {
+app.put("/basvurular/:applicationID", authenticateToken, async (req, res) => {
     const client = await pool.connect()
     // if an ID that doesn't exist in database gets sent, nothing get's updated but no error get's triggered.
     const userInfo = res.locals.userInfo
@@ -162,6 +169,7 @@ app.put("/basvurular/:applicationID", serverFunction.authenticateToken, async (r
     try {
         const query = await client.query("SELECT last_change_date FROM sales_applications WHERE id = $1", [applicationID])
         // *** because I updated the status records of the database manually, I temporarily commented the lines of code below, I need to uncomment them again
+        // *** In order for me to do that, It would be easier to delete all existing applications and make new ones.
         // if (query.rows[0].last_change_date !== null)
         //     return res.status(401).json("You cannot set application status to approved without first procedures")
         console.log("query", query.rows)
@@ -181,7 +189,7 @@ app.put("/basvurular/:applicationID", serverFunction.authenticateToken, async (r
       }
 })
 
-app.put("/basvurular/:applicationID/sp", serverFunction.authenticateToken, async (req, res) => {
+app.put("/basvurular/:applicationID/sp", authenticateToken, async (req, res) => {
     const client = await pool.connect()
     const userInfo = res.locals.userInfo
     if (userInfo.role !== "sales_assistant")
@@ -213,12 +221,12 @@ app.put("/basvurular/:applicationID/sp", serverFunction.authenticateToken, async
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////// SATIŞ DESTEK ÇEF///////////////////////////////////////////////////////////////////////////////////////
 
-app.get("/sdc/users", serverFunction.authenticateToken, async (req, res) => {
+app.get("/sdc/users", authenticateToken, async (req, res) => {
     const userInfo = res.locals.userInfo
     if (userInfo.role !== "sales_assistant_chef")
         return res.status(401).json("this user does not have sales assistant premission")
     try {
-        const query = await pool.query("SELECT id, username, role, register_date, active FROM login")
+        const query = await pool.query("SELECT user_id, username, role, register_date, active FROM login")
         res.status(200).json(query.rows)
       } catch (e) {
         console.log(e)
@@ -226,13 +234,13 @@ app.get("/sdc/users", serverFunction.authenticateToken, async (req, res) => {
       }
 })
 
-app.get("/sdc/user/:userID", serverFunction.authenticateToken, async (req, res) => {
+app.get("/sdc/user/:userID", authenticateToken, async (req, res) => {
     const userInfo = res.locals.userInfo
     if (userInfo.role !== "sales_assistant_chef")
         return res.status(401).json("this user does not have sales assistant premission")
     const { userID } = req.params
     try {
-        const query = await pool.query("SELECT id, username, role FROM login WHERE id = $1", [userID])
+        const query = await pool.query("SELECT user_id, username, role, active, register_date FROM login WHERE user_id = $1", [userID])
         res.status(200).json(query.rows[0])
       } catch (e) {
         console.log(e)
@@ -240,7 +248,21 @@ app.get("/sdc/user/:userID", serverFunction.authenticateToken, async (req, res) 
       }
 })
 
-app.get("/sdc/user/:id/count", serverFunction.authenticateToken, async (req, res) => {
+app.put("/sdc/user/:userID", authenticateToken, async (req, res) => {
+    const userInfo = res.locals.userInfo
+    if (userInfo.role !== "sales_assistant_chef")
+        return res.status(401).json("this user does not have sales assistant premission")
+    const { userID } = req.params
+    try {
+        await pool.query("UPDATE login SET active = NOT active WHERE user_id = $1", [userID])
+        res.status(200).json("User status update was a success")
+      } catch (e) {
+        console.log(e)
+        return res.status(500).json("An error occurred while attempting to toggle user active status ")
+      }
+})
+
+app.get("/sdc/user/:id/count", authenticateToken, async (req, res) => {
     
     // Returns the COUNT of user total sent applications
     // can be filtered through specific criteria in fetchUserAppsCount args
@@ -260,14 +282,13 @@ app.get("/sdc/user/:id/count", serverFunction.authenticateToken, async (req, res
       }
 })
 
-app.get("/sdc/user/:id/details", serverFunction.authenticateToken, async (req, res) => {
+app.get("/sdc/user/:id/details", authenticateToken, async (req, res) => {
     const userInfo = res.locals.userInfo
     if (userInfo.role !== "sales_assistant_chef")
         return res.status(401).json("this user does not have sales assistant premission")
     const { service } = req.query
     const { id } = req.params
     try {
-        console.log("service and id", service, id)
         const result = await fetchUserAppsDetails(service, id)
         console.log(result)
         res.status(200).json(result)
@@ -277,7 +298,18 @@ app.get("/sdc/user/:id/details", serverFunction.authenticateToken, async (req, r
       }
 })
 
-app.get("/", (req, res) => res.json("app worksssssssssss"))
+app.get("/", async (req, res) => res.json("app worksssssssssss"))
+app.put("/test/:userID", async (req, res) => {
+    const { userID } = req.params
+    const { isActive } = req.body
+    try {
+        const query = await pool.query("UPDATE login SET  WHERE id = $1", [userID])
+        res.status(200).json(query.rows[0])
+      } catch (e) {
+        console.log(e)
+        return res.status(500).json("An error occurred while attempting to update application")
+      }
+})
 
 
 const PORT = process.env.PORT || 8080

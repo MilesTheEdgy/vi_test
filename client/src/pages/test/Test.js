@@ -18,24 +18,40 @@ import Modal from '../../components/modals/Modal'
 import Toaster from '../../components/toaster/Toaster'
 import Loader from "../../components/loader/Loader"
 
-const Register = () => {
-  const missingInfo = "Lütfen tüm alanları doldurunuz"
-  const unmatchedPassword = "Şifreniz uyuşmuyor, lütfen şifrelerinizi kontrol edin"
-  const userAlreadyExists = "Bu kullanıcı adı alınmıştır. Lütfen farklı bir kullanıcı adı seçiniz"
-  const modalErrorObj = {
-    header: "HATA",
-    body: "Bilgileriniz kaydedilmedi, lütfen daha sonra tekrar deneyin",
-    color: "danger"
+const Test = () => {
+  const onImageSelect =  (event) => {
+    if (event.target.files && event.target.files[0]) {
+      console.log("event.target.files", event.target.files)
+      let img = event.target.files[0];
+      console.log("img before using createobjecturl", img)
+      // console.log("img before using createobjecturl", URL.createObjectURL(img))
+      setImage(img)
+    }
+  };
+  
+  const onImageUpload = async () => {
+    const formData = new FormData()
+    formData.append("myFile", image)
+    console.log("img", image)
+    console.log("form data", formData)
+    const plainFormData = Object.fromEntries(formData.entries());
+    const formDataJsonString = JSON.stringify(plainFormData);
+    try {
+      console.log("fetching")
+      const res = await fetch("http://localhost:8080/upload", {
+        method: "POST",
+        body: formData
+      })
+      const data = await res.json()
+      console.log("data from fetch", data)
+    } catch (error) {
+      console.log(error)
+    }
   }
-  const modalSuccessObj = {
-    header: "BAŞARILI",
-    body: "Talebiniz başarıyla işlenmiştir! giriş yapabilirsiniz.",
-    color: "success"
-  }
+  
   const [username, setUsername] = useState("")
-  const [pharmacyName, setPharmacyName] = useState("")
   const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
+  const [image, setImage] = useState(null)
   const [modal, setModal] = useState({
     header: "",
     body: "",
@@ -43,35 +59,8 @@ const Register = () => {
   })
   const [modalOn, setModalOn] = useState(false)
   const [toasters, addToaster] = useState([])
-  const reset = () => {
-    setUsername("")
-    setPharmacyName("")
-    setPassword("")
-    setConfirmPassword("")
-  }
-  const verifyInput = () => {
-    if (username === "" || password === "" || confirmPassword === "" || pharmacyName === "") {
-      addToaster([
-        ...toasters,
-        {body: missingInfo}
-      ])
-      return false
-    }
-    return true
-  }
-  const verifyPassword = () => {
-    if (password !== confirmPassword) {
-      addToaster([
-        ...toasters,
-        {body: unmatchedPassword}
-      ])
-      return false
-    }
-    return true
-  }
   return (
     <div className="c-app c-default-layout flex-row align-items-center">
-      <Loader isLoading = {false} >
         <CContainer>
         {
           toasters.map((element, i) => {
@@ -107,42 +96,27 @@ const Register = () => {
                     <CInputGroup className="mb-3">
                       <CInputGroupPrepend>
                         <CInputGroupText>
-                          <CIcon name="cil-user" />
-                        </CInputGroupText>
-                      </CInputGroupPrepend>
-                      <CInput type="text" placeholder="Eczanenizin ismi ÖRN: Hayat Eczanesi" autoComplete="pharmacy-name" value = {pharmacyName}
-                      onChange = {(e) => {
-                        setPharmacyName(e.target.value)
-                        }} />
-                    </CInputGroup>
-                    <CInputGroup className="mb-3">
-                      <CInputGroupPrepend>
-                        <CInputGroupText>
                           <CIcon name="cil-lock-locked" />
                         </CInputGroupText>
                       </CInputGroupPrepend>
                       <CInput type="password" placeholder="Şifreniz" autoComplete="new-password" value = {password}
                       onChange = {(e) => setPassword(e.target.value)} />
                     </CInputGroup>
-                    <CInputGroup className="mb-4">
-                      <CInputGroupPrepend>
-                        <CInputGroupText>
-                          <CIcon name="cil-lock-locked" />
-                        </CInputGroupText>
-                      </CInputGroupPrepend>
-                      <CInput type="password" placeholder="Şifrenizi tekrar giriniz" autoComplete="new-password" value = {confirmPassword}
-                      onChange = {(e) => setConfirmPassword(e.target.value)} />
+                    <CInputGroup>
+                      <input type = "file" onChange={(e) => onImageSelect(e)} />
                     </CInputGroup>
-                    <CButton color="success" block>Hesabınızı oluşturun</CButton>
+                    <CButton color="success" block 
+                    onClick = {() => console.log(image)}>test value</CButton>
+                    <CButton color="success" block 
+                    onClick = {() => onImageUpload()}>Submit</CButton>
                   </CForm>
                 </CCardBody>
               </CCard>
             </CCol>
           </CRow>
         </CContainer>
-      </Loader>
     </div>
   )
 }
 
-export default Register
+export default Test

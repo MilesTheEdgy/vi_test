@@ -13,36 +13,17 @@ const fetchData = async(service, id) => {
     }
   })
   const fetchData = await res.json()
-  console.log(fetchData)
   const resData = mapDataToTurkish(fetchData)
   return resData
  }
 
 const SdcIslemler = ({match, location}) => {
-  // console.log("match", match)
-  // console.log("location", location)
   const history = useHistory()
   const temp = qs.parse(location.search)
   const [data, setData] = useState([])
-  // const data = useSelector(state => state.reducer.appsData)
-
-  // const exportFile = () => {
-  //   let cols = ["ID", "İsim", "Tarih", "Hizmet", "Kampanya", "Açıklama", "Statü"]
-  //   let arrOfArrs = []
-  //   for (let i = 0; i < data.length; i++) {
-  //       arrOfArrs[i] = Object.values(data[i])
-  //     }
-  //   arrOfArrs.unshift(cols)
-  //   console.log('arr of arrays is ', arrOfArrs)
-  //   const ws = XLSX.utils.aoa_to_sheet(arrOfArrs);
-  //   const wb = XLSX.utils.book_new();
-  //   XLSX.utils.book_append_sheet(wb, ws, "Başvurular");
-  //   XLSX.writeFile(wb, "başvurular.xlsx")
-  // };
 
  useEffect(() => {
    const fetchAllData = async () => {
-     console.log(temp)
      const res = await fetchData(temp["?islem"], temp.id);
      setData(res)
    }
