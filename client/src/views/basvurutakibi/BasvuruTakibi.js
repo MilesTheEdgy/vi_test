@@ -23,6 +23,7 @@ const BasvuruTakibi = () => {
   const [usersData, setUsersData] = useState(undefined)
   const [modal, setModal] = useState(false)
   const [modalData, setModalData] = useState({})
+  const [loading, setLoading] = useState(true)
 
   const pageChange = newPage => {
     currentPage !== newPage && history.push(`/basvuru/takip?sayfa=${newPage}`)
@@ -43,6 +44,7 @@ const BasvuruTakibi = () => {
         const resData = mapDataToTurkish(fetchData)
         setUsersData(resData)
       }
+      setLoading(false)
     };
     getData();
   }, [currentPage, page])
@@ -64,6 +66,7 @@ const BasvuruTakibi = () => {
                 { key: 'İsim', _classes: 'font-weight-bold' },
                 'Tarih', 'Tip', 'Statü'
                 ]}
+                loading = {loading}
                 hover
                 striped
                 itemsPerPage={30}

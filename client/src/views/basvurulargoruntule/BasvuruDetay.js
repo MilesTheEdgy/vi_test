@@ -75,12 +75,12 @@ const BasvuruDetay = ({match}) => {
     else if (details.submitProcessNum === 3) {
       return (
         <CFormGroup>
-        <CLabel>Bayi Açıklaması</CLabel>
-        <CTextarea 
-          rows="4"
-          placeholder={userDetails.Açıklama}
-          readOnly
-        />
+          <CLabel>Bayi Açıklaması</CLabel>
+          <CTextarea 
+            rows="4"
+            placeholder={userDetails.Açıklama}
+            readOnly
+          />
       </CFormGroup>
       )
     } else {
@@ -169,13 +169,13 @@ const BasvuruDetay = ({match}) => {
           </CCardHeader>
           <CCardBody className = "basvuru-detay" >
             <CFormGroup row className="my-0">
-              <CCol xs="2">
+              <CCol xs = "12" lg="2">
                 <CFormGroup>
                   <CLabel>ID</CLabel>
                   <CInput placeholder= {userDetails.ID} readOnly />
                 </CFormGroup>
               </CCol>
-              <CCol xs="10">
+              <CCol xs = "12" lg="10">
                 <CFormGroup>
                   <CLabel>İsim</CLabel>
                   <CInput placeholder={userDetails.İsim} readOnly />
@@ -183,19 +183,25 @@ const BasvuruDetay = ({match}) => {
               </CCol>
             </CFormGroup>
             <CFormGroup row className="my-0">
-              <CCol xs="2">
+              <CCol xs = "12" lg="2">
+                <CFormGroup>
+                  <CLabel>Statü</CLabel>
+                  <CInput placeholder= {userDetails.Statü} readOnly />
+                </CFormGroup>
+              </CCol>
+              <CCol xs = "12" lg="2">
                 <CFormGroup>
                   <CLabel>Tarih</CLabel>
                   <CInput placeholder= {userDetails.Tarih} readOnly />
                 </CFormGroup>
               </CCol>
-              <CCol xs="3">
+              <CCol xs = "12" lg="2">
                 <CFormGroup>
                   <CLabel>Hizmet</CLabel>
                   <CInput placeholder={userDetails.Tip} readOnly />
                 </CFormGroup>
               </CCol>
-              <CCol xs="7">
+              <CCol xs = "12" lg="6">
                 <CFormGroup>
                   <CLabel>Kampanya</CLabel>
                   <CInput placeholder={userDetails.Kampanya} readOnly />
@@ -224,7 +230,7 @@ const BasvuruDetay = ({match}) => {
               </CFormGroup>
             }
             <CFormGroup row className = "basvuru-detay-submit-buttons my-0" >
-              <CCol sm = "4">
+              <CCol lg = "4">
                 {renderBasvuruDetayFooter(userDetails)}
               </CCol>
             </CFormGroup>

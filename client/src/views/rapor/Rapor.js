@@ -19,6 +19,7 @@ const RaporOnaylanan = ({match, location}) => {
   const queryPage = useLocation().search.match(/sayfa=([0-9]+)/, '')
   const currentPage = Number(queryPage && queryPage[1] ? queryPage[1] : 1)
   const [page, setPage] = useState(currentPage)
+  const [loading, setLoading] = useState(true)
   const [usersData, setUsersData] = useState(undefined)
   const qsQuery = qs.parse(location.search)
 
@@ -29,6 +30,7 @@ const RaporOnaylanan = ({match, location}) => {
   useEffect(() => {
     currentPage !== page && setPage(currentPage)
     const fetchData = async () => {
+      setLoading(true)
       const res = await fetch(`http://localhost:8080/bayi/applications?status=${qsQuery["?status"]}`, {
         method: 'GET',
         headers: {
@@ -41,6 +43,7 @@ const RaporOnaylanan = ({match, location}) => {
         const mappedData = mapDataToTurkish(fetchData)
         setUsersData(mappedData)
       }
+      setLoading(false)
     };
     fetchData();
     // eslint-disable-next-line

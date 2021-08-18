@@ -29,9 +29,9 @@ export const mapDataToTurkish = (fetchData) => {
             Kampanya: obj.selected_offer,
             Açıklama: obj.description,
             Statü: status,
-            salesRepDetails: obj.sales_rep_details,
+            salesRepDetails: obj.sales_rep_details ? obj.sales_rep_details : "",
             statusChangeDate: statusChangeDate ? statusChangeDate.toISOString().slice(0, 10) : null,
-            finalSalesRepDetails: obj.final_sales_rep_details,
+            finalSalesRepDetails: obj.final_sales_rep_details ? obj.final_sales_rep_details : "",
             lastChangeDate: lastChangeDate ? lastChangeDate.toISOString().slice(0, 10) : null,
             submitProcessNum
           }

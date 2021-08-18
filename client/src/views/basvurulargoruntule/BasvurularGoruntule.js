@@ -7,19 +7,26 @@ import { mapDataToTurkish, getBadge } from '../../components/index'
 const BasvurularGoruntule = () => {
   const history = useHistory()
   const [data, setData] = useState([])
+  const [loading, setLoading] = useState(true)
 
   const exportFile = () => {
-    let cols = ["ID", "İsim", "Tarih", "Hizmet", "Kampanya", "Açıklama", "Statü"]
-    let arrOfArrs = []
-    for (let i = 0; i < data.length; i++) {
-        arrOfArrs[i] = Object.values(data[i])
-      }
-    arrOfArrs.unshift(cols)
-    console.log('arr of arrays is ', arrOfArrs)
-    const ws = XLSX.utils.aoa_to_sheet(arrOfArrs);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Başvurular");
-    XLSX.writeFile(wb, "başvurular.xlsx")
+    // let cols = ["ID", "İsim", "Tarih", "Hizmet", "Kampanya", "Açıklama", "Statü", ]
+    // console.log("cols", cols)
+    // const excelData = [...data]
+    console.log("data before", data)
+    // excelData.forEach(obj => delete obj.submitProcessNum)
+    // console.log("data after", data)
+    // console.log("excelData", excelData)
+    // let arrOfArrs = []
+    // for (let i = 0; i < excelData.length; i++) {
+    //     arrOfArrs[i] = Object.values(excelData[i])
+    //   }
+    // arrOfArrs.unshift(cols)
+    // console.log('arr of arrays is ', arrOfArrs)
+    // const ws = XLSX.utils.aoa_to_sheet(arrOfArrs);
+    // const wb = XLSX.utils.book_new();
+    // XLSX.utils.book_append_sheet(wb, ws, "Başvurular");
+    // XLSX.writeFile(wb, "başvurular.xlsx")
   };
 
  useEffect(() => {
@@ -34,6 +41,7 @@ const BasvurularGoruntule = () => {
     const fetchData = await res.json()
     const resData = mapDataToTurkish(fetchData)
     setData(resData)
+    setLoading(false)
    }
    fetchData();
  }, [])
@@ -55,8 +63,10 @@ const BasvurularGoruntule = () => {
      return (
 <>
    <CDataTable
+     overTableSlot = {<button onClick = {() => exportFile()}>hello </button>}
      items={data}
      fields={fields}
+     loading= {loading}
      columnFilter
      tableFilter
      footer
