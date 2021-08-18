@@ -33,44 +33,35 @@ cloudinary.config({
 
 
 app.post("/upload", upload.single("myFile"), (req, res) => {
-    console.log("route hit")
-    const { file } = req
-    console.log("file from client ", file)
-    res.status(200).json("File uploaded!")
-    // const tempPath = file.path;
-    // const targetPath1 = path.join(__dirname, `./uploads/${file.originalname}`);
-    // console.log("original 'temp' path: ", tempPath)
-    // console.log("targetpath1 path: ", targetPath1)
-    // fs.rename(tempPath, targetPath1, err => {
-    //   if (err) 
-    //       return handleError(err, res);
-    //     res.status(200).json("File uploaded!")
-    //   });
-    
-
-    // cloudinary.v2.uploader.upload(
-    //   "https://www.example.com/mysample.jpg",
-    //   { public_id: "sample_woman" },
-    //   (error, result) => {
-    //     if (error)
-    //       console.log(error)
-    //     else
-    //       console.log(result); 
-    //   });
-
-    // if (path.extname(file.originalname).toLowerCase() === ".png") {
-    //   fs.rename(tempPath, targetPath, err => {
-    //     if (err) 
-    //         return handleError(err, res);
-    //     res.status(200).json("File uploaded!")
-    //   });
-    // } else {
-    //   fs.unlink(tempPath, err => {
-    //     if (err) 
-    //         return handleError(err, res);
-    //     res.status(403).json("Only .png files are allowed!")
-    //   });
-    // }
+    const uploadImage = () => {
+      // console.log("route hit")
+      const { file } = req
+      // console.log("file from client ", file)
+      const tempPath = file.path;
+      const targetPath = path.join(__dirname, `./uploads/${file.originalname}`);
+      // console.log("original 'temp' path: ", tempPath)
+      // console.log("targetpath1 path: ", targetPath)
+      const fileExtenstion = path.extname(file.originalname).toLowerCase() 
+      if ( fileExtenstion === ".png" || fileExtenstion === ".jpg" || fileExtenstion === ".jpeg") {
+        fs.rename(tempPath, targetPath, err => {
+          if (err) 
+              return handleError(err, res);
+          cloudinary.v2.uploader.upload(targetPath, { public_id: "IYS_Sample" }, (error, result) => {
+            if (error)
+              console.log(error)
+            else
+              console.log(result); 
+              res.status(200).json("File uploaded!")
+          });
+        });
+      } else {
+        fs.unlink(tempPath, err => {
+          if (err) 
+              return handleError(err, res);
+          res.status(403).json("Only .png or .jpg files are allowed!")
+        });
+      }
+    }
   }
 );
 

@@ -1,11 +1,18 @@
 const bcrypt = require("bcrypt");
 // const client = require("./db");
+const fs = require("fs");
 const pool = require("./db");
 const jwt = require("jsonwebtoken");
 const dotenv = require('dotenv');
+const multer = require("multer");
+const cors = require("cors")
+const cloudinary = require("cloudinary")
 
 dotenv.config();
 process.env.TOKEN_SECRET;
+process.env.CLOUDINARY_NAME;
+process.env.CLOUDINARY_API_KEY;
+process.env.CLOUDINARY_API_SECRET;
 
 const checkCredentials = async (clientUsername, clientPassword) => {
     try {
@@ -110,6 +117,50 @@ const sendApplication = async (userInfo, selectedService, selectedOffer, clientW
         client.release()
     }
 }
+
+const uploadImage = () => {
+    const upload = multer({
+        dest: path.join(__dirname, "./uploads")
+        // you might also want to set some limits: https://github.com/expressjs/multer#limits
+      });
+      
+    cloudinary.config({ 
+        cloud_name: process.env.CLOUDINARY_NAME, 
+        api_key: process.env.CLOUDINARY_API_KEY, 
+        api_secret: process.env.CLOUDINARY_API_SECRET 
+    });
+    const handleError = (err, res) => {
+        console.log(err)
+        res.status(500).json("Oops! Something went wrong!")
+      };
+    // console.log("route hit")
+    const { file } = req
+    // console.log("file from client ", file)
+    const tempPath = file.path;
+    const targetPath = path.join(__dirname, `./uploads/${file.originalname}`);
+    // console.log("original 'temp' path: ", tempPath)
+    // console.log("targetpath1 path: ", targetPath)
+    const fileExtenstion = path.extname(file.originalname).toLowerCase() 
+    if ( fileExtenstion === ".png" || fileExtenstion === ".jpg" || fileExtenstion === ".jpeg") {
+      fs.rename(tempPath, targetPath, err => {
+        if (err) 
+            return handleError(err, res);
+        cloudinary.v2.uploader.upload(targetPath, { public_id: "IYS_Sample" }, (error, result) => {
+          if (error)
+            console.log(error)
+          else
+            console.log(result); 
+            res.status(200).json("File uploaded!")
+        });
+      });
+    } else {
+      fs.unlink(tempPath, err => {
+        if (err) 
+            return handleError(err, res);
+        res.status(403).json("Only .png or .jpg files are allowed!")
+      });
+    }
+  }
 
 
 module.exports = {checkCredentials, generateAccessToken, authenticateToken, loadAnasayfa, sendApplication}
