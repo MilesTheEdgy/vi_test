@@ -11,7 +11,8 @@ const {
     checkCredentials,
     generateAccessToken,
     loadAnasayfa,
-    sendApplication
+    sendApplication,
+    verifyRegisterRoute
 } = require("./functions");
 
 const { 
@@ -77,14 +78,19 @@ app.post("/login", async(req, res) => {
     }
 });
 
-app.post("/register", async(req, res) => {
+app.post("/register", verifyRegisterRoute, async(req, res) => {
     try {
+        // this code handles the registeration prodcedure by inserting a new record into the database
+        // that contains the user's info, and sends a verification link to the user's email.
+
         const { username, password, dealerName, email } = req.body;
         const uniqueID = uniqid()
         const hash = await bcrypt.hash(password, 10);
         await pool.query("INSERT INTO register(username, password, email, verify_email_id, date, dealer_name) VALUES ($1, $2, $3, $4, CURRENT_DATE, $5)",
          [username, hash, email, uniqueID, dealerName])
-        app.render(__dirname + "/ejs/verifyemail.ejs", {verifyEmailID: uniqueID}, (err, html) => {
+        app.render(__dirname + "/ejs/verifyemail.ejs", 
+        {verifyEmailID: "http://localhost:8080/verifymail/" + uniqueID},
+         (err, html) => {
             const emailData = {
                 from: '<info@obexport.com>',
                 to: email,
@@ -105,6 +111,15 @@ app.post("/register", async(req, res) => {
         res.status(500).json("error occurred at register route")
     }
 });
+
+app.get("/verifymail/:emailID", async (req, res) => {
+    console.log("HIT")
+    const { emailID } = req.params
+    const emailIDQuery = await pool.query("SELECT * FROM register WHERE verify_email_id = $1", [emailID])
+    if (emailIDQuery.rows.length === 0)
+        return res.status(403).json("Your email verification ID has expired or doesn't exist")
+    return res.render(__dirname + '/ejs/emailVerified.ejs', {loginPage: "http://localhost:3000"}) 
+})
 
 app.get("/bayi/anasayfa", authenticateToken, async(req, res) => {
     try {

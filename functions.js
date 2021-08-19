@@ -163,4 +163,34 @@ const uploadImage = () => {
   }
 
 
-module.exports = {checkCredentials, generateAccessToken, authenticateToken, loadAnasayfa, sendApplication}
+const verifyRegisterRoute = async (req, res, next) => {
+    try {
+        const {username, password, dealerName, email} = req.body
+        if (!username || !password || !dealerName || !email)
+            return res.status(406).json("Your input verifications failed to pass")
+        if (username === "" || password === "" || dealerName === "" || email === "")
+            return res.status(406).json("Your input verifications failed to pass")
+        //verify the email
+        const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        if (re.test(email) === false)
+            return res.status(406).json("Your input verifications failed to pass")
+        // check if email exists
+        const emailQuery = await pool.query("SELECT email FROM login WHERE email = $1", [email])
+        if (emailQuery.rows.length !== 0) 
+            return res.status(403).json("This email already exists")
+        next()
+    } catch (error) {
+        console.error(error)
+        return res.status(500).json("an error occurred while attempting to register user")
+    }
+} 
+
+
+module.exports = {
+    checkCredentials, 
+    generateAccessToken, 
+    authenticateToken, 
+    loadAnasayfa, 
+    sendApplication, 
+    verifyRegisterRoute
+}
