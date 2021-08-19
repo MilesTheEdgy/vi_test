@@ -21,6 +21,7 @@ import Loader from "../../components/loader/Loader"
 const Register = () => {
   const missingInfo = "Lütfen tüm alanları doldurunuz"
   const unmatchedPassword = "Şifreniz uyuşmuyor, lütfen şifrelerinizi kontrol edin"
+  const invalidEmail = "Lütfen girilen E-Mail adresini kontrol edin"
   const userAlreadyExists = "Bu kullanıcı adı alınmıştır. Lütfen farklı bir kullanıcı adı seçiniz"
   const modalErrorObj = {
     header: "HATA",
@@ -33,7 +34,8 @@ const Register = () => {
     color: "success"
   }
   const [username, setUsername] = useState("")
-  const [pharmacyName, setPharmacyName] = useState("")
+  const [email, setEmail] = useState("")
+  const [dealerName, setDealerName] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [modal, setModal] = useState({
@@ -45,12 +47,25 @@ const Register = () => {
   const [toasters, addToaster] = useState([])
   const reset = () => {
     setUsername("")
-    setPharmacyName("")
+    setDealerName("")
     setPassword("")
     setConfirmPassword("")
   }
+
+  const verifyEmail = () => {
+    const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if (re.test(email) === false) {
+      addToaster([
+        ...toasters,
+        {body: invalidEmail}
+      ])
+      return false
+    }
+    return true
+  }
+
   const verifyInput = () => {
-    if (username === "" || password === "" || confirmPassword === "" || pharmacyName === "") {
+    if (username === "" || password === "" || confirmPassword === "" || dealerName === "" || email === "") {
       addToaster([
         ...toasters,
         {body: missingInfo}
@@ -69,9 +84,33 @@ const Register = () => {
     }
     return true
   }
+
+  const onSubmit = async () => {
+    if (verifyInput() && verifyEmail() && verifyPassword()) {
+      const res = await fetch("http://localhost:8080/register" , {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username,
+          password,
+          email,
+          dealerName
+        })
+      })
+      setModalOn(true)
+      if (res.status === 200) {
+        setModal(modalSuccessObj)
+      } else {
+        setModalOn(modalErrorObj)
+      }
+
+    }
+  }
+
   return (
     <div className="c-app c-default-layout flex-row align-items-center">
-      <Loader isLoading = {false} >
         <CContainer>
         {
           toasters.map((element, i) => {
@@ -85,20 +124,20 @@ const Register = () => {
                 <CCardBody className="p-4">
                   <CForm>
                     <div className = "container">
-                      <div className = "row">
+                      <div className = "row align-items-center justify-content-between">
                         <div className = "col">
                           <h1>Kayıt olun</h1>
                           <p className="text-muted">Hesabınızı oluşturun</p>
                         </div>
-                        <div>
+                        {/* <div className = "col">
                           <Link to = "/login" ><p>Giriş sayfasına git</p></Link>
-                        </div>
+                        </div> */}
                       </div>
                     </div>
                     <CInputGroup className="mb-3">
                       <CInputGroupPrepend>
                         <CInputGroupText>
-                          <CIcon name="cil-user" />
+                          <i className="far fa-user"></i>
                         </CInputGroupText>
                       </CInputGroupPrepend>
                       <CInput type="text" placeholder="Kullanıcı isminiz" autoComplete="username" value = {username}
@@ -107,18 +146,27 @@ const Register = () => {
                     <CInputGroup className="mb-3">
                       <CInputGroupPrepend>
                         <CInputGroupText>
-                          <CIcon name="cil-user" />
+                          <i className="far fa-envelope"></i>
                         </CInputGroupText>
                       </CInputGroupPrepend>
-                      <CInput type="text" placeholder="Eczanenizin ismi ÖRN: Hayat Eczanesi" autoComplete="pharmacy-name" value = {pharmacyName}
+                      <CInput type="text" placeholder="e-mail adresiniz" autoComplete="email" value = {email}
+                      onChange = {(e) => setEmail(e.target.value)} />
+                    </CInputGroup>
+                    <CInputGroup className="mb-3">
+                      <CInputGroupPrepend>
+                        <CInputGroupText>
+                          <i className="fas fa-store-alt"></i>
+                        </CInputGroupText>
+                      </CInputGroupPrepend>
+                      <CInput type="text" placeholder="Bayi ismi ÖRN: İstanbul İletişim" autoComplete="dealer-name" value = {dealerName}
                       onChange = {(e) => {
-                        setPharmacyName(e.target.value)
+                        setDealerName(e.target.value)
                         }} />
                     </CInputGroup>
                     <CInputGroup className="mb-3">
                       <CInputGroupPrepend>
                         <CInputGroupText>
-                          <CIcon name="cil-lock-locked" />
+                          <i className="fas fa-lock"></i>
                         </CInputGroupText>
                       </CInputGroupPrepend>
                       <CInput type="password" placeholder="Şifreniz" autoComplete="new-password" value = {password}
@@ -127,20 +175,19 @@ const Register = () => {
                     <CInputGroup className="mb-4">
                       <CInputGroupPrepend>
                         <CInputGroupText>
-                          <CIcon name="cil-lock-locked" />
+                          <i className="fas fa-lock"></i>
                         </CInputGroupText>
                       </CInputGroupPrepend>
                       <CInput type="password" placeholder="Şifrenizi tekrar giriniz" autoComplete="new-password" value = {confirmPassword}
                       onChange = {(e) => setConfirmPassword(e.target.value)} />
                     </CInputGroup>
-                    <CButton color="success" block>Hesabınızı oluşturun</CButton>
+                    <CButton color="success" block onClick = {() => onSubmit()} >Hesabınızı oluşturun</CButton>
                   </CForm>
                 </CCardBody>
               </CCard>
             </CCol>
           </CRow>
         </CContainer>
-      </Loader>
     </div>
   )
 }

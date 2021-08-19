@@ -4,7 +4,8 @@ const cors = require("cors");
 const bcrypt = require("bcrypt");
 // const client = require("./db");
 const pool = require("./db");
-var uniqid = require('uniqid');
+const mg = require("./mailgun/mailgun")
+const uniqid = require('uniqid');
 const {
     authenticateToken,
     checkCredentials,
@@ -28,8 +29,7 @@ app.use(express.json());
 pool.on('error', (err, client) => {
     console.error('Unexpected error on idle client', err)
     process.exit(-1)
-  })
-  
+  })  
 
 
 // app.post("/superuser", async (req, res) => {
@@ -79,18 +79,32 @@ app.post("/login", async(req, res) => {
 
 app.post("/register", async(req, res) => {
     try {
-        const { username, password } = req.body;
+        const { username, password, dealerName, email } = req.body;
         const uniqueID = uniqid()
-        bcrypt.hash(password, 10, function(err, hash) {
-            res.json({username, hash})
-        });
+        const hash = await bcrypt.hash(password, 10);
+        await pool.query("INSERT INTO register(username, password, email, verify_email_id, date, dealer_name) VALUES ($1, $2, $3, $4, CURRENT_DATE, $5)",
+         [username, hash, email, uniqueID, dealerName])
+        app.render(__dirname + "/ejs/verifyemail.ejs", {verifyEmailID: uniqueID}, (err, html) => {
+            const emailData = {
+                from: '<info@obexport.com>',
+                to: email,
+                subject: 'Mail adresinizi onaylayın',
+                html: html
+            }
+            mg.messages().send(emailData, (error, body) => {
+                if (error) {
+                    console.error(error)
+                    return res.status(500).json("An error occurred during registeration")
+                }
+                console.log(body);
+                res.status(200).json("Register application is successful, awaiting client verification through client's email")
+            });
+        })
     } catch (error) {
         console.error(error);
-        res.json("error occurred at register route")
+        res.status(500).json("error occurred at register route")
     }
 });
-
-
 
 app.get("/bayi/anasayfa", authenticateToken, async(req, res) => {
     try {

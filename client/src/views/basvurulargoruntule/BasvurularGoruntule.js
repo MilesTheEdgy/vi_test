@@ -10,23 +10,18 @@ const BasvurularGoruntule = () => {
   const [loading, setLoading] = useState(true)
 
   const exportFile = () => {
-    // let cols = ["ID", "İsim", "Tarih", "Hizmet", "Kampanya", "Açıklama", "Statü", ]
-    // console.log("cols", cols)
-    // const excelData = [...data]
-    console.log("data before", data)
-    // excelData.forEach(obj => delete obj.submitProcessNum)
-    // console.log("data after", data)
-    // console.log("excelData", excelData)
-    // let arrOfArrs = []
-    // for (let i = 0; i < excelData.length; i++) {
-    //     arrOfArrs[i] = Object.values(excelData[i])
-    //   }
-    // arrOfArrs.unshift(cols)
-    // console.log('arr of arrays is ', arrOfArrs)
-    // const ws = XLSX.utils.aoa_to_sheet(arrOfArrs);
-    // const wb = XLSX.utils.book_new();
-    // XLSX.utils.book_append_sheet(wb, ws, "Başvurular");
-    // XLSX.writeFile(wb, "başvurular.xlsx")
+    let cols = ["ID", "İsim", "Tarih", "Hizmet", "Kampanya", "Açıklama", "Statü", "S-D Açıklaması", "S-D Açıklama Tarihi", "S-D Son Açıklaması", "S-D Son Açıklama Tarihi" ]
+    const excelData = JSON.parse(JSON.stringify(data));
+    excelData.forEach(obj => delete obj.submitProcessNum)
+    let arrOfArrs = []
+    for (let i = 0; i < excelData.length; i++) {
+        arrOfArrs[i] = Object.values(excelData[i])
+      }
+    arrOfArrs.unshift(cols)
+    const ws = XLSX.utils.aoa_to_sheet(arrOfArrs);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Başvurular");
+    XLSX.writeFile(wb, "başvurular.xlsx")
   };
 
  useEffect(() => {
@@ -63,7 +58,7 @@ const BasvurularGoruntule = () => {
      return (
 <>
    <CDataTable
-     overTableSlot = {<button onClick = {() => exportFile()}>hello </button>}
+     overTableSlot = {<CButton color = "primary" onClick = {() => exportFile()}>Excele aktar</CButton>}
      items={data}
      fields={fields}
      loading= {loading}
@@ -101,9 +96,6 @@ const BasvurularGoruntule = () => {
              )
          }
      }}
-    excelButton = {() => {
-      exportFile()
-      }}
    />
 </>
  )

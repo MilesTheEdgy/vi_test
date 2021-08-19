@@ -9,8 +9,10 @@ import {
   CCol,
   CDataTable,
   CRow,
-  CPagination
+  CPagination,
+  CButton
 } from '@coreui/react'
+import XLSX from "xlsx";
 import { getBadge, mapDataToTurkish } from '../../components'
 import { switchRaporHeader } from "."
 
@@ -26,6 +28,21 @@ const RaporOnaylanan = ({match, location}) => {
   const pageChange = newPage => {
     currentPage !== newPage && history.push(`/basvuru/takip?sayfa=${newPage}`)
   }
+
+  const exportFile = () => {
+    let cols = ["ID", "İsim", "Tarih", "Hizmet", "Kampanya", "Açıklama", "Statü", "S-D Açıklaması", "S-D Açıklama Tarihi", "S-D Son Açıklaması", "S-D Son Açıklama Tarihi" ]
+    const excelData = JSON.parse(JSON.stringify(usersData));
+    excelData.forEach(obj => delete obj.submitProcessNum)
+    let arrOfArrs = []
+    for (let i = 0; i < excelData.length; i++) {
+        arrOfArrs[i] = Object.values(excelData[i])
+      }
+    arrOfArrs.unshift(cols)
+    const ws = XLSX.utils.aoa_to_sheet(arrOfArrs);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Başvurular");
+    XLSX.writeFile(wb, "başvurular.xlsx")
+  };
 
   useEffect(() => {
     currentPage !== page && setPage(currentPage)
@@ -61,6 +78,8 @@ const RaporOnaylanan = ({match, location}) => {
           </CCardHeader>
           <CCardBody>
             <CDataTable
+                overTableSlot = {<CButton color = "primary" onClick = {() => exportFile()}>Excele aktar</CButton>}
+                loading = {loading}
                 sorter
                 items={usersData}
                 fields={[

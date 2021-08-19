@@ -5,6 +5,7 @@ const multer = require("multer");
 const cors = require("cors")
 const dotenv = require('dotenv');
 const cloudinary = require("cloudinary")
+const mg = require("./mailgun/mailgun")
 
 const app = express();
 
@@ -14,6 +15,7 @@ process.env.CLOUDINARY_API_KEY;
 process.env.CLOUDINARY_API_SECRET;
 
 app.use(cors())
+app.use(express.json())
 
 const handleError = (err, res) => {
   console.log(err)
@@ -65,11 +67,40 @@ app.post("/upload", upload.single("myFile"), (req, res) => {
   }
 );
 
+
+app.post("/sendmail", async (req, res) => {
+  app.render(__dirname + "/ejs/verifyemail.ejs", {verifyEmailID: "sadkjaskdj12312312asdjHAHAHAHA"}, (err, html) => {
+    // const emailBody = fs.readFileSync(__dirname + "/temp.html").toString();
+    const emailData = {
+      from: '<info@obexport.com>',
+      to: 'mohammad.nadom98@gmail.com',
+      subject: 'testing',
+      html: html
+    }
+    mg.messages().send(emailData, function (error, body) {
+      if (error) {
+        console.error(error)
+        return res.status(500).json("didnt send :(")
+      }
+      console.log(body);
+      res.status(200).json("it worked I think")
+    });
+  })
+})
+
+app.get("/test", async (req, res) => {
+  fs.readFile(__dirname + "/temp.html", (err, data) => {
+    if (err) {
+      console.log(err)
+      return res.status(500).json("an error occurred")
+    }
+    console.log(data)
+    res.status(200).json("it worked check logs")
+  })
+})
+
 const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {
   console.log(`Test Server is listening on port ${PORT}`);
-}); 
-
-// put the HTML file containing your form in a directory named "public" (relative to where this script is located)
-// app.get("/", express.static(path.join(__dirname, "./public")));
+});

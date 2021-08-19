@@ -78,7 +78,6 @@ class Login extends React.Component {
     // document.cookie = 'token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     this.props.logoutUser()
     let res = await fetch("http://localhost:8080/login", {
-
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -87,7 +86,7 @@ class Login extends React.Component {
       body: JSON.stringify({
         username: this.state.username,
         password: this.state.password
-      }) 
+      })
     })
     if (res.status === 200) {
       let data = await res.json()
