@@ -23,7 +23,9 @@ const {
     fetchUserAppsDetails
 } = require("./database/queries")
 const { 
-    forDealerGetApplications
+    forDealerGetApplications,
+    getDealerApplicationsDetails,
+    getDealerApplicationsCount
 } = require("./database/dealerqueries")
 
 dotenv.config();
@@ -265,6 +267,24 @@ app.put("/resetpassword/:passResetToken", async (req, res) => {
             }        
         }
     });
+})
+
+app.get("/dealer/applications/:query", authenticateToken, async (req, res) => {
+    const dealerName = res.locals.userInfo.username
+    // const dealerName = "ademiletişim"
+    const { query } = req.params
+    const { status, date } = req.query
+    try {
+        let selectQuery
+        if (query === "count")
+            selectQuery = await getDealerApplicationsCount(dealerName, date, status)
+        else if (query === "details")
+            selectQuery = await getDealerApplicationsDetails(dealerName, date, status)
+        return res.status(200).json(selectQuery)
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json("Unable to fetch dealer applications")
+    }
 })
 
 app.get("/bayi/anasayfa", authenticateToken, async(req, res) => {

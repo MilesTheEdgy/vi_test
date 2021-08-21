@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   CWidgetDropdown,
   CRow,
@@ -8,41 +8,41 @@ import {
 // import ChartBarSimple from '../charts/ChartBarSimple'
 
 const WidgetsDropdown = () => {
-  // const [unsoldDevices, setUnsoldDevices] = useState(0);
-  // const [urgentPaperwork, setUrgentPaperwork] = useState(0);
-  // const [thisMonthSales, setThisMonthSales] = useState(0);
-  // const [thisYearSales, setThisYearSales] = useState(0);
-  const unsoldDevices = 60
-  const urgentPaperwork = 0
-  const thisMonthSales = 0
-  const thisYearSales = 0
+  const [todaySales, setTodaySales] = useState(0);
+  const [problematicSales, setProblematicSales] = useState(0);
+  const [thisMonthSales, setThisMonthSales] = useState(0);
+  const [thisYearSales, setThisYearSales] = useState(0);
+  // const problematicSales = 0
+  // const thisMonthSales = 0
+  // const thisYearSales = 0
 
-  // useEffect(() => {
-  //   const getData = async () => {
-  //     const res = await fetch("http://localhost:8080/bayi/anasayfa", {
-  //       headers: {
-  //         'content-type': 'application/json',
-  //         'authorization' :`Bearer ${document.cookie.slice(8)} `
-  //       }
-  //     });
-  //     if (res.status === 200) {
-  //       const data = await res.json();
-  //       setUnsoldDevices(data.unsold_devices)
-  //       setUrgentPaperwork(data.urgent_paperwork)
-  //       setThisMonthSales(data.this_month_sales)
-  //       setThisYearSales(data.this_year_sales)
-  //     }
-  //   };
-  //   getData();
-  // }, [unsoldDevices, urgentPaperwork, thisMonthSales, thisYearSales])
+  useEffect(() => {
+    const fetchAppsCountData = async (urlString, setState) => {
+      const res = await fetch(urlString, {
+        headers: {
+          'content-type': 'application/json',
+          'authorization' :`Bearer ${document.cookie.slice(8)} `
+        }
+      });
+      if (res.status === 200) {
+        const data = await res.json();
+        console.log("success", data)
+        setState(data.count)
+      }
+    };
+    fetchAppsCountData("http://localhost:8080/dealer/applications/count?status=approved&date=today", setTodaySales);
+    fetchAppsCountData("http://localhost:8080/dealer/applications/count?status=rejected&date=today", setProblematicSales);
+    fetchAppsCountData("http://localhost:8080/dealer/applications/count?status=ALL&date=month", setThisMonthSales);
+    fetchAppsCountData("http://localhost:8080/dealer/applications/count?status=ALL&date=year", setThisYearSales);
+  }, [])
   return (
     <CRow>
       <CCol sm="6" lg="3">
         <CWidgetDropdown
                   style = {{height: "130px"}}
           color="gradient-primary"
-          header= {`${unsoldDevices}`}
-          text="Bugünkü Satışlarınız"
+          header= {`${todaySales}`}
+          text="Bugünkü Onaylanan Satışlarınız"
         >
         </CWidgetDropdown>
       </CCol>
@@ -53,8 +53,8 @@ const WidgetsDropdown = () => {
         <CWidgetDropdown
           style = {{height: "130px"}}
           color="gradient-info"
-          header={`${urgentPaperwork}`}
-          text="Sıkıntılı Satışlarınız"
+          header={`${problematicSales}`}
+          text="Bugünku Sıkıntılı Satışlarınız"
         >
         </CWidgetDropdown>
       </CCol>

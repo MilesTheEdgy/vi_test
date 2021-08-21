@@ -92,14 +92,14 @@ const sendApplication = async (userInfo, selectedService, selectedOffer, clientW
         return res.status(401).json("user does not have premission to submit")
     }
     const d = new Date()
-    const currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`    // 2016-06-22 19:10:25
+    // const currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`    // 2016-06-22 19:10:25
     const client = await pool.connect()
 
     try {
         await client.query('BEGIN')
         //begin the query transaction
         const query = await client.query("INSERT INTO sales_applications(submitter, submit_time, activator, representative, client_name, status) VALUES($1, $2, $3, $4, $5, $6) RETURNING id"
-            , [username, currentDate, "Abdullah Kara", "Erdem Mutlu", clientName, 'sent'])
+            , [username, 'CURRENT_TIMESTAMP', "Abdullah Kara", "Erdem Mutlu", clientName, 'processing'])
         await client.query("INSERT INTO sales_applications_details(client_name, selected_service, selected_offer, description, client_wants_router, id) VALUES($1, $2, $3, $4, $5, $6)"
             , [clientName, selectedService, selectedOffer, clientDescription, clientWantsRouter, query.rows[0].id])
         await client.query('COMMIT')
