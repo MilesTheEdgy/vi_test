@@ -148,7 +148,7 @@ class Login extends React.Component {
                           <CButton color="primary" className="px-4" onClick = {this.onSubmit}>Giriş</CButton>
                         </CCol>
                         <CCol xs="6" className="text-right">
-                          <CButton color="link" className="px-0">Şifrenizi unuttunuz mu?</CButton>
+                          <CButton color="link" className="px-0"> <Link to = "resetpassword/verify">Şifrenizi unuttunuz mu?</Link></CButton>
                         </CCol>
                       </CRow>
                     </CForm>

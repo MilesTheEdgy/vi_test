@@ -1,3 +1,31 @@
-In the test route, I need to implement an independent function that would run
-the image uploading, so I won't have to deal with the pain of doing that
-boilerplate code for every run
+2 client routes: Reset password verify and Reset password new
+2 server routes: GET resetpassword and PUT resetpassword
+
+Client sends his email, server queries his user info through his email in the database.
+If the query returns info, servers sends an email containing an html with a password reset ID link, and stores the reset ID in the database
+Client clicks this link, sends reset ID to server, servers queries database again
+If the query returns the ID, the server sends a 200 request and redirects the client to Reset Password new route
+
+
+
+Okay
+A little bit of reconciling
+I need to verify my goals for the varol iletisim project, and for the other projects as well
+As far as Varol iletisim goes, it needed 2 roles, but I created 3.
+•	Dealer
+•	Sales Assistant
+•	Sales Assistant Chef
+Since I need to ship it to erdem first, I will make a combination of the sales assistant and sales assistant chef roles.
+I will call it the Admin role.
+The admin role will be able to:
+•	Process, approve and delete applications
+•	Accept new users, deactivate users
+•	See a detailed report of user activites
+The dealer role will be able to:
+•	Send new applications
+•	View their current applications
+These are the current requirements, They might increase later on.
+The applications itself will have:
+•	Create new account through email verification
+•	Change password in client
+•	Reset password incase user forgets it

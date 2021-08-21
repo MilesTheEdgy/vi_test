@@ -24,7 +24,7 @@ const ResetPassword = () => {
   }
   const modalSuccessObj = {
     header: "BAŞARILI",
-    body: "Talebiniz başarıyla işlenmiştir! giriş yapabilirsiniz.",
+    body: "Talebiniz başarıyla işlenmiştir! Eğer E-Mail adresiniz doğru isa, sizin E-Mail hesabınıza gelen maili kontrol ediniz",
     color: "success"
   }
   const [email, setEmail] = useState("")
@@ -46,20 +46,17 @@ const ResetPassword = () => {
 
   const onEmailSubmit = async () => {
     if (verifyEmail()) {
-      const res = await fetch("http://localhost:8080/register" , {
-        method: 'POST',
+      const res = await fetch(`http://localhost:8080/resetpassword?email=${email}` , {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email
-        })
+        }
       })
       setModalOn(true)
       if (res.status === 200) {
         setModal(modalSuccessObj)
       } else {
-        setModalOn(modalErrorObj)
+        setModal(modalErrorObj)
       }
     }
   }

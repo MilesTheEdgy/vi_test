@@ -34,6 +34,18 @@ cloudinary.config({
 });
 
 
+app.get("/test", async (req, res) => {
+  fs.readFile(__dirname + "/temp.html", (err, data) => {
+    if (err) {
+      console.log(err)
+      return res.status(500).json("an error occurred")
+    }
+    console.log(data)
+    res.status(200).json("it worked check logs")
+  })
+})
+
+
 app.post("/upload", upload.single("myFile"), (req, res) => {
     const uploadImage = () => {
       // console.log("route hit")
@@ -66,38 +78,6 @@ app.post("/upload", upload.single("myFile"), (req, res) => {
     }
   }
 );
-
-
-app.post("/sendmail", async (req, res) => {
-  app.render(__dirname + "/ejs/verifyemail.ejs", {verifyEmailID: "sadkjaskdj12312312asdjHAHAHAHA"}, (err, html) => {
-    // const emailBody = fs.readFileSync(__dirname + "/temp.html").toString();
-    const emailData = {
-      from: '<info@obexport.com>',
-      to: 'mohammad.nadom98@gmail.com',
-      subject: 'testing',
-      html: html
-    }
-    mg.messages().send(emailData, function (error, body) {
-      if (error) {
-        console.error(error)
-        return res.status(500).json("didnt send :(")
-      }
-      console.log(body);
-      res.status(200).json("it worked I think")
-    });
-  })
-})
-
-app.get("/test", async (req, res) => {
-  fs.readFile(__dirname + "/temp.html", (err, data) => {
-    if (err) {
-      console.log(err)
-      return res.status(500).json("an error occurred")
-    }
-    console.log(data)
-    res.status(200).json("it worked check logs")
-  })
-})
 
 const PORT = process.env.PORT || 8080;
 

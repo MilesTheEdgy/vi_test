@@ -28,9 +28,14 @@ const Register = () => {
     body: "Bilgileriniz kaydedilmedi, lütfen daha sonra tekrar deneyin",
     color: "danger"
   }
+  const modalEmailExistsObj = {
+    header: "HATA",
+    body: "Bu kullanıcı mevcuttur. Lütfen şifrenizi yenileyin veya yeni hesap oluşturun",
+    color: "warning"
+  }
   const modalSuccessObj = {
     header: "BAŞARILI",
-    body: "Talebiniz başarıyla işlenmiştir! giriş yapabilirsiniz.",
+    body: "Talebiniz başarıyla işlenmiştir! Lütfen mail hesabınıza gelen onaylama mesajını kontrol ediniz",
     color: "success"
   }
   const [username, setUsername] = useState("")
@@ -101,9 +106,14 @@ const Register = () => {
       })
       setModalOn(true)
       if (res.status === 200) {
+        setModalOn(true)
         setModal(modalSuccessObj)
+      } else if (res.status === 406) {
+        setModalOn(true)
+        setModal(modalEmailExistsObj)
       } else {
-        setModalOn(modalErrorObj)
+        setModalOn(true)
+        setModal(modalErrorObj)
       }
 
     }
