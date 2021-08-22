@@ -269,15 +269,21 @@ app.put("/resetpassword/:passResetToken", async (req, res) => {
     });
 })
 
-app.get("/dealer/applications/:query", authenticateToken, async (req, res) => {
-    const dealerName = res.locals.userInfo.username
-    // const dealerName = "ademiletişim"
+
+// This code handles sending the applications the dealer submitted, it takes "dealerName"
+// supplied from authenticateToken middleware. "query" has to possible values: count and details.
+// if query has value of "count" it returns the applications count according to specific critera
+// if it's "details", it returns the columns of the application's details according to specific
+// criteria. 
+app.get("/dealer/applications/:query", async (req, res) => {
+    // const dealerName = res.locals.userInfo.username
+    const dealerName = "ademiletişim"
     const { query } = req.params
-    const { status, date } = req.query
+    const { status, date, service } = req.query
     try {
         let selectQuery
         if (query === "count")
-            selectQuery = await getDealerApplicationsCount(dealerName, date, status)
+            selectQuery = await getDealerApplicationsCount(date, dealerName, status, service)
         else if (query === "details")
             selectQuery = await getDealerApplicationsDetails(dealerName, date, status)
         return res.status(200).json(selectQuery)
