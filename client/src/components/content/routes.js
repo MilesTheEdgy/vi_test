@@ -13,6 +13,7 @@ const SdcKullanicilar = lazy(() => import('../../views/sdckullanicilar/SdcKullan
 const SdcKullanici = lazy(() => import('../../views/sdckullanicilar/SdcKullanici'))
 const SdcIslemler = lazy(() => import('../../views/sdckullanicilar/SdcIslemler'))
 const SdcIslem = lazy(() => import('../../views/sdckullanicilar/SdcIslem'))
+const SdcHedefEkle = lazy(() => import("../../views/sdc/hedefekle/HedefEkle"))
 const BasvuruID = lazy(() => import('../../views/basvuruid/BasvuruID'))
 
 const routes = [
@@ -28,7 +29,8 @@ const routes = [
   { path: '/sdc/kullanicilar', exact: true, name: 'SDC Kullanıcılar', component: SdcKullanicilar},
   { path: '/sdc/kullanici/:id', exact: true, name: 'SDC Kullanıcı', component: SdcKullanici},
   { path: '/sdc/islemler', exact: true, name: 'SDC İşlemler', component: SdcIslemler},
-  { path: '/sd/islem/:id', exact: true, name: 'SDC İşlemler', component: SdcIslem},
+  { path: '/sdc/hedefekle', exact: true, name: 'SDC Hedef Ekle', component: SdcHedefEkle},
+  { path: '/sd/islem/:id', exact: true, name: 'SDC İşlem', component: SdcIslem},
   { path: '/islem/:id', exact: true, name: 'İşlem ID', component: BasvuruID}
 ];
 

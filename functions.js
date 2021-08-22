@@ -16,16 +16,16 @@ process.env.CLOUDINARY_API_SECRET;
 const checkCredentials = async (clientUsername, clientPassword) => {
     try {
         console.log("in function, values", clientUsername, clientPassword)
-        const dbUserTable = await pool.query("SELECT username, hash, role FROM login WHERE username = $1", [clientUsername]);
+        const dbUserTable = await pool.query("SELECT username, hash, role, user_id FROM login WHERE username = $1", [clientUsername]);
         const dbUsername = dbUserTable.rows[0]?.username;
         const dbUserHash = dbUserTable.rows[0]?.hash;
         const dbUserRole = dbUserTable.rows[0]?.role;
-        console.log(dbUserTable.rows)
+        const dbUserID = dbUserTable.rows[0]?.user_id;
         if (dbUsername === clientUsername) {
             let hashResult = await bcrypt.compare(clientPassword, dbUserHash);
             if (hashResult) {
-                console.log(hashResult ,dbUsername, dbUserRole)
-                return {ok: hashResult, username: dbUsername, userRole: dbUserRole}
+                console.log(hashResult ,dbUsername, dbUserRole, dbUserID)
+                return {ok: hashResult, username: dbUsername, userRole: dbUserRole, ID: dbUserID}
             } else {
                 return {ok: hashResult}
             }
@@ -54,8 +54,8 @@ const authenticateToken = (req, res, next) => {
             console.error("AN ERROR OCCURRED WHEN VERIFYING TOKEN: ", err)
             return res.status(403).json("USER AUTHENTICATION failed")
         } else {
-            console.log("Success")
-            res.locals.userInfo = {username: decoded.username, role: decoded.role};
+            console.log("Success", decoded)
+            res.locals.userInfo = {username: decoded.username, role: decoded.role, userID: decoded.userID};
             next()
         }
     });

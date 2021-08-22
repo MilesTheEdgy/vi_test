@@ -21,6 +21,7 @@ const fetchUserLoginDate = async (id) => {
 }
 
 const fetchSalesData = async (id, service, status) => {
+  console.log(id, service, status)
   try {
     const res = await fetch(`http://localhost:8080/sdc/user/${id}/count/?service=${service}&status=${status}`, {
       method: 'GET',
@@ -74,13 +75,19 @@ const SdcKullanici = ({match}) => {
   const [salesdata, setSalesData] = useState([])
   useEffect(() => {
     const fetchAllData = async () => {
-      const userDataFetch = await fetchUserLoginDate(id)
-      const mappedUserData = mapUsersData([userDataFetch])
-      setUserLoginData(mappedUserData[0])
-      setUserLoginDataLoading(false)
-      const allData = await fetchSalesData(id, "ALL", "ALL")
-      const filteredData = filterAndMapAppData(allData)
-      setSalesData(filteredData)
+      try {
+        const userDataFetch = await fetchUserLoginDate(id)
+        const mappedUserData = mapUsersData([userDataFetch])
+        setUserLoginData(mappedUserData[0])
+        setUserLoginDataLoading(false)
+        debugger
+        const allData = await fetchSalesData(id, "MAP", "ALL")
+        console.log(allData)
+        const filteredData = filterAndMapAppData(allData)
+        setSalesData(filteredData)
+      } catch (error) {
+        console.log(error)
+      }
     }
     fetchAllData()
   }, [id])

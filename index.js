@@ -20,12 +20,10 @@ const {
 
 const { 
     fetchUserAppsCount,
-    fetchUserAppsDetails
+    getDealerApplications,
 } = require("./database/queries")
 const { 
     forDealerGetApplications,
-    getDealerApplicationsDetails,
-    getDealerApplicationsCount
 } = require("./database/dealerqueries")
 
 dotenv.config();
@@ -68,7 +66,7 @@ app.post("/login", async(req, res) => {
         let checkCredentialsResult = await checkCredentials(username, password)
         console.log("checkCredentialsResult", checkCredentialsResult)
         if (checkCredentialsResult.ok) {
-            let token = generateAccessToken({username: username, role: checkCredentialsResult.userRole})
+            let token = generateAccessToken({username: username, role: checkCredentialsResult.userRole, userID: checkCredentialsResult.ID})
             // console.log("token from login: ", token)
             console.log(checkCredentialsResult.userRole);
             return res.status(200).json({
@@ -269,23 +267,38 @@ app.put("/resetpassword/:passResetToken", async (req, res) => {
     });
 })
 
+app.get("/services", async (req, res) => {
+    try {
+        const { profitable } = req.query
+        let serviceQuery
+        if (profitable)
+            serviceQuery = await pool.query("SELECT * FROM services WHERE active = true AND profitable = true")
+        else
+            serviceQuery = await pool.query("SELECT * FROM services WHERE active = true")
+        return res.status(200).json(serviceQuery.rows)
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json("an error occurred while fetching services data")
+    }
+})
 
 // This code handles sending the applications the dealer submitted, it takes "dealerName"
 // supplied from authenticateToken middleware. "query" has to possible values: count and details.
 // if query has value of "count" it returns the applications count according to specific critera
 // if it's "details", it returns the columns of the application's details according to specific
 // criteria. 
-app.get("/dealer/applications/:query", async (req, res) => {
-    // const dealerName = res.locals.userInfo.username
-    const dealerName = "ademiletişim"
+app.get("/dealer/applications/:query", authenticateToken, async (req, res) => {
+    console.log(res.locals.userInfo)
+    const { userID } = res.locals.userInfo
+    // const dealerName = "ademiletişim"
     const { query } = req.params
-    const { status, date, service } = req.query
+    const { status, interval, service, month, year } = req.query
     try {
         let selectQuery
-        if (query === "count")
-            selectQuery = await getDealerApplicationsCount(date, dealerName, status, service)
-        else if (query === "details")
-            selectQuery = await getDealerApplicationsDetails(dealerName, date, status)
+        if (month && year)
+            selectQuery = await getDealerApplications(query, [month, year], userID, status, service)
+        else
+            selectQuery = await getDealerApplications(query, interval, userID, status, service)
         return res.status(200).json(selectQuery)
     } catch (error) {
         console.log(error)
@@ -463,7 +476,7 @@ app.put("/sdc/user/:userID", authenticateToken, async (req, res) => {
       }
 })
 
-app.get("/sdc/user/:id/count", authenticateToken, async (req, res) => {
+app.get("/sdc/user/:userID/:query", authenticateToken, async (req, res) => {
     
     // Returns the COUNT of user total sent applications
     // can be filtered through specific criteria in fetchUserAppsCount args
@@ -472,32 +485,53 @@ app.get("/sdc/user/:id/count", authenticateToken, async (req, res) => {
     const userInfo = res.locals.userInfo
     if (userInfo.role !== "sales_assistant_chef")
         return res.status(401).json("this user does not have sales assistant premission")
+
     try {
-        const { service, status } = req.query
-        const { id } = req.params
-        const approvedAppsCountQuery = await fetchUserAppsCount(id, status, service)
-        res.status(200).json(approvedAppsCountQuery)
+        const { service, status, date } = req.query
+        const { userID, query } = req.params
+        let dbQuery
+        // with some time and effort, I could unify the below two functions into one, but for
+        // now this is a temporary solution
+        // if (service === "ALL")
+        //     dbQuery = await fetchUserAppsCount(userID, status, service)
+        // else
+            console.log("servce ", service)
+            dbQuery = await getDealerApplications(query, date, userID, status, service)
+        res.status(200).json(dbQuery)
       } catch (e) {
         console.log(e)
         return res.status(500).json("An error occurred while attempting to update application")
       }
 })
 
-app.get("/sdc/user/:id/details", authenticateToken, async (req, res) => {
-    const userInfo = res.locals.userInfo
-    if (userInfo.role !== "sales_assistant_chef")
-        return res.status(401).json("this user does not have sales assistant premission")
-    const { service } = req.query
-    const { id } = req.params
+app.get("/sdc/user/:userID/applications/filterbydate/:query", authenticateToken, async (req, res) => {
     try {
-        const result = await fetchUserAppsDetails(service, id)
-        console.log(result)
-        res.status(200).json(result)
-      } catch (e) {
-        console.log(e)
-        return res.status(500).json("An error occurred while attempting to update application")
-      }
+        const { query } = req.params
+        const { service, status, date } = req.query
+
+
+
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json("An error occurred while fetching applications according to date")
+    }
 })
+
+// app.get("/sdc/user/:id/details", authenticateToken, async (req, res) => {
+//     const userInfo = res.locals.userInfo
+//     if (userInfo.role !== "sales_assistant_chef")
+//         return res.status(401).json("this user does not have sales assistant premission")
+//     const { service } = req.query
+//     const { id } = req.params
+//     try {
+//         const result = await fetchUserAppsDetails(service, id)
+//         console.log(result)
+//         res.status(200).json(result)
+//       } catch (e) {
+//         console.log(e)
+//         return res.status(500).json("An error occurred while attempting to update application")
+//       }
+// })
 
 app.get("/", async (req, res) => res.json("app worksssssssssss"))
 app.put("/test/:userID", async (req, res) => {

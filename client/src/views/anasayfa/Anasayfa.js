@@ -1,4 +1,4 @@
-import React, { lazy } from 'react'
+import React, { lazy, useEffect } from 'react'
 import {
   CCard,
   CCardBody,
@@ -23,24 +23,6 @@ const Anasayfa = () => {
 
 
       <CCard>
-        {/* <CCardBody>
-          <CRow>
-
-            <CCol sm="5">
-              <h4 className="card-title mb-0">Satış Grafiği</h4>
-              <div className="small text-muted">2021</div>
-            </CCol>
-
-          </CRow>
-
-          
-          <MainChartExample style={{height: '300px', marginTop: '40px'}}/>
-
-
-        </CCardBody> */}
-
-
-        
         <CCardFooter>
           <CRow className="text-center">
 
