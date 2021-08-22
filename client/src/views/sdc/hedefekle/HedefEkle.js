@@ -55,9 +55,27 @@ const HedefEkle = () => {
         fetchData("http://localhost:8080/sdc/users", setUsersData)
         fetchData("http://localhost:8080/services?profitable=true", setServicesData)
         if (displayedUser) {
-            console.log("fetching specific")
             const id = displayedUser
-            fetchData(`http://localhost:8080/sdc/user/${id}/count/?service=${"ALL"}&status=${"ALL"}`, setTableData)
+            const res = await fetch(`http://localhost:8080/sdc/user/${id}/count/?service=${"ALL"}&status=${"ALL"}`, {
+                method: 'GET',
+                headers: {
+                  'content-type': 'application/json',
+                  'authorization' :`Bearer ${document.cookie.slice(8)} `
+                }
+              })
+              if (res.status === 200) {
+                const fetchData = await res.json()
+                console.log(fetchData)
+                const mappedData = fetchData.map(obj => {
+                    return {
+                        hizmet
+                        onaylanan_işlem
+                        hedef
+                        tarih
+                    }
+                })
+                setState(fetchData)
+              }
         }
     }, [displayedUser])
 
@@ -133,7 +151,7 @@ const HedefEkle = () => {
                     </CRow>
                 </CForm>
                 <CDataTable
-                    items={dummyData}
+                    items={tableData}
                     fields={fields}
                     tableFilter
                     footer
