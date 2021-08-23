@@ -186,7 +186,6 @@ const queryConstructorDate = (selectStatement, conditionArr) => {
 
 const getDealerApplications = async (query, date, userID, status = "ALL", service = "ALL") => {
 
-        console.log("USER ID IS ", userID)
         const getDealerName = await pool.query("SELECT username FROM login WHERE user_id = $1", [userID])
         const dealerName = getDealerName.rows[0].username
         if (service === "MAP") {
@@ -219,8 +218,6 @@ const getDealerApplications = async (query, date, userID, status = "ALL", servic
         const conditionSubmitter = "sales_applications.submitter = "
         const conditionStatus = "sales_applications.status = "
         const conditionService = "sales_applications_details.selected_service = "
-        console.log(typeof date)
-        // if user is querying date as an interval
         if (typeof date === "string" ||typeof date === "number") {
             const interval = date
             // DATE Interval is REQUIRED
@@ -244,7 +241,6 @@ const getDealerApplications = async (query, date, userID, status = "ALL", servic
             if (interval !== "ALL")
                 verifiedConditionParamsArr.shift()
             const queryString = queryConstructor(selectStatement, verifiedConditionQueryArr)
-            console.log(queryString, verifiedConditionParamsArr)
             const dbQuery = await pool.query(queryString, verifiedConditionParamsArr)
             // if query is details, return the entire array of objects, else return only the object in the array.
             return query === "details" ? dbQuery.rows : dbQuery.rows[0]

@@ -21,7 +21,8 @@ import {
   CModal,
   CModalTitle,
   CModalBody,
-  CModalFooter
+  CModalFooter,
+  CInputFile
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import "./yenibasvuru.css";
@@ -131,6 +132,7 @@ class YeniBasvuru extends React.Component {
             clientWantsRouter: 0,
             clientDescription: "",
             clientName: "",
+            clientAppFiles: null,
 
             offers : [],
             dslOffers : [
@@ -262,7 +264,44 @@ class YeniBasvuru extends React.Component {
         })
     }
 
+    loadImage = (event) => {
+        if (event.target.files && event.target.files[0]) {
+            console.log("event.target.files", event.target.files)
+            let img = event.target.files;
+            // console.log("img before using createobjecturl", URL.createObjectURL(img))
+            this.setState({clientAppFiles: img})
+        }
+    }
 
+    onImageUpload = async () => {
+        const { selectedService, selectedOffer, 
+            clientWantsRouter, clientDescription,
+             clientName} = this.state;
+        const image = this.state.clientAppFiles
+        const formData = new FormData()
+        formData.append("selectedService", "selectedService")
+        formData.append("selectedOffer", "selectedOffer")
+        formData.append("clientWantsRouter", "clientWantsRouter")
+        formData.append("clientDescription", "clientDescription")
+        formData.append("clientName", "clientName")
+        for (let i = 0; i < image.length; i++) {
+            formData.append("image", image[i])            
+        }
+        try {
+          console.log("fetching")
+          const res = await fetch("http://localhost:8080/bayi/basvuru/yeni", {
+            method: "POST",
+            headers: {
+            'authorization' :`Bearer ${document.cookie.slice(8)} `
+            },
+            body: formData
+          })
+          const data = await res.json()
+          console.log("data from fetch", data)
+        } catch (error) {
+          console.log(error)
+        }
+      }
  
     render() {
         const {selectedService, offers, isOfferValueDSL, isApplicationSubmitting, isSubmitSuccess, didApplicationFinishSubmit, clientDescription, clientName, areAppFieldsMissing } = this.state;
@@ -362,6 +401,46 @@ class YeniBasvuru extends React.Component {
                             <CInput value = {clientName} id="text-input" name="text-input" placeholder="" onChange = {this.onCustomernameChange}/>
                             <CFormText>müşterinin isim soyisimi</CFormText>
                         </CCol>
+                        </CFormGroup>
+                        <CFormGroup row>
+                            <CCol md="3">
+                                <CLabel>Başvuru dosyaları</CLabel>
+                            </CCol>
+                            <CCol xs="12" md="9">
+                                <CInputFile 
+                                id="file-multiple-input" 
+                                name="file-multiple-input"
+                                multiple
+                                custom
+                                onChange = {this.loadImage}
+                                />
+                                <CLabel htmlFor="file-multiple-input" variant="custom-file">
+                                Dosyalarını seç
+                                </CLabel>
+                            </CCol>
+                        </CFormGroup>
+                        <CFormGroup row>
+                            <CLabel col md={3}>Dosyanı seç</CLabel>
+                            <CCol xs="12" md="9">
+                                <CInputFile custom id="custom-file-input" onChange = {this.loadImage} />
+                                <CLabel htmlFor="custom-file-input" variant="custom-file">
+                                Testing
+                                </CLabel>
+
+                                <CInputFile 
+                                    id="file-multiple-input" 
+                                    name="file-multiple-input" 
+                                    multiple
+                                    custom
+                                    onChange = {this.loadImage}
+                                />
+                                <CLabel htmlFor="file-multiple-input" variant="custom-file">
+                                Choose Files...
+                                </CLabel>
+                            </CCol>
+                            <CCol>
+                                <CButton color = "primary" onClick = {this.onImageUpload} >submitimage</CButton>
+                            </CCol>
                         </CFormGroup>
                     </CForm>
                     </CCardBody>

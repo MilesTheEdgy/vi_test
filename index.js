@@ -1,3 +1,4 @@
+const fs = require("fs")
 const express = require("express");
 const path = require("path");
 const app = express();
@@ -5,6 +6,8 @@ const cors = require("cors");
 const bcrypt = require("bcrypt");
 const dotenv = require('dotenv');
 const jwt = require("jsonwebtoken");
+const multer = require("multer")
+const cloudinary = require("cloudinary").v2
 // const client = require("./db");
 const pool = require("./db");
 const mg = require("./mailgun/mailgun")
@@ -28,6 +31,35 @@ const {
 
 dotenv.config();
 process.env.TOKEN_SECRET;
+
+const imageStorage = multer.diskStorage({
+    // Destination to store image     
+    destination: 'uploads', 
+      filename: (req, file, cb) => {
+          cb(null, file.fieldname + '_yoyo_' + Date.now() 
+             + path.extname(file.originalname))
+    }
+  });
+const upload = multer({
+    storage: imageStorage,
+    limits: {
+    fileSize: 1000000 // 1000000 Bytes = 1 MB
+    },
+    fileFilter(req, file, cb) {
+    // console.log("multer -- req: ", req)
+    // console.log("multer -- file: ", file)
+    if (!file.originalname.match(/\.(png|jpg)$/)) { 
+        return cb(new Error('Please upload an Image'))
+        }
+    cb(undefined, true)
+    }
+})
+
+cloudinary.config({ 
+    cloud_name: process.env.CLOUDINARY_NAME, 
+    api_key: process.env.CLOUDINARY_API_KEY, 
+    api_secret: process.env.CLOUDINARY_API_SECRET 
+});
 
 app.use(cors());
 app.use(express.json());
@@ -64,10 +96,8 @@ app.post("/login", async(req, res) => {
     try {
         const { username, password } = req.body;
         let checkCredentialsResult = await checkCredentials(username, password)
-        console.log("checkCredentialsResult", checkCredentialsResult)
         if (checkCredentialsResult.ok) {
             let token = generateAccessToken({username: username, role: checkCredentialsResult.userRole, userID: checkCredentialsResult.ID})
-            // console.log("token from login: ", token)
             console.log(checkCredentialsResult.userRole);
             return res.status(200).json({
                 token: token,
@@ -288,7 +318,6 @@ app.get("/services", async (req, res) => {
 // if it's "details", it returns the columns of the application's details according to specific
 // criteria. 
 app.get("/dealer/applications/:query", authenticateToken, async (req, res) => {
-    console.log(res.locals.userInfo)
     const { userID } = res.locals.userInfo
     // const dealerName = "ademiletişim"
     const { query } = req.params
@@ -319,11 +348,54 @@ app.get("/bayi/anasayfa", authenticateToken, async(req, res) => {
     }
 })
 
-app.post("/bayi/basvuru/yeni", authenticateToken, async(req, res) => {
+app.post("/bayi/basvuru/yeni", authenticateToken, upload.array("image", 3), async(req, res) => {
     try {
-        const { selectedService, selectedOffer, clientDescription, clientWantsRouter, clientName} = req.body;
-        const userInfo = res.locals.userInfo
-        await sendApplication(userInfo, selectedService, selectedOffer, clientWantsRouter, clientDescription, clientName, res) 
+        const { userID } = res.locals.userInfo
+        const { files, body } = req
+
+        console.log(files)
+        console.log(body)
+        for (let i = 0; i < files.length; i++) {
+            const fileExtension = path.extname(files[i].originalname).toLowerCase() 
+            const imageUniqID = `${userID}-${uniqid.process()}`
+            fs.rename(`${files[i].path}`, `${files[i].destination}/${imageUniqID+fileExtension}`, err => {
+                console.log(err)
+              });
+        }
+
+        res.json("okey")
+        console.log("uploading to cloudinary")
+        const imageFolderPath = path.join(__dirname + "/uploads")
+        fs.readdir(imageFolderPath, (err, filePaths) => {
+            if (err)
+                console.log(err)
+            console.log(filePaths)
+            for (let i = 0; i < filePaths.length; i++) {
+                
+                cloudinary.uploader.upload(__dirname + "/uploads/" + filePaths[i], {
+                     public_id: `iys/${filePaths[i].split('.').slice(0, -1).join('.')}`
+                    }, (error, result) => {
+                    if (error) {
+                    console.log(error)
+                    return res.status(500).json("upload to cloudinary error")
+                    }
+                    else {
+                    console.log(result); 
+                    // console.log('deleting from storage...')
+                    // fs.unlink(file.path, err => {
+                    //   if (err)
+                    //       return handleError(err, res);
+                    //   console.log('deleted')
+                    //   return res.status(200).json("I think its uploaded?")
+                    // });
+                    }
+                });
+            }
+        })
+
+        // const { selectedService, selectedOffer, clientDescription, clientWantsRouter, clientName} = req.body;
+        // const userInfo = res.locals.userInfo
+        // await sendApplication(userInfo, selectedService, selectedOffer, clientWantsRouter, clientDescription, clientName, res) 
     } catch (error) {
         console.error(error)
         res.status(500)

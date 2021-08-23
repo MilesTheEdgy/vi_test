@@ -4,7 +4,7 @@ const express = require("express");
 const multer = require("multer");
 const cors = require("cors")
 const dotenv = require('dotenv');
-const cloudinary = require("cloudinary")
+const cloudinary = require("cloudinary").v2
 const mg = require("./mailgun/mailgun")
 
 const app = express();
@@ -22,17 +22,34 @@ const handleError = (err, res) => {
   res.status(500).json("Oops! Something went wrong!")
 };
 
-const upload = multer({
-  dest: path.join(__dirname, "./uploads")
-  // you might also want to set some limits: https://github.com/expressjs/multer#limits
+const imageStorage = multer.diskStorage({
+  // Destination to store image     
+  destination: 'uploads', 
+    filename: (req, file, cb) => {
+        cb(null, file.fieldname + '_yoyo_' + Date.now() 
+           + path.extname(file.originalname))
+  }
 });
+const upload = multer({
+    storage: imageStorage,
+    limits: {
+      fileSize: 1000000 // 1000000 Bytes = 1 MB
+    },
+    fileFilter(req, file, cb) {
+      // console.log("multer -- req: ", req)
+      // console.log("multer -- file: ", file)
+      if (!file.originalname.match(/\.(png|jpg)$/)) { 
+        return cb(new Error('Please upload an Image'))
+      }
+    cb(undefined, true)
+  }
+})
 
 cloudinary.config({ 
   cloud_name: process.env.CLOUDINARY_NAME, 
   api_key: process.env.CLOUDINARY_API_KEY, 
   api_secret: process.env.CLOUDINARY_API_SECRET 
 });
-
 
 app.get("/test", async (req, res) => {
   fs.readFile(__dirname + "/temp.html", (err, data) => {
@@ -45,12 +62,31 @@ app.get("/test", async (req, res) => {
   })
 })
 
-
-app.post("/upload", upload.single("myFile"), (req, res) => {
+app.post("/upload", upload.single("image"), (req, res) => {
+    console.log('attempting to add an image alongside other body')
+    console.log(req.body)
+    console.log(req.file)
+    const { file } = req
+    console.log("uploading to cloudinary")
+    cloudinary.uploader.upload(file.path, { public_id: `iys/${file.originalname}` }, (error, result) => {
+      if (error) {
+        console.log(error)
+        return res.status(500).json("upload to cloudinary error")
+      }
+      else {
+        console.log(result); 
+        console.log('deleting from storage...')
+        fs.unlink(file.path, err => {
+          if (err)
+              return handleError(err, res);
+          console.log('deleted')
+          return res.status(200).json("I think its uploaded?")
+        });
+      }
+    });
     const uploadImage = () => {
-      // console.log("route hit")
       const { file } = req
-      // console.log("file from client ", file)
+      console.log("file from client ", file)
       const tempPath = file.path;
       const targetPath = path.join(__dirname, `./uploads/${file.originalname}`);
       // console.log("original 'temp' path: ", tempPath)
@@ -65,8 +101,8 @@ app.post("/upload", upload.single("myFile"), (req, res) => {
               console.log(error)
             else
               console.log(result); 
-              res.status(200).json("File uploaded!")
-          });
+            });
+            res.status(200).json("File uploaded!")
         });
       } else {
         fs.unlink(tempPath, err => {
@@ -76,8 +112,8 @@ app.post("/upload", upload.single("myFile"), (req, res) => {
         });
       }
     }
-  }
-);
+    // uploadImage()
+  });
 
 const PORT = process.env.PORT || 8080;
 

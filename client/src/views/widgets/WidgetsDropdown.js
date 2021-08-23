@@ -30,10 +30,10 @@ const WidgetsDropdown = () => {
         setState(data.count)
       }
     };
-    fetchAppsCountData("http://localhost:8080/dealer/applications/count?status=approved&date=today", setTodaySales);
-    fetchAppsCountData("http://localhost:8080/dealer/applications/count?status=rejected&date=today", setProblematicSales);
-    fetchAppsCountData("http://localhost:8080/dealer/applications/count?status=ALL&date=month", setThisMonthSales);
-    fetchAppsCountData("http://localhost:8080/dealer/applications/count?status=ALL&date=year", setThisYearSales);
+    fetchAppsCountData("http://localhost:8080/dealer/applications/count?status=approved&interval=today", setTodaySales);
+    fetchAppsCountData("http://localhost:8080/dealer/applications/count?status=rejected&interval=today", setProblematicSales);
+    fetchAppsCountData("http://localhost:8080/dealer/applications/count?status=ALL&interval=month", setThisMonthSales);
+    fetchAppsCountData("http://localhost:8080/dealer/applications/count?status=ALL&interval=year", setThisYearSales);
   }, [])
   return (
     <CRow>
