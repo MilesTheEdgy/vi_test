@@ -357,40 +357,40 @@ app.post("/bayi/basvuru/yeni", authenticateToken, upload.array("image", 3), asyn
         console.log(body)
         for (let i = 0; i < files.length; i++) {
             const fileExtension = path.extname(files[i].originalname).toLowerCase() 
+            console.log("fileExtension", fileExtension)
             const imageUniqID = `${userID}-${uniqid.process()}`
-            fs.rename(`${files[i].path}`, `${files[i].destination}/${imageUniqID+fileExtension}`, err => {
-                console.log(err)
-              });
+            console.log("imageUniqID", imageUniqID);
+            fs.renameSync(`${files[i].path}`, `${files[i].destination}/${imageUniqID+fileExtension}`);
         }
-
-        res.json("okey")
-        console.log("uploading to cloudinary")
         const imageFolderPath = path.join(__dirname + "/uploads")
+        console.log('imageFolderPath', imageFolderPath)
         fs.readdir(imageFolderPath, (err, filePaths) => {
+            console.log('in READDIR function...')
             if (err)
                 console.log(err)
-            console.log(filePaths)
+            console.log('passed readdir function, moving onto cloudinary upload loop...')
+            console.log("filePaths", filePaths)
             for (let i = 0; i < filePaths.length; i++) {
-                
+                console.log('in cloudinary upload loop number ', i)
                 cloudinary.uploader.upload(__dirname + "/uploads/" + filePaths[i], {
                      public_id: `iys/${filePaths[i].split('.').slice(0, -1).join('.')}`
                     }, (error, result) => {
                     if (error) {
-                    console.log(error)
-                    return res.status(500).json("upload to cloudinary error")
+                        console.log(error)
+                        return res.status(500).json("upload to cloudinary error")
                     }
                     else {
-                    console.log(result); 
-                    // console.log('deleting from storage...')
-                    // fs.unlink(file.path, err => {
-                    //   if (err)
-                    //       return handleError(err, res);
-                    //   console.log('deleted')
-                    //   return res.status(200).json("I think its uploaded?")
-                    // });
+                        console.log(result); 
+                        console.log('deleting from storage...')
+                        fs.unlink(__dirname + "/uploads/" + filePaths[i], err => {
+                        if (err)
+                            // return handleError(err, res);
+                        console.log('deleted')
+                        });
                     }
                 });
             }
+            return res.status(200).json("I think its uploaded?")
         })
 
         // const { selectedService, selectedOffer, clientDescription, clientWantsRouter, clientName} = req.body;

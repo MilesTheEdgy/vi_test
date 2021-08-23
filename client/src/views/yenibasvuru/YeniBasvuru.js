@@ -63,11 +63,11 @@ const MissingInfoModal = ({reset}) => {
     )
 }
 
-const SubmitApplicationResultText = ({isSuccess}) => {
+const SubmitApplicationResultText = ({isSuccess, toasterText}) => {
     return (
         <CToaster position="top-right">
             <CToast show={true} autohide={3000} fade={true} color={isSuccess ? "success" : "danger"} className = "applicationToaster">
-                <CToastBody>{isSuccess ? "Talebiniz başarıyla gönderilmiştir!": "Bir sorun oldu, lütfen daha sonra tekrar deneyin"}</CToastBody>
+                <CToastBody>{toasterText}</CToastBody>
             </CToast>
         </CToaster>
     )
@@ -133,6 +133,7 @@ class YeniBasvuru extends React.Component {
             clientDescription: "",
             clientName: "",
             clientAppFiles: null,
+            clientAppFilesObjURL: null,
 
             offers : [],
             dslOffers : [
@@ -150,6 +151,7 @@ class YeniBasvuru extends React.Component {
             isOfferValueDSL: false,
             isApplicationSubmitting: false,
             isSubmitSuccess: undefined,
+            toasterText: "",
             didApplicationFinishSubmit: false,
 
             areAppFieldsMissing: false
@@ -173,21 +175,21 @@ class YeniBasvuru extends React.Component {
     selectedServiceHandler = (e) => {
         let value = e.target.value
         const { dslOffers, taahütOffers, tivibuOffers, PSTNOffers } = this.state;
-        this.setState({selectedService: value})   
+        this.setState({selectedService: value}) 
         switch (value) {
             case "DSL":
-                this.setState({offers: dslOffers, isOfferValueDSL: false})           
+                this.setState({offers: dslOffers, isOfferValueDSL: false})
                 break;
             case "Taahüt":
-                this.setState({offers: taahütOffers, isOfferValueDSL: false})                   
+                this.setState({offers: taahütOffers, isOfferValueDSL: false})
                 break;
 
             case "Tivibu":
-                this.setState({offers: tivibuOffers, isOfferValueDSL: false})                   
+                this.setState({offers: tivibuOffers, isOfferValueDSL: false})
                 break;
 
             case "PSTN":
-                this.setState({offers: PSTNOffers, isOfferValueDSL: false})                   
+                this.setState({offers: PSTNOffers, isOfferValueDSL: false})
                 break;
 
             default:
@@ -209,37 +211,84 @@ class YeniBasvuru extends React.Component {
         const { selectedService, selectedOffer, 
             clientWantsRouter, clientDescription,
              clientName} = this.state;
-
-        if (!selectedService || !clientDescription || !clientDescription || !clientName)  {
-            this.setState({areAppFieldsMissing: true})
-            console.log(this.state.areAppFieldsMissing)
-            return
+        const image = this.state.clientAppFiles
+        const formData = new FormData()
+        formData.append("selectedService", selectedService)
+        formData.append("selectedOffer", selectedOffer)
+        formData.append("clientWantsRouter", clientWantsRouter)
+        formData.append("clientDescription", clientDescription)
+        formData.append("clientName", clientName)
+        for (let i = 0; i < image.length; i++) {
+            formData.append("image", image[i])            
         }
-        this.setState({isApplicationSubmitting: true})
-
-        let res = await fetch("http://localhost:8080/bayi/basvuru/yeni", {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
+        try {
+          console.log("fetching")
+          const res = await fetch("http://localhost:8080/bayi/basvuru/yeni", {
+            method: "POST",
+            headers: {
             'authorization' :`Bearer ${document.cookie.slice(8)} `
             },
-        body: JSON.stringify({
-            selectedService: selectedService,
-            selectedOffer: selectedOffer,
-            clientWantsRouter: clientWantsRouter,
-            clientDescription: clientDescription,
-            clientName: clientName
-            }) 
-        });
-        if (res.status === 200 ) {
-            this.setState({isSubmitSuccess: true})
+            body: formData
+          })
+          if (res.status === 200 ) {
+            this.setState({
+                isSubmitSuccess: true,
+                toasterText: "Talebiniz başarıyla gönderilmiştir!"
+            })
         } else {
-            this.setState({isSubmitSuccess: false})
+            this.setState({
+                isSubmitSuccess: false,
+                toasterText: "Bir sorun oldu, lütfen daha sonra tekrar deneyin"
+            })
         }
-
         this.setState({isApplicationSubmitting: false, didApplicationFinishSubmit: true})
         this.resetInput();
         setTimeout(() => this.resetAppStats(), 4300)
+
+        } catch (error) {
+          console.log(error)
+        }
+/////////////////////////////////////////////////
+        // const { selectedService, selectedOffer, 
+        //     clientWantsRouter, clientDescription,
+        //      clientName} = this.state;
+
+        // if (!selectedService || !clientDescription || !clientDescription || !clientName)  {
+        //     this.setState({areAppFieldsMissing: true})
+        //     console.log(this.state.areAppFieldsMissing)
+        //     return
+        // }
+        // this.setState({isApplicationSubmitting: true})
+
+        // let res = await fetch("http://localhost:8080/bayi/basvuru/yeni", {
+        // method: 'POST',
+        // headers: {
+        //     'Content-Type': 'application/json',
+        //     'authorization' :`Bearer ${document.cookie.slice(8)} `
+        //     },
+        // body: JSON.stringify({
+        //     selectedService: selectedService,
+        //     selectedOffer: selectedOffer,
+        //     clientWantsRouter: clientWantsRouter,
+        //     clientDescription: clientDescription,
+        //     clientName: clientName
+        //     }) 
+        // });
+        // if (res.status === 200 ) {
+        //     this.setState({
+        //         isSubmitSuccess: true,
+        //         toasterText: "Talebiniz başarıyla gönderilmiştir!"
+        //     })
+        // } else {
+        //     this.setState({
+        //         isSubmitSuccess: false,
+        //         toasterText: "Bir sorun oldu, lütfen daha sonra tekrar deneyin"
+        //     })
+        // }
+
+        // this.setState({isApplicationSubmitting: false, didApplicationFinishSubmit: true})
+        // this.resetInput();
+        // setTimeout(() => this.resetAppStats(), 4300)
 
     }
 
@@ -265,11 +314,37 @@ class YeniBasvuru extends React.Component {
     }
 
     loadImage = (event) => {
-        if (event.target.files && event.target.files[0]) {
+        if (event.target.files) {
             console.log("event.target.files", event.target.files)
-            let img = event.target.files;
-            // console.log("img before using createobjecturl", URL.createObjectURL(img))
-            this.setState({clientAppFiles: img})
+            const images = event.target.files;
+            // display error toaster if images total is not 3
+            if (images.length !== 3) {
+                this.setState({didApplicationFinishSubmit: true})
+                this.setState({
+                    isSubmitSuccess: false,
+                    toasterText: "Lütfen 3 adet resim seçiniz"
+                })
+                return setTimeout(() => this.resetAppStats(), 4300)
+            }
+            let objURLS = []
+            // loop through the images and store image object as temp url in objURLS array
+            for (let i = 0; i < images.length; i++) {
+                // display error toaster if image is not pdf or jpg
+                if (images[i].type.indexOf("image") !== 0) {
+                    this.setState({didApplicationFinishSubmit: true})
+                    this.setState({
+                        isSubmitSuccess: false,
+                        toasterText: "Lütfen seçtiğiniz dosya resim (JPG, PNG) olduğundan emin olun"
+                    })
+                    return setTimeout(() => this.resetAppStats(), 4300)
+                }
+                const objURL = URL.createObjectURL(images[i])
+                objURLS.push(objURL)
+            }
+            this.setState({
+                clientAppFiles: images,
+                clientAppFilesObjURL: objURLS
+            })
         }
     }
 
@@ -304,7 +379,7 @@ class YeniBasvuru extends React.Component {
       }
  
     render() {
-        const {selectedService, offers, isOfferValueDSL, isApplicationSubmitting, isSubmitSuccess, didApplicationFinishSubmit, clientDescription, clientName, areAppFieldsMissing } = this.state;
+        const {selectedService, offers, isOfferValueDSL, isApplicationSubmitting, isSubmitSuccess, didApplicationFinishSubmit, clientDescription, clientName, areAppFieldsMissing, toasterText } = this.state;
         return (
             <CRow className = "d-flex justify-content-center">
                 <CCol xs="12" md="8">
@@ -312,7 +387,7 @@ class YeniBasvuru extends React.Component {
                     isApplicationSubmitting && <Loader/>
                 }
                 {
-                    didApplicationFinishSubmit && <SubmitApplicationResultText isSuccess = {isSubmitSuccess} />
+                    didApplicationFinishSubmit && <SubmitApplicationResultText isSuccess = {isSubmitSuccess} toasterText = {toasterText} />
                 }
                 {
                     areAppFieldsMissing ? <MissingInfoModal reset = {this.resetInput} /> : null
@@ -408,7 +483,7 @@ class YeniBasvuru extends React.Component {
                             </CCol>
                             <CCol xs="12" md="9">
                                 <CInputFile 
-                                id="file-multiple-input" 
+                                id="file-multiple-input"
                                 name="file-multiple-input"
                                 multiple
                                 custom
@@ -419,29 +494,32 @@ class YeniBasvuru extends React.Component {
                                 </CLabel>
                             </CCol>
                         </CFormGroup>
+                        {
+                        this.state.clientAppFiles === null ?
                         <CFormGroup row>
-                            <CLabel col md={3}>Dosyanı seç</CLabel>
-                            <CCol xs="12" md="9">
-                                <CInputFile custom id="custom-file-input" onChange = {this.loadImage} />
-                                <CLabel htmlFor="custom-file-input" variant="custom-file">
-                                Testing
-                                </CLabel>
-
-                                <CInputFile 
-                                    id="file-multiple-input" 
-                                    name="file-multiple-input" 
-                                    multiple
-                                    custom
-                                    onChange = {this.loadImage}
-                                />
-                                <CLabel htmlFor="file-multiple-input" variant="custom-file">
-                                Choose Files...
-                                </CLabel>
+                            <CCol md="4">
+                                <img style = {{maxWidth: "200px", maxHeight: "200px"}} src = "https://res.cloudinary.com/papyum/image/upload/v1629721581/iys/placeholder_fb7gch.png" />
                             </CCol>
-                            <CCol>
-                                <CButton color = "primary" onClick = {this.onImageUpload} >submitimage</CButton>
+                            <CCol md="4">
+                                <img style = {{maxWidth: "200px", maxHeight: "200px"}} src = "https://res.cloudinary.com/papyum/image/upload/v1629721581/iys/placeholder_fb7gch.png" />
+                            </CCol>
+                            <CCol md="4">
+                                <img style = {{maxWidth: "200px", maxHeight: "200px"}} src = "https://res.cloudinary.com/papyum/image/upload/v1629721581/iys/placeholder_fb7gch.png" />
                             </CCol>
                         </CFormGroup>
+                        :
+                        <CFormGroup row>
+                            <CCol md="4">
+                                <img style = {{maxWidth: "200px", maxHeight: "200px"}} src = {this.state.clientAppFilesObjURL[0]} />
+                            </CCol>
+                            <CCol md="4">
+                                <img style = {{maxWidth: "200px", maxHeight: "200px"}} src = {this.state.clientAppFilesObjURL[1]} />
+                            </CCol>
+                            <CCol md="4">
+                                <img style = {{maxWidth: "200px", maxHeight: "200px"}} src = {this.state.clientAppFilesObjURL[2]} />
+                            </CCol>
+                        </CFormGroup>
+                        }
                     </CForm>
                     </CCardBody>
                     <CCardFooter>
