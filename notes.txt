@@ -1,11 +1,3 @@
-2 client routes: Reset password verify and Reset password new
-2 server routes: GET resetpassword and PUT resetpassword
-
-Client sends his email, server queries his user info through his email in the database.
-If the query returns info, servers sends an email containing an html with a password reset ID link, and stores the reset ID in the database
-Client clicks this link, sends reset ID to server, servers queries database again
-If the query returns the ID, the server sends a 200 request and redirects the client to Reset Password new route
-
 
 
 Okay

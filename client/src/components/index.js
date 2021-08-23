@@ -33,7 +33,8 @@ export const mapDataToTurkish = (fetchData) => {
             statusChangeDate: statusChangeDate ? statusChangeDate.toISOString().slice(0, 10) : null,
             finalSalesRepDetails: obj.final_sales_rep_details ? obj.final_sales_rep_details : "",
             lastChangeDate: lastChangeDate ? lastChangeDate.toISOString().slice(0, 10) : null,
-            submitProcessNum
+            submitProcessNum,
+            imageURLS: obj.image_urls ? obj.image_urls : null
           }
       })
 }

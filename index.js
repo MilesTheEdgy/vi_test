@@ -24,6 +24,7 @@ const {
 const { 
     fetchUserAppsCount,
     getDealerApplications,
+    getSDCApplicationsCount
 } = require("./database/queries")
 const { 
     forDealerGetApplications,
@@ -348,54 +349,66 @@ app.get("/bayi/anasayfa", authenticateToken, async(req, res) => {
     }
 })
 
-app.post("/bayi/basvuru/yeni", authenticateToken, upload.array("image", 3), async(req, res) => {
+app.post("/applications", authenticateToken, upload.array("image", 3), async(req, res) => {
     try {
-        const { userID } = res.locals.userInfo
-        const { files, body } = req
+        const handleError = (err, res) => {
+            console.log(err)
+            res.status(500).json("An error occurred during application submission")
+        };
+
+        const userInfo = res.locals.userInfo
+        const { files } = req
+        const { selectedService, selectedOffer, clientDescription, clientWantsRouter, clientName} = req.body;
+
+        if (!selectedService || !clientDescription || !clientName)
+            return res.status(403).json("one or more field was empty")
 
         console.log(files)
-        console.log(body)
+        console.log(req.body)
+        const highestApplicationIDQuery = await pool.query("SELECT MAX(id) FROM sales_applications;")
+        const highestApplicationID = highestApplicationIDQuery.rows[0].max
         for (let i = 0; i < files.length; i++) {
             const fileExtension = path.extname(files[i].originalname).toLowerCase() 
             console.log("fileExtension", fileExtension)
-            const imageUniqID = `${userID}-${uniqid.process()}`
+            const imageUniqID = `${userInfo.userID}-${uniqid.process()}`
             console.log("imageUniqID", imageUniqID);
             fs.renameSync(`${files[i].path}`, `${files[i].destination}/${imageUniqID+fileExtension}`);
         }
         const imageFolderPath = path.join(__dirname + "/uploads")
         console.log('imageFolderPath', imageFolderPath)
+        let dbImageURLS = []
         fs.readdir(imageFolderPath, (err, filePaths) => {
             console.log('in READDIR function...')
             if (err)
-                console.log(err)
+                return handleError(err, res)
             console.log('passed readdir function, moving onto cloudinary upload loop...')
             console.log("filePaths", filePaths)
             for (let i = 0; i < filePaths.length; i++) {
                 console.log('in cloudinary upload loop number ', i)
                 cloudinary.uploader.upload(__dirname + "/uploads/" + filePaths[i], {
-                     public_id: `iys/${filePaths[i].split('.').slice(0, -1).join('.')}`
-                    }, (error, result) => {
-                    if (error) {
-                        console.log(error)
-                        return res.status(500).json("upload to cloudinary error")
+                     public_id: `iys/dealer_submissions/${userInfo.userID}/${highestApplicationID}/${filePaths[i].split('.').slice(0, -1).join('.')}`
+                    }, (err, result) => {
+                    if (err) {
+                        return handleError(err, res)
                     }
                     else {
                         console.log(result); 
+                        dbImageURLS.push(result.secure_url)
                         console.log('deleting from storage...')
-                        fs.unlink(__dirname + "/uploads/" + filePaths[i], err => {
+                        fs.unlink(__dirname + "/uploads/" + filePaths[i], async err => {
                         if (err)
-                            // return handleError(err, res);
+                            return handleError(err, res)
                         console.log('deleted')
+                        console.log("dbImageURLS", dbImageURLS)
+                        if (dbImageURLS.length === 3)
+                            await sendApplication(userInfo, selectedService, selectedOffer, clientWantsRouter, clientDescription, clientName, dbImageURLS, res)
                         });
                     }
                 });
             }
-            return res.status(200).json("I think its uploaded?")
+            // return res.status(200).json("an error occurred during application submission")
         })
 
-        // const { selectedService, selectedOffer, clientDescription, clientWantsRouter, clientName} = req.body;
-        // const userInfo = res.locals.userInfo
-        // await sendApplication(userInfo, selectedService, selectedOffer, clientWantsRouter, clientDescription, clientName, res) 
     } catch (error) {
         console.error(error)
         res.status(500)
@@ -414,11 +427,16 @@ app.get("/bayi/applications", authenticateToken, async(req, res) => {
     }
 })
 
-app.get("/applications/:applicationID", async(req, res) => {
+app.get("/applications/:applicationID", authenticateToken, async(req, res) => {
     try {
+        // THIS ROUTE RETURNS ANY APPLICATION, ANY DEALER CAN ACCESS IT
+        // ADD SOME VERIFICATION HERE!!!!!!!!!!!!!!!!!!!!!!
+        //
+        //
+        //
         console.log("route hit")
         const { applicationID } = req.params
-        let query = await pool.query("SELECT sales_applications.id, sales_applications.client_name, sales_applications.submit_time, sales_applications_details.selected_service, sales_applications_details.selected_offer, sales_applications_details.description, sales_applications.status, sales_applications_details.sales_rep_details, sales_applications_details.status_change_date, sales_applications_details.final_sales_rep_details, sales_applications.last_change_date FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id WHERE sales_applications.id = $1",
+        let query = await pool.query("SELECT sales_applications.id, sales_applications.client_name, sales_applications.submit_time, sales_applications_details.selected_service, sales_applications_details.selected_offer, sales_applications_details.description, sales_applications.status, sales_applications_details.sales_rep_details, sales_applications_details.status_change_date, sales_applications_details.final_sales_rep_details, sales_applications.last_change_date, sales_applications_details.image_urls FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id WHERE sales_applications.id = $1",
         [applicationID])
         console.log(query.rows)
         res.status(200).json(query.rows)
@@ -561,19 +579,20 @@ app.get("/sdc/user/:userID/:query", authenticateToken, async (req, res) => {
     try {
         const { service, status, date } = req.query
         const { userID, query } = req.params
-        let dbQuery
-        // with some time and effort, I could unify the below two functions into one, but for
-        // now this is a temporary solution
-        // if (service === "ALL")
-        //     dbQuery = await fetchUserAppsCount(userID, status, service)
-        // else
-            console.log("servce ", service)
-            dbQuery = await getDealerApplications(query, date, userID, status, service)
+        const dbQuery = await getDealerApplications(query, date, userID, status, service)
         res.status(200).json(dbQuery)
       } catch (e) {
         console.log(e)
         return res.status(500).json("An error occurred while attempting to update application")
       }
+})
+
+app.get("/sdc/applications/count", authenticateToken, async (req, res) => {
+    const userInfo = res.locals.userInfo
+    if (userInfo.role !== "sales_assistant_chef")
+        return res.status(401).json("this user does not have sales assistant premission")
+    const { interval } = req.query
+    return getSDCApplicationsCount(interval)
 })
 
 app.get("/sdc/user/:userID/applications/filterbydate/:query", authenticateToken, async (req, res) => {

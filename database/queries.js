@@ -131,7 +131,7 @@ const convertDateInputToSQLInterval = (interval) => {
         case "ALL":
             conditionTime = conditionTime + "' 99 year'"
         default:
-            break;
+            throw new Error("Unexpected input at convertDateInputToSQLInterval")
     }
     return conditionTime
 }
@@ -173,6 +173,25 @@ const convertDateInputToSQLInterval = (interval) => {
 //     return query === "details" ? dbQuery.rows : dbQuery.rows[0]
 // }
 
+const switchServiceNameToTurkish = (service) => {
+    let q_service = ""
+    switch (service) {
+        case "Faturasiz":
+            q_service = "Faturasız"; break;
+        case "Faturali":
+            q_service = "Faturalı"; break;
+        case "taahut":
+            q_service = "Taahüt"; break;
+        case "iptal":
+            q_service = "İptal"; break;
+        case "tivibu":
+            q_service = "Tivibu"; break;
+        default:
+            q_service = service;
+    }
+    return q_service
+}
+
 const queryConstructorDate = (selectStatement, conditionArr) => {
     let conditionText = ""
     for (let i = 0; i < conditionArr.length; i++) {
@@ -184,10 +203,32 @@ const queryConstructorDate = (selectStatement, conditionArr) => {
     return selectStatement + conditionText
 }
 
-const getDealerApplications = async (query, date, userID, status = "ALL", service = "ALL") => {
+const getSDCApplicationsCount = async (interval, service) => {
+    //select statement
+    const selectCount = "SELECT count(*) FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id"
+    //condition statements
+    const conditionInterval = convertDateInputToSQLInterval(interval)
+    const conditionService = "sales_applications_details.selected_service = "
+    //service parameter switched to turkish eg: taahut => Taahüt
+    const serviceParam = switchServiceNameToTurkish(service)
+
+    //condition statements array
+    const conditionStatementsArr = [conditionInterval, conditionService]
+    //query statement constructer. adds WHERE and AND, alongside $ signs. Omits the first dollar sign
+    const queryStatement = queryConstructor(selectCount, conditionStatementsArr)
+    //special condition statement for SDC, selects records submitted by all dealers
+    const allDealers = "sales_applications.submitter IN (SELECT username FROM login WHERE role = 'dealer')"
+    const finalStatement = queryStatement + allDealers
+    console.log("final statement: ", finalStatement)
+    const query = await pool.query(finalStatement, [serviceParam])
+    return query.rows
+}
+
+const getDealerApplications = async (query, date = "ALL", userID, status = "ALL", service = "ALL") => {
 
         const getDealerName = await pool.query("SELECT username FROM login WHERE user_id = $1", [userID])
         const dealerName = getDealerName.rows[0].username
+        console.log("SERVICE: ", service)
         if (service === "MAP") {
             const services = await pool.query("SELECT (name) FROM services WHERE active = true")
             const statusArray = ["approved", "rejected", "processing", "sent"]
@@ -209,21 +250,29 @@ const getDealerApplications = async (query, date, userID, status = "ALL", servic
             return result
         }
 
+        if (service === "diger") {
+            const otherServicesQuery = await pool.query(FOR_SDC_GET_USER_APPS_ACCORDINGTO_OTHER_SERVICES_AND_USERID, [userID])
+            return otherServicesQuery.rows
+        }
+
         // SELECT statements
         const selectCount = "SELECT count(*) FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id"
-        const selectDetails = "SELECT sales_applications.id, sales_applications.client_name, sales_applications.submit_time, sales_applications_details.selected_service, sales_applications_details.selected_offer, sales_applications_details.description, sales_applications.status, sales_applications_details.sales_rep_details, sales_applications_details.status_change_date, sales_applications_details.final_sales_rep_details, sales_applications.last_change_date FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id"
+        const selectDetails = "SELECT sales_applications.id, sales_applications.client_name, sales_applications.submit_time, sales_applications_details.selected_service, sales_applications_details.selected_offer, sales_applications_details.description, sales_applications.status, sales_applications_details.sales_rep_details, sales_applications_details.status_change_date, sales_applications_details.final_sales_rep_details, sales_applications.last_change_date, sales_applications_details.image_urls FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id"
         const selectStatement = query === "details" ? selectDetails : selectCount
     
         //CONDITION statements
         const conditionSubmitter = "sales_applications.submitter = "
         const conditionStatus = "sales_applications.status = "
         const conditionService = "sales_applications_details.selected_service = "
+        // console.log("service ", service)
+        const serviceTUR = switchServiceNameToTurkish(service)
+        // console.log("serviceTUR ", serviceTUR)
         if (typeof date === "string" ||typeof date === "number") {
             const interval = date
             // DATE Interval is REQUIRED
             const conditionTime = convertDateInputToSQLInterval(interval)
             //original condition params and query arrays
-            const conditionArr = [interval, dealerName, status, service]
+            const conditionArr = [interval, dealerName, status, serviceTUR]
             const conditionQueryArr = [conditionTime, conditionSubmitter, conditionStatus, conditionService]
             //verified condition params and query arrays
             let verifiedConditionParamsArr = []
@@ -241,7 +290,11 @@ const getDealerApplications = async (query, date, userID, status = "ALL", servic
             if (interval !== "ALL")
                 verifiedConditionParamsArr.shift()
             const queryString = queryConstructor(selectStatement, verifiedConditionQueryArr)
+            // console.log(queryString, verifiedConditionParamsArr)
             const dbQuery = await pool.query(queryString, verifiedConditionParamsArr)
+            if (query !== "details") {
+                console.log(queryString)
+            }
             // if query is details, return the entire array of objects, else return only the object in the array.
             return query === "details" ? dbQuery.rows : dbQuery.rows[0]
 
@@ -250,7 +303,7 @@ const getDealerApplications = async (query, date, userID, status = "ALL", servic
             const extractMonthCondition = "EXTRACT(MONTH FROM sales_applications.submit_time) = "
             const extracYearCondition = "EXTRACT(YEAR FROM sales_applications.submit_time) = "
             //original condition params and query arrays
-            const conditionArr = [Number(month), Number(year), dealerName, status, service]
+            const conditionArr = [Number(month), Number(year), dealerName, status, serviceTUR]
             const conditionQueryArr = [extractMonthCondition, extracYearCondition, conditionSubmitter, conditionStatus, conditionService]
             //verified condition params and query arrays
             let verifiedConditionParamsArr = []
@@ -262,8 +315,9 @@ const getDealerApplications = async (query, date, userID, status = "ALL", servic
                 }
             }
             const queryString = queryConstructorDate(selectStatement, verifiedConditionQueryArr)
-            console.log(queryString, verifiedConditionParamsArr)
+            // console.log(queryString, verifiedConditionParamsArr)
             const dbQuery = await pool.query(queryString, verifiedConditionParamsArr)
+
             // if query is details, return the entire array of objects, else return only the object in the array.
             return query === "details" ? dbQuery.rows : dbQuery.rows[0]
         }
@@ -273,5 +327,6 @@ module.exports = {
     FOR_SDC_GET_USER_APPS_ACCORDINGTO_SERVICE_AND_USERID,
     FOR_SDC_GET_USER_CRITERIA_APPS,
     fetchUserAppsCount,
-    getDealerApplications
+    getDealerApplications,
+    getSDCApplicationsCount
 }

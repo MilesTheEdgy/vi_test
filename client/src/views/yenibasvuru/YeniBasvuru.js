@@ -208,6 +208,9 @@ class YeniBasvuru extends React.Component {
     }
 
     onSubmitApplication = async() => {
+        this.setState({
+            isApplicationSubmitting: true
+        })
         const { selectedService, selectedOffer, 
             clientWantsRouter, clientDescription,
              clientName} = this.state;
@@ -223,7 +226,7 @@ class YeniBasvuru extends React.Component {
         }
         try {
           console.log("fetching")
-          const res = await fetch("http://localhost:8080/bayi/basvuru/yeni", {
+          const res = await fetch("http://localhost:8080/applications", {
             method: "POST",
             headers: {
             'authorization' :`Bearer ${document.cookie.slice(8)} `

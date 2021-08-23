@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useSelector } from "react-redux"
 import {
   CWidgetDropdown,
   CRow,
@@ -8,6 +9,7 @@ import {
 // import ChartBarSimple from '../charts/ChartBarSimple'
 
 const WidgetsDropdown = () => {
+  const userInfo = useSelector(state => state.reducer.loggedInUserInfo)
   const [todaySales, setTodaySales] = useState(0);
   const [problematicSales, setProblematicSales] = useState(0);
   const [thisMonthSales, setThisMonthSales] = useState(0);

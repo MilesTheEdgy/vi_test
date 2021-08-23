@@ -80,7 +80,6 @@ const SdcKullanici = ({match}) => {
         const mappedUserData = mapUsersData([userDataFetch])
         setUserLoginData(mappedUserData[0])
         setUserLoginDataLoading(false)
-        debugger
         const allData = await fetchSalesData(id, "MAP", "ALL")
         console.log(allData)
         const filteredData = filterAndMapAppData(allData)

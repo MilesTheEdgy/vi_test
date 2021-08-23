@@ -17,6 +17,7 @@ const SdcIslem = ({match}) => {
       if (res.status === 200) {
         const fetchData = await res.json()
         const mappedData = mapDataToTurkish(fetchData)
+        console.log(mappedData)
         setData(mappedData[0])
       }
     }
