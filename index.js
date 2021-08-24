@@ -99,8 +99,8 @@ app.post("/", authenticateToken, async (req, res) => {
 
 app.post("/login", async(req, res) => {
     try {
-        console.log('user attempting to login with values: ', username)
         const { username, password } = req.body;
+        console.log('user attempting to login with values: ', username)
         let checkCredentialsResult = await checkCredentials(username, password)
         if (checkCredentialsResult.ok) {
             let token = generateAccessToken({username: username, role: checkCredentialsResult.userRole, userID: checkCredentialsResult.ID})

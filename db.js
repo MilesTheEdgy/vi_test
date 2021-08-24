@@ -28,4 +28,4 @@ const client = new Client({
     }
   });
 
-module.exports = client;
+module.exports = pool;
