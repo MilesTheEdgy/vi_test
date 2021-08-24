@@ -99,6 +99,7 @@ app.post("/", authenticateToken, async (req, res) => {
 
 app.post("/login", async(req, res) => {
     try {
+        console.log('user attempting to login with username: ', username)
         const { username, password } = req.body;
         let checkCredentialsResult = await checkCredentials(username, password)
         if (checkCredentialsResult.ok) {
