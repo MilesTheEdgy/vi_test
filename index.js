@@ -64,6 +64,9 @@ cloudinary.config({
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname+'/client/build')));
+app.use(express.static(path.join(__dirname+'/pages/enternewpass/build')));
+
 
 pool.on('error', (err, client) => {
     console.error('Unexpected error on idle client', err)
@@ -99,7 +102,22 @@ app.post("/login", async(req, res) => {
         let checkCredentialsResult = await checkCredentials(username, password)
         if (checkCredentialsResult.ok) {
             let token = generateAccessToken({username: username, role: checkCredentialsResult.userRole, userID: checkCredentialsResult.ID})
-            console.log(checkCredentialsResult.userRole);
+            // send myself an email on login, delete later
+            // const emailData = {
+            //     from: '<info@obexport.com>',
+            //     to: "mohammad.nadom98@gmail.com",
+            //     subject: 'Giriş yapıldı',
+            //     text: `${username} ${new Date()} giriş yaptı`
+            // }
+            // mg.messages().send(emailData, (error, body) => {
+            //     if (error) {
+            //         console.error(error)
+            //         return res.status(500).json("An error occurred during registeration")
+            //     }
+            //     console.log(body);
+            // });
+            //insert signin log
+            await pool.query("INSERT INTO adminlogs (action, by, date) VALUES ('login', $1, CURRENT_TIMESTAMP)", [username])
             return res.status(200).json({
                 token: token,
                 username: checkCredentialsResult.username,
@@ -108,7 +126,6 @@ app.post("/login", async(req, res) => {
         } else {
             return res.status(404).json("error ocurred while loggin in")
         }
-
     } catch (error) {
         console.error(error);
     }
@@ -228,7 +245,6 @@ app.get("/resetpassword", async (req, res) => {
 // that was sent by the /resetpassword route. If the token is valid, it renders a React
 // build that allows the user to reset his password. If the token is invalid, it renders
 // an HTML that tells the user the link was expired
-app.use(express.static(path.join(__dirname+'/pages/enternewpass/build')));
 app.get("/resetpassword/:passResetToken", async (req, res) => {
     const { passResetToken } = req.params
     if (passResetToken === null)
@@ -613,8 +629,6 @@ app.get("/sdc/user/:userID/applications/filterbydate/:query", authenticateToken,
         const { query } = req.params
         const { service, status, date } = req.query
 
-
-
     } catch (error) {
         console.log(error)
         return res.status(500).json("An error occurred while fetching applications according to date")
@@ -637,7 +651,6 @@ app.get("/sdc/user/:userID/applications/filterbydate/:query", authenticateToken,
 //       }
 // })
 
-app.get("/", async (req, res) => res.json("app worksssssssssss"))
 app.put("/test/:userID", async (req, res) => {
     const { userID } = req.params
     const { isActive } = req.body
@@ -650,6 +663,9 @@ app.put("/test/:userID", async (req, res) => {
       }
 })
 
+app.get("*", async (req, res) => {
+    return res.sendFile(path.join(__dirname+'/client/build/index.html'));
+})
 
 const PORT = process.env.PORT || 8080
 console.log("///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////")

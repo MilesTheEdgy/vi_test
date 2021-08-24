@@ -3,14 +3,6 @@ const { Pool } = require('pg')
 
 const { Client } = require("pg");
 
-// const pool = new Pool({
-//     user: "postgres",
-//     password: "crossmyheart1243",
-//     host: "localhost",
-//     port: 5432,
-//     database: "varoliletisim"
-// });
-
 const pool = new Pool({
   host: "localhost",
   user: 'postgres',
@@ -29,11 +21,11 @@ const pool = new Pool({
 //     database: "varoliletisim"
 // })
 
-// const client = new Client({
-//     connectionString: process.env.DATABASE_URL,
-//     ssl: {
-//       rejectUnauthorized: false
-//     }
-//   });
+const client = new Client({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false
+    }
+  });
 
-module.exports = pool;
+module.exports = client;
