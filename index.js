@@ -404,7 +404,7 @@ app.post("/applications", authenticateToken, upload.array("image", 3), async(req
                 console.log('in cloudinary upload loop number ', i)
                 cloudinary.uploader.upload(__dirname + "/uploads/" + filePaths[i], {
                      public_id: `iys/dealer_submissions/${userInfo.userID}/${highestApplicationID}/${filePaths[i].split('.').slice(0, -1).join('.')}`
-                    }, (err, result) => {
+                    }, async (err, result) => {
                     if (err) {
                         return handleError(err, res)
                     }
