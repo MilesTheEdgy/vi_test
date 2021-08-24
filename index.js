@@ -452,10 +452,12 @@ app.get("/applications/:applicationID", authenticateToken, async(req, res) => {
 app.get("/sd/basvurular/goruntule", authenticateToken, async (req, res) => {
     try {
         const userInfo = res.locals.userInfo
-        if (userInfo.role !== "sales_assistant")
+        console.log('role: ', userInfo.role)
+        if (userInfo.role === "sales_assistant" || userInfo.role === "sales_assistant_chef") {
+            let query = await pool.query("SELECT sales_applications.id, sales_applications.client_name, sales_applications.submit_time, sales_applications_details.selected_service, sales_applications_details.selected_offer, sales_applications_details.description, sales_applications.status, sales_applications_details.sales_rep_details, sales_applications_details.status_change_date, sales_applications_details.final_sales_rep_details, sales_applications.last_change_date FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id")
+            res.status(200).json(query.rows)
+        } else
             return res.status(401).json("this user does not have sales assistant premission")
-        let query = await pool.query("SELECT sales_applications.id, sales_applications.client_name, sales_applications.submit_time, sales_applications_details.selected_service, sales_applications_details.selected_offer, sales_applications_details.description, sales_applications.status, sales_applications_details.sales_rep_details, sales_applications_details.status_change_date, sales_applications_details.final_sales_rep_details, sales_applications.last_change_date FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id")
-        res.status(200).json(query.rows)
     } catch (error) {
         console.error(error);
     }
@@ -465,60 +467,65 @@ app.put("/basvurular/:applicationID", authenticateToken, async (req, res) => {
     const client = await pool.connect()
     // if an ID that doesn't exist in database gets sent, nothing get's updated but no error get's triggered.
     const userInfo = res.locals.userInfo
-    if (userInfo.role !== "sales_assistant")
-        return res.status(401).json("this user does not have sales assistant premission")
-    const { applicationID } = req.params
-    const { salesRepDetails, statusChange } = req.body
-    const d = new Date()
-    try {
-        const query = await client.query("SELECT last_change_date FROM sales_applications WHERE id = $1", [applicationID])
-        // *** because I updated the status records of the database manually, I temporarily commented the lines of code below, I need to uncomment them again
-        // *** In order for me to do that, It would be easier to delete all existing applications and make new ones.
-        // if (query.rows[0].last_change_date !== null)
-        //     return res.status(401).json("You cannot set application status to approved without first procedures")
-        console.log("query", query.rows)
-        const currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`
-        await client.query('BEGIN')
-        await client.query("UPDATE sales_applications_details SET sales_rep_details = $1, status_change_date = $2 WHERE id = $3",
-         [salesRepDetails, currentDate, applicationID])
-        await client.query("UPDATE sales_applications SET status = $1 WHERE id = $2", [statusChange, applicationID])
-        await client.query('COMMIT')
-        res.status(200).json("Application was updated successfully")
-      } catch (e) {
-        console.log(e)
-        await client.query('ROLLBACK')
-        return res.status(500).json("An error occurred while attempting to update application")
-      } finally {
-        client.release()
+    if (userInfo.role === "sales_assistant" || userInfo.role === "sales_assistant_chef") {
+        const { applicationID } = req.params
+        const { salesRepDetails, statusChange } = req.body
+        const d = new Date()
+        try {
+            const query = await client.query("SELECT last_change_date FROM sales_applications WHERE id = $1", [applicationID])
+            // *** because I updated the status records of the database manually, I temporarily commented the lines of code below, I need to uncomment them again
+            // *** In order for me to do that, It would be easier to delete all existing applications and make new ones.
+            // if (query.rows[0].last_change_date !== null)
+            //     return res.status(401).json("You cannot set application status to approved without first procedures")
+            console.log("query", query.rows)
+            const currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`
+            await client.query('BEGIN')
+            await client.query("UPDATE sales_applications_details SET sales_rep_details = $1, status_change_date = $2 WHERE id = $3",
+             [salesRepDetails, currentDate, applicationID])
+            await client.query("UPDATE sales_applications SET status = $1 WHERE id = $2", [statusChange, applicationID])
+            await client.query('COMMIT')
+            res.status(200).json("Application was updated successfully")
+          } catch (e) {
+            console.log(e)
+            await client.query('ROLLBACK')
+            return res.status(500).json("An error occurred while attempting to update application")
+          } finally {
+            client.release()
+          }
+    } else {
+          return res.status(401).json("this user does not have sales assistant premission")
       }
+
 })
 
 app.put("/basvurular/:applicationID/sp", authenticateToken, async (req, res) => {
     const client = await pool.connect()
     const userInfo = res.locals.userInfo
-    if (userInfo.role !== "sales_assistant")
+    if (userInfo.role === "sales_assistant" || userInfo.role === "sales_assistant_chef") {
+        const { applicationID } = req.params
+        const { salesRepDetails, statusChange } = req.body
+        const d = new Date()
+        const currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`
+        try {
+            const query = await client.query("SELECT last_change_date FROM sales_applications WHERE id = $1", [applicationID])
+            // if (query.rows[0].last_change_date !== null)
+            //     return res.status(401).json("You cannot set application status to approved without first procedures")
+            await client.query('BEGIN')
+            await client.query("UPDATE sales_applications_details SET final_sales_rep_details = $1 WHERE id = $2",
+            [salesRepDetails, applicationID])
+            await client.query("UPDATE sales_applications SET status = $1, last_change_date = $2 WHERE id = $3", [statusChange, currentDate, applicationID])
+            await client.query('COMMIT')
+            res.status(200).json("Application was updated successfully")
+        } catch (e) {
+            console.log(e)
+            await client.query('ROLLBACK')
+            return res.status(500).json("An error occurred while attempting to update application")
+        } finally {
+            client.release()
+        }
+    } else {
         return res.status(401).json("this user does not have sales assistant premission")
-    const { applicationID } = req.params
-    const { salesRepDetails, statusChange } = req.body
-    const d = new Date()
-    const currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`
-    try {
-        const query = await client.query("SELECT last_change_date FROM sales_applications WHERE id = $1", [applicationID])
-        // if (query.rows[0].last_change_date !== null)
-        //     return res.status(401).json("You cannot set application status to approved without first procedures")
-        await client.query('BEGIN')
-        await client.query("UPDATE sales_applications_details SET final_sales_rep_details = $1 WHERE id = $2",
-         [salesRepDetails, applicationID])
-        await client.query("UPDATE sales_applications SET status = $1, last_change_date = $2 WHERE id = $3", [statusChange, currentDate, applicationID])
-        await client.query('COMMIT')
-        res.status(200).json("Application was updated successfully")
-      } catch (e) {
-        console.log(e)
-        await client.query('ROLLBACK')
-        return res.status(500).json("An error occurred while attempting to update application")
-      } finally {
-        client.release()
-      }
+    }
 })
 
 
@@ -591,8 +598,14 @@ app.get("/sdc/applications/count", authenticateToken, async (req, res) => {
     const userInfo = res.locals.userInfo
     if (userInfo.role !== "sales_assistant_chef")
         return res.status(401).json("this user does not have sales assistant premission")
-    const { interval } = req.query
-    return getSDCApplicationsCount(interval)
+    try {
+        const { interval } = req.query
+        const result = await getSDCApplicationsCount(interval)
+        console.log("RESULT: ", result)
+        return res.status(200).json(result)
+    } catch (error) {
+        console.log(error)
+    }
 })
 
 app.get("/sdc/user/:userID/applications/filterbydate/:query", authenticateToken, async (req, res) => {

@@ -10,16 +10,21 @@ import {
 
 const WidgetsDropdown = () => {
   const userInfo = useSelector(state => state.reducer.loggedInUserInfo)
-  const [todaySales, setTodaySales] = useState(0);
-  const [problematicSales, setProblematicSales] = useState(0);
-  const [thisMonthSales, setThisMonthSales] = useState(0);
-  const [thisYearSales, setThisYearSales] = useState(0);
-  // const problematicSales = 0
-  // const thisMonthSales = 0
-  // const thisYearSales = 0
+  const [todaySales, setTodaySales] = useState("0");
+  const [problematicSales, setProblematicSales] = useState("0");
+  const [thisMonthSales, setThisMonthSales] = useState("0");
+  const [thisYearSales, setThisYearSales] = useState("0");
 
   useEffect(() => {
+    let urlStringRole = ""
+    if (userInfo.loggedInRole === "sales_assistant_chef")
+      urlStringRole = "sdc"
+    else
+      urlStringRole = "dealer"
+    const urlString = `http://localhost:8080/${urlStringRole}/applications/count`
+    console.log("urlString", urlString)
     const fetchAppsCountData = async (urlString, setState) => {
+      console.log('fetchin')
       const res = await fetch(urlString, {
         headers: {
           'content-type': 'application/json',
@@ -30,56 +35,53 @@ const WidgetsDropdown = () => {
         const data = await res.json();
         console.log("success", data)
         setState(data.count)
+      } else {
+        const data = await res.json();
+        console.log(res.status, data)
       }
     };
-    fetchAppsCountData("http://localhost:8080/dealer/applications/count?status=approved&interval=today", setTodaySales);
-    fetchAppsCountData("http://localhost:8080/dealer/applications/count?status=rejected&interval=today", setProblematicSales);
-    fetchAppsCountData("http://localhost:8080/dealer/applications/count?status=ALL&interval=month", setThisMonthSales);
-    fetchAppsCountData("http://localhost:8080/dealer/applications/count?status=ALL&interval=year", setThisYearSales);
+    fetchAppsCountData(urlString + "?status=approved&interval=today", setTodaySales);
+    fetchAppsCountData(urlString + "?status=rejected&interval=today", setProblematicSales);
+    fetchAppsCountData(urlString + "?status=ALL&interval=month", setThisMonthSales);
+    fetchAppsCountData(urlString + "?status=ALL&interval=year", setThisYearSales);
   }, [])
   return (
     <CRow>
       <CCol sm="6" lg="3">
         <CWidgetDropdown
-                  style = {{height: "130px"}}
+          style = {{height: "130px"}}
           color="gradient-primary"
-          header= {`${todaySales}`}
+          header= {todaySales}
           text="Bugünkü Onaylanan Satışlarınız"
         >
         </CWidgetDropdown>
       </CCol>
 
-
-
       <CCol sm="6" lg="3">
         <CWidgetDropdown
           style = {{height: "130px"}}
           color="gradient-info"
-          header={`${problematicSales}`}
+          header={problematicSales}
           text="Bugünku Sıkıntılı Satışlarınız"
         >
         </CWidgetDropdown>
       </CCol>
 
-
-
       <CCol sm="6" lg="3">
         <CWidgetDropdown
-                  style = {{height: "130px"}}
+            style = {{height: "130px"}}
             color="gradient-warning"
-            header={`${thisMonthSales}`}
+            header={thisMonthSales}
             text="Bu Ayki Genel Satışlar"
           >
         </CWidgetDropdown>
       </CCol>
 
-
-
       <CCol sm="6" lg="3">
         <CWidgetDropdown
-                  style = {{height: "130px"}}
+          style = {{height: "130px"}}
           color="gradient-danger"
-          header={`${thisYearSales}`}
+          header={thisYearSales}
           text="Bu Yılki Genel Satışlar"
         >
         </CWidgetDropdown>

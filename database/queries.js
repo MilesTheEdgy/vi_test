@@ -114,6 +114,7 @@ const queryConstructor = (selectStatement, conditionArr) => {
     return selectStatement + conditionText
 }
 const convertDateInputToSQLInterval = (interval) => {
+    console.log('VALUE OF INTERVAL ', interval)
     let conditionTime = "submit_time > now() - interval"
     switch (interval) {
         case "today":
@@ -130,6 +131,7 @@ const convertDateInputToSQLInterval = (interval) => {
             break
         case "ALL":
             conditionTime = conditionTime + "' 99 year'"
+            break
         default:
             throw new Error("Unexpected input at convertDateInputToSQLInterval")
     }
@@ -203,29 +205,49 @@ const queryConstructorDate = (selectStatement, conditionArr) => {
     return selectStatement + conditionText
 }
 
-const getSDCApplicationsCount = async (interval, service) => {
+const getSDCApplicationsCount = async (interval = "ALL", service = "ALL", status = "ALL") => {
     //select statement
     const selectCount = "SELECT count(*) FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id"
     //condition statements
     const conditionInterval = convertDateInputToSQLInterval(interval)
     const conditionService = "sales_applications_details.selected_service = "
+    const conditionStatus = "sales_applications.status = "
     //service parameter switched to turkish eg: taahut => Taahüt
     const serviceParam = switchServiceNameToTurkish(service)
+    //condition parameters
+    const conditionParamArr = [interval, status, serviceParam]
+    //condition statements
+    const conditionStatementsArr = [conditionInterval, conditionStatus, conditionService]
 
-    //condition statements array
-    const conditionStatementsArr = [conditionInterval, conditionService]
+    //verified condition params and query arrays
+    let verifiedConditionParamsArr = []
+    // if interval = ALL, add conditionTime at first index. Reason is the for loops pushes any value that !== ALL.
+    // And this statement prevents duplicate conditionTime
+    let verifiedConditionQueryArr = interval === "ALL" ?  [conditionTime] : []
+    //if condition statement's param does not equal ALL, add it to verified array, else, omit it
+    for (let i = 0; i < conditionParamArr.length; i++) {
+        if (conditionParamArr[i] !== "ALL") {
+            verifiedConditionParamsArr.push(conditionParamArr[i])
+            verifiedConditionQueryArr.push(conditionStatementsArr[i])
+        }
+    }
+    if (interval !== "ALL")
+        verifiedConditionParamsArr.shift()
+
+    console.log("VERIFIED CONDITION STATEMENT: ", verifiedConditionQueryArr)
+    console.log("VERIFIED CONDITION PARAMETERS: ", verifiedConditionParamsArr)
+    const allDealers = " AND sales_applications.submitter IN (SELECT username FROM login WHERE role = 'dealer')"
     //query statement constructer. adds WHERE and AND, alongside $ signs. Omits the first dollar sign
-    const queryStatement = queryConstructor(selectCount, conditionStatementsArr)
+    const queryStatement = queryConstructor(selectCount, verifiedConditionQueryArr)
     //special condition statement for SDC, selects records submitted by all dealers
-    const allDealers = "sales_applications.submitter IN (SELECT username FROM login WHERE role = 'dealer')"
+
     const finalStatement = queryStatement + allDealers
-    console.log("final statement: ", finalStatement)
-    const query = await pool.query(finalStatement, [serviceParam])
-    return query.rows
+    console.log("finalStatement: ", finalStatement, "--- condition params: ",  verifiedConditionParamsArr)
+    const query = await pool.query(finalStatement, verifiedConditionParamsArr)
+    return query.rows[0]
 }
 
 const getDealerApplications = async (query, date = "ALL", userID, status = "ALL", service = "ALL") => {
-
         const getDealerName = await pool.query("SELECT username FROM login WHERE user_id = $1", [userID])
         const dealerName = getDealerName.rows[0].username
         console.log("SERVICE: ", service)

@@ -501,25 +501,25 @@ class YeniBasvuru extends React.Component {
                         this.state.clientAppFiles === null ?
                         <CFormGroup row>
                             <CCol md="4">
-                                <img style = {{maxWidth: "200px", maxHeight: "200px"}} src = "https://res.cloudinary.com/papyum/image/upload/v1629721581/iys/placeholder_fb7gch.png" />
+                                <img alt = "" style = {{maxWidth: "200px", maxHeight: "200px"}} src = "https://res.cloudinary.com/papyum/image/upload/v1629721581/iys/placeholder_fb7gch.png" />
                             </CCol>
                             <CCol md="4">
-                                <img style = {{maxWidth: "200px", maxHeight: "200px"}} src = "https://res.cloudinary.com/papyum/image/upload/v1629721581/iys/placeholder_fb7gch.png" />
+                                <img alt = "" style = {{maxWidth: "200px", maxHeight: "200px"}} src = "https://res.cloudinary.com/papyum/image/upload/v1629721581/iys/placeholder_fb7gch.png" />
                             </CCol>
                             <CCol md="4">
-                                <img style = {{maxWidth: "200px", maxHeight: "200px"}} src = "https://res.cloudinary.com/papyum/image/upload/v1629721581/iys/placeholder_fb7gch.png" />
+                                <img alt = "" style = {{maxWidth: "200px", maxHeight: "200px"}} src = "https://res.cloudinary.com/papyum/image/upload/v1629721581/iys/placeholder_fb7gch.png" />
                             </CCol>
                         </CFormGroup>
                         :
                         <CFormGroup row>
                             <CCol md="4">
-                                <img style = {{maxWidth: "200px", maxHeight: "200px"}} src = {this.state.clientAppFilesObjURL[0]} />
+                                <img alt = "" style = {{maxWidth: "200px", maxHeight: "200px"}} src = {this.state.clientAppFilesObjURL[0]} />
                             </CCol>
                             <CCol md="4">
-                                <img style = {{maxWidth: "200px", maxHeight: "200px"}} src = {this.state.clientAppFilesObjURL[1]} />
+                                <img alt = "" style = {{maxWidth: "200px", maxHeight: "200px"}} src = {this.state.clientAppFilesObjURL[1]} />
                             </CCol>
                             <CCol md="4">
-                                <img style = {{maxWidth: "200px", maxHeight: "200px"}} src = {this.state.clientAppFilesObjURL[2]} />
+                                <img alt = "" style = {{maxWidth: "200px", maxHeight: "200px"}} src = {this.state.clientAppFilesObjURL[2]} />
                             </CCol>
                         </CFormGroup>
                         }

@@ -16,9 +16,9 @@ import { Link } from "react-router-dom"
 import CIcon from '@coreui/icons-react'
 import Modal from '../../components/modals/Modal'
 import Toaster from '../../components/toaster/Toaster'
-import Loader from "../../components/loader/Loader"
 
 const Test = () => {
+
   const onImageSelect =  (event) => {
     if (event.target.files && event.target.files[0]) {
       console.log("event.target.files", event.target.files)
@@ -34,8 +34,8 @@ const Test = () => {
     formData.append("myFile", image)
     console.log("img", image)
     console.log("form data", formData)
-    const plainFormData = Object.fromEntries(formData.entries());
-    const formDataJsonString = JSON.stringify(plainFormData);
+    // const plainFormData = Object.fromEntries(formData.entries());
+    // const formDataJsonString = JSON.stringify(plainFormData);
     try {
       console.log("fetching")
       const res = await fetch("http://localhost:8080/upload", {
@@ -59,6 +59,16 @@ const Test = () => {
   })
   const [modalOn, setModalOn] = useState(false)
   const [toasters, addToaster] = useState([])
+
+  const somethingdeletemelater = () => {
+    setModal({})
+    addToaster()
+  }
+  if (username)
+    console.log(somethingdeletemelater)
+
+    
+
   return (
     <div className="c-app c-default-layout flex-row align-items-center">
         <CContainer>

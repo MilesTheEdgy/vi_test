@@ -14,14 +14,14 @@ import {
   CDataTable
 } from '@coreui/react'
 
-const dummyData = [
-    {
-        hizmet: "DSL",
-        onaylanan_işlem: 20,
-        hedef: 50,
-        tarih: "2021.06"
-    }
-]
+// const dummyData = [
+//     {
+//         hizmet: "DSL",
+//         onaylanan_işlem: 20,
+//         hedef: 50,
+//         tarih: "2021.06"
+//     }
+// ]
 
 const fields = [
     { key: 'hizmet', _style: { width: '25%'} },

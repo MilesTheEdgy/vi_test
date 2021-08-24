@@ -95,7 +95,7 @@ const SdcKullanicilar = () => {
   return (
     <HocLoader isLoading = {false} absolute = {true}>
       <CRow className = "d-flex justify-content-center">
-        <CCol xl={10}>
+        <CCol xl={12}>
           <CCard>
             <CCardHeader>
               Kullanıcılar
