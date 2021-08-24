@@ -330,7 +330,7 @@ app.get("/services", async (req, res) => {
 })
 
 // This code handles sending the applications the dealer submitted, it takes "dealerName"
-// supplied from authenticateToken middleware. "query" has to possible values: count and details.
+// supplied from authenticateToken middleware. "query" has two possible values: count and details.
 // if query has value of "count" it returns the applications count according to specific critera
 // if it's "details", it returns the columns of the application's details according to specific
 // criteria. 
@@ -411,6 +411,8 @@ app.post("/applications", authenticateToken, upload.array("image", 3), async(req
                         console.log(result); 
                         dbImageURLS.push(result.secure_url)
                         console.log('deleting from storage...')
+                        //send log
+                        await pool.query("INSERT INTO adminlogs (action, by, date) VALUES ('sent application', $1, CURRENT_TIMESTAMP)", [userInfo.username])
                         fs.unlink(__dirname + "/uploads/" + filePaths[i], async err => {
                         if (err)
                             return handleError(err, res)
