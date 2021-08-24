@@ -21,7 +21,7 @@ const WidgetsDropdown = () => {
       urlStringRole = "sdc"
     else
       urlStringRole = "dealer"
-    const urlString = `http://localhost:8080/${urlStringRole}/applications/count`
+    const urlString = `/${urlStringRole}/applications/count`
     console.log("urlString", urlString)
     const fetchAppsCountData = async (urlString, setState) => {
       console.log('fetchin')

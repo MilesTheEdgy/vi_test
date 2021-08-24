@@ -226,7 +226,7 @@ class YeniBasvuru extends React.Component {
         }
         try {
           console.log("fetching")
-          const res = await fetch("http://localhost:8080/applications", {
+          const res = await fetch("/applications", {
             method: "POST",
             headers: {
             'authorization' :`Bearer ${document.cookie.slice(8)} `
@@ -263,7 +263,7 @@ class YeniBasvuru extends React.Component {
         // }
         // this.setState({isApplicationSubmitting: true})
 
-        // let res = await fetch("http://localhost:8080/bayi/basvuru/yeni", {
+        // let res = await fetch("/bayi/basvuru/yeni", {
         // method: 'POST',
         // headers: {
         //     'Content-Type': 'application/json',
@@ -367,7 +367,7 @@ class YeniBasvuru extends React.Component {
         }
         try {
           console.log("fetching")
-          const res = await fetch("http://localhost:8080/bayi/basvuru/yeni", {
+          const res = await fetch("/bayi/basvuru/yeni", {
             method: "POST",
             headers: {
             'authorization' :`Bearer ${document.cookie.slice(8)} `

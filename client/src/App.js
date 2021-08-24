@@ -55,7 +55,7 @@ class App extends Component {
   
   validate = async () => {
       //validating token on first start
-      const res = await fetch("http://localhost:8080/", {
+      const res = await fetch("/", {
 
       method: 'POST',
       headers: {

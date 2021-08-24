@@ -32,7 +32,7 @@ const BasvuruTakibi = () => {
   useEffect(() => {
     currentPage !== page && setPage(currentPage)
     const getData = async () => {
-      const res = await fetch("http://localhost:8080/bayi/applications", {
+      const res = await fetch("/bayi/applications", {
         method: 'GET',
         headers: {
           'content-type': 'application/json',

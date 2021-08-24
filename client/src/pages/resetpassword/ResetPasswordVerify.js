@@ -46,7 +46,7 @@ const ResetPassword = () => {
 
   const onEmailSubmit = async () => {
     if (verifyEmail()) {
-      const res = await fetch(`http://localhost:8080/resetpassword?email=${email}` , {
+      const res = await fetch(`/resetpassword?email=${email}` , {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

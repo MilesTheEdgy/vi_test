@@ -5,7 +5,7 @@ import { mapDataToTurkish, getBadge } from "../../components/index";
 import qs from "qs"
 
 const fetchData = async(service, id) => {
-  const res = await fetch(`http://localhost:8080/sdc/user/${id}/details?service=${service}`, {
+  const res = await fetch(`/sdc/user/${id}/details?service=${service}`, {
     method: 'GET',
     headers: {
       'content-type': 'application/json',

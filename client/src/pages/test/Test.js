@@ -38,7 +38,7 @@ const Test = () => {
     // const formDataJsonString = JSON.stringify(plainFormData);
     try {
       console.log("fetching")
-      const res = await fetch("http://localhost:8080/upload", {
+      const res = await fetch("/upload", {
         method: "POST",
         body: formData
       })

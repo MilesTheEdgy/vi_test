@@ -9,7 +9,7 @@ const AuthHOC = (props) => {
   const history = useHistory();
   useEffect(() => {
     return history.listen(async (location) => { 
-        const res = await fetch("http://localhost:8080/", {
+        const res = await fetch("/", {
             method: 'POST',
             headers: {
               'content-type': 'application/json',

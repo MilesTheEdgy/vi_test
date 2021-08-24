@@ -7,7 +7,7 @@ const BasvuruID = ({match}) => {
   const [data, setData] = useState({})
   useEffect(() => {
     const fetchData = async () => {
-      const res = await fetch(`http://localhost:8080/applications/${applicationID}`,{
+      const res = await fetch(`/applications/${applicationID}`,{
           method: 'GET',
           headers: {
             'content-type': 'application/json',

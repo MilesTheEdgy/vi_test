@@ -52,11 +52,11 @@ const HedefEkle = () => {
                 setState(fetchData)
               }
         }
-        fetchData("http://localhost:8080/sdc/users", setUsersData)
-        fetchData("http://localhost:8080/services?profitable=true", setServicesData)
+        fetchData("/sdc/users", setUsersData)
+        fetchData("/services?profitable=true", setServicesData)
         if (displayedUser) {
             const id = displayedUser
-            // const res = await fetch(`http://localhost:8080/sdc/user/${id}/count/?service=${"ALL"}&status=${"ALL"}`, {
+            // const res = await fetch(`/sdc/user/${id}/count/?service=${"ALL"}&status=${"ALL"}`, {
             //     method: 'GET',
             //     headers: {
             //       'content-type': 'application/json',

@@ -99,7 +99,7 @@ app.post("/", authenticateToken, async (req, res) => {
 
 app.post("/login", async(req, res) => {
     try {
-        console.log('user attempting to login with username: ', username)
+        console.log('user attempting to login with values: ', username)
         const { username, password } = req.body;
         let checkCredentialsResult = await checkCredentials(username, password)
         if (checkCredentialsResult.ok) {
@@ -144,7 +144,7 @@ app.post("/register", verifyRegisterRoute, async(req, res) => {
         await pool.query("INSERT INTO register(username, password, email, verify_email_id, date, dealer_name) VALUES ($1, $2, $3, $4, CURRENT_DATE, $5)",
          [username, hash, email, uniqueID, dealerName])
         app.render(__dirname + "/ejs/verifyemail.ejs", 
-        {verifyEmailID: "http://localhost:8080/verifymail/" + uniqueID},
+        {verifyEmailID: "https://b2b-iys.herokuapp.com/verifymail/" + uniqueID},
          (err, html) => {
             const emailData = {
                 from: '<info@obexport.com>',
@@ -223,7 +223,7 @@ app.get("/resetpassword", async (req, res) => {
     await pool.query("INSERT INTO tempidstore VALUES($1, CURRENT_DATE, true, $2)", [passResetToken, email])
     //send email with resetPassword HTML template that contains /resetpassword/:passResetToken link
     app.render(__dirname + "/ejs/resetPassword.ejs", 
-    {resetPassPage: "http://localhost:8080/resetpassword/" + passResetToken},
+    {resetPassPage: "https://b2b-iys.herokuapp.com/resetpassword/" + passResetToken},
      (err, html) => {
         const emailData = {
             from: 'İletişim<info@obexport.com>',
