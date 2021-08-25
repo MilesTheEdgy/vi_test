@@ -64,34 +64,38 @@ app.post("/register", verifyRegisterRoute, async(req, res) => {
     try {
         const { username, password, dealerName, email } = req.body;
 
+        // Generate a unique ID as email verification param
         const uniqueID = uniqid()
+        // Hash user password
         const hash = await bcrypt.hash(password, 10);
+        // Register table is a temporary table that stores users who haven't verified their email yet. Store the request body information
+        // And the unique ID for later email verification
         await pool.query("INSERT INTO register(username, password, email, verify_email_id, date, dealer_name) VALUES ($1, $2, $3, $4, CURRENT_DATE, $5)",
          [username, hash, email, uniqueID, dealerName])
-        console.log('attempt at finding dir: ', __dirname + "/../../../views/emailverification/verifyemail.ejs")
+        // After inserting the new record, render the Verify Email HTML template, it takes the unique ID generated eariler as in argument
+        // And it uses that unique ID to render a link with that unique ID as the route's (link's) parameter. EG: http://localhost:8080/verifymail/[UNIQUE ID]
         app.render(__dirname + "/../../../views/emailverification/verifyemail.ejs", 
         {verifyEmailID: "http://localhost:8080/verifymail/" + uniqueID},
          (err, html) => {
             if (err)
                 return handleError(err, res, "server error when attempting to register user")
+            // insert the HTML into mailgun mailing options
             const emailData = {
                 from: '<info@obexport.com>',
                 to: email,
                 subject: 'Mail adresinizi onaylayın',
                 html: html
             }
-            mailgun.messages().send(emailData, (error, body) => {
-                if (error) {
-                    console.error(error)
-                    return res.status(500).json("An error occurred during registeration")
+            mailgun.messages().send(emailData, (err, body) => {
+                if (err) {
+                    return handleError(err, res, "server error when attempting to register user")
                 }
                 console.log(body);
                 res.status(200).json("Register application is successful, awaiting client verification through client's email")
             });
         })
-    } catch (error) {
-        console.error(error);
-        res.status(500).json("error occurred at register route")
+    } catch (err) {
+        return handleError(err, res, "server error when attempting to register user")
     }
 });
 
