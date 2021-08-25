@@ -33,7 +33,7 @@ const ResetPassword = () => {
   const [toasters, addToaster] = useState([])
 
   const verifyEmail = () => {
-    const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     if (re.test(email) === false) {
       addToaster([
         ...toasters,
@@ -46,7 +46,7 @@ const ResetPassword = () => {
 
   const onEmailSubmit = async () => {
     if (verifyEmail()) {
-      const res = await fetch(`http://localhost:8080/resetpassword?email=${email}` , {
+      const res = await fetch(`/resetpassword?email=${email}` , {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

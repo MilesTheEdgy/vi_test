@@ -55,7 +55,7 @@ const SdcKullanicilar = () => {
   }
 
   const fetchData = async () => {
-    const res = await fetch("http://localhost:8080/sdc/users", {
+    const res = await fetch("/sdc/users", {
       method: 'GET',
       headers: {
         'content-type': 'application/json',
@@ -74,7 +74,7 @@ const SdcKullanicilar = () => {
 
   const updateUserActiveState = async (userID) => {
     setLoading(true)
-    const res = await fetch(`http://localhost:8080/sdc/user/${userID}`, {
+    const res = await fetch(`/sdc/user/${userID}`, {
       method: 'PUT',
       headers: {
         'content-type': 'application/json',
@@ -95,7 +95,7 @@ const SdcKullanicilar = () => {
   return (
     <HocLoader isLoading = {false} absolute = {true}>
       <CRow className = "d-flex justify-content-center">
-        <CCol xl={10}>
+        <CCol xl={12}>
           <CCard>
             <CCardHeader>
               Kullanıcılar

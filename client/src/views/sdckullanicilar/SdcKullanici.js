@@ -6,7 +6,7 @@ import "./style.css"
 import { filterAndMapAppData, mapUsersData } from '.'
 
 const fetchUserLoginDate = async (id) => {
-  const res = await fetch(`http://localhost:8080/sdc/user/${id}`, {
+  const res = await fetch(`/sdc/user/${id}`, {
     method: 'GET',
     headers: {
       'content-type': 'application/json',
@@ -23,7 +23,7 @@ const fetchUserLoginDate = async (id) => {
 const fetchSalesData = async (id, service, status) => {
   console.log(id, service, status)
   try {
-    const res = await fetch(`http://localhost:8080/sdc/user/${id}/count/?service=${service}&status=${status}`, {
+    const res = await fetch(`/sdc/user/${id}/count/?service=${service}&status=${status}`, {
       method: 'GET',
       headers: {
         'content-type': 'application/json',
@@ -51,7 +51,7 @@ const onImageChange =  async (event) => {
     formData.append("myFile", img, img.name)
     const plainFormData = Object.fromEntries(formData.entries());
     const formDataJsonString = JSON.stringify(plainFormData);
-    const res = await fetch("http://localhost:8080/upload", {
+    const res = await fetch("/upload", {
       method: "POST",
       headers: {
         'authorization' :`Bearer ${document.cookie.slice(8)} `

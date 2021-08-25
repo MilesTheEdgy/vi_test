@@ -1,23 +1,27 @@
 
-
-Okay
-A little bit of reconciling
-I need to verify my goals for the varol iletisim project, and for the other projects as well
-As far as Varol iletisim goes, it needed 2 roles, but I created 3.
-•	Dealer
-•	Sales Assistant
-•	Sales Assistant Chef
-Since I need to ship it to erdem first, I will make a combination of the sales assistant and sales assistant chef roles.
-I will call it the Admin role.
-The admin role will be able to:
-•	Process, approve and delete applications
-•	Accept new users, deactivate users
-•	See a detailed report of user activites
-The dealer role will be able to:
-•	Send new applications
-•	View their current applications
-These are the current requirements, They might increase later on.
-The applications itself will have:
-•	Create new account through email verification
-•	Change password in client
-•	Reset password incase user forgets it
+FEATURES TO ADD:
+    ANASAYFA:
+            * have the widgets be clickable, on Click, render the respective table
+            * Show more info regarding sales
+    PROFILE:
+            * Add profile route, will have information regarding user's username, dealername, creation date, password. Have user be able to
+            Change dealer name and password
+            * Same for other roles too
+    NOTIFICATIONS:
+            * Add notification on each appliaction change. For dealer, on application process, approve, reject. For SDC, on application
+            submit
+            * For dealer, Add notification on goal added.
+    SIDEBAR:
+            * Get rid of the nested items. Have all items display without nesting.
+    SDC:
+        SERVICES:
+            * Have SDC be able to add a new service, modify current services, and add an offer to the service respectively. Yeni Başvuru
+            needs to be updated so that it renders the services from database services table, and not statically.
+        GOALS:
+            * Have SDC be able to add a goal for each dealer. And have the dealer be able to view their goal. And have the dealer get a
+            notification on goal added.
+        SdcKullanıcı:
+            * Add a filter input, that requests the applications count according to an interval/date criteria
+        SdcIslemler:
+            * Add an ID column
+    

@@ -48,7 +48,7 @@ const RaporOnaylanan = ({match, location}) => {
     currentPage !== page && setPage(currentPage)
     const fetchData = async () => {
       setLoading(true)
-      const res = await fetch(`http://localhost:8080/bayi/applications?status=${qsQuery["?status"]}`, {
+      const res = await fetch(`/bayi/applications?status=${qsQuery["?status"]}`, {
         method: 'GET',
         headers: {
           'content-type': 'application/json',

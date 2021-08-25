@@ -44,9 +44,6 @@ const TheHeader = () => {
         <CHeaderNavItem className="px-3" >
           <CHeaderNavLink to="/anasayfa">Ana Sayfa</CHeaderNavLink>
         </CHeaderNavItem>
-        <CHeaderNavItem  className="px-3">
-          <CHeaderNavLink to="/users">Users</CHeaderNavLink>
-        </CHeaderNavItem>
         {
           loggedInRole === "bayi" ?
           <CHeaderNavItem className="px-3">

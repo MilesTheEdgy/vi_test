@@ -519,47 +519,64 @@ export const satisdestekchef_nav =  [
     to: '/anasayfa',
     icon: <i className="fas fa-home c-sidebar-nav-icon"></i>
   },
+  // {
+  //   _tag: 'CSidebarNavDropdown',
+  //   name: 'Yeni Duyurular',
+  //   route: '/duyuru',
+  //   icon: <i className="fas fa-bell c-sidebar-nav-icon"></i>,
+  //   _children: [
+  //     {
+  //       _tag: 'CSidebarNavItem',
+  //       name: "Tüm Kategorideki Duyurular",
+  //       to: '/duyurular',
+  //     },
+  //     {
+  //       _tag: 'CSidebarNavItem',
+  //       name: 'Tarife Duyurular',
+  //       to: '/duyuru/tarife',
+  //     },
+  //     {
+  //       _tag: 'CSidebarNavItem',
+  //       name: 'Cihaz Duyurular',
+  //       to: '/duyuru/cihaz',
+  //     },
+  //     {
+  //       _tag: 'CSidebarNavItem',
+  //       name: 'Bayi Kampanya Duyurular',
+  //       to: '/duyuru/bayi',
+  //     },
+  //     {
+  //       _tag: 'CSidebarNavItem',
+  //       name: 'Sistem Duyurular',
+  //       to: '/duyuru/sistem',
+  //     },
+  //     {
+  //       _tag: 'CSidebarNavItem',
+  //       name: 'Evrak Duyurular',
+  //       to: '/duyuru/evrak',
+  //     },
+  //     {
+  //       _tag: 'CSidebarNavItem',
+  //       name: 'Tarife Duyurular',
+  //       to: '/duyuru/tarife',
+  //     },
+  //   ],
+  // },
+  {
+    _tag: 'CSidebarNavTitle',
+    _children: ['İşlemler Ve Evraklar']
+  },
   {
     _tag: 'CSidebarNavDropdown',
-    name: 'Yeni Duyurular',
-    route: '/duyuru',
-    icon: <i className="fas fa-bell c-sidebar-nav-icon"></i>,
+    name: 'Başvuru İşlemleri',
+    route: '/basvuru',
+    icon: <i className="fas fa-file-alt c-sidebar-nav-icon"></i>,
     _children: [
       {
         _tag: 'CSidebarNavItem',
-        name: "Tüm Kategorideki Duyurular",
-        to: '/duyurular',
-      },
-      {
-        _tag: 'CSidebarNavItem',
-        name: 'Tarife Duyurular',
-        to: '/duyuru/tarife',
-      },
-      {
-        _tag: 'CSidebarNavItem',
-        name: 'Cihaz Duyurular',
-        to: '/duyuru/cihaz',
-      },
-      {
-        _tag: 'CSidebarNavItem',
-        name: 'Bayi Kampanya Duyurular',
-        to: '/duyuru/bayi',
-      },
-      {
-        _tag: 'CSidebarNavItem',
-        name: 'Sistem Duyurular',
-        to: '/duyuru/sistem',
-      },
-      {
-        _tag: 'CSidebarNavItem',
-        name: 'Evrak Duyurular',
-        to: '/duyuru/evrak',
-      },
-      {
-        _tag: 'CSidebarNavItem',
-        name: 'Tarife Duyurular',
-        to: '/duyuru/tarife',
-      },
+        name: 'Başvuruları Görüntüle',
+        to: '/basvurular/goruntule',
+      }
     ],
   },
   {
@@ -571,19 +588,6 @@ export const satisdestekchef_nav =  [
     name: 'Kullanıcılar',
     to: '/sdc/kullanicilar',
     icon: <i className="fas fa-home c-sidebar-nav-icon"></i>
-  },
-  {
-    _tag: 'CSidebarNavDropdown',
-    name: 'Bayi Borç-Ceza İşlemleri',
-    route: '/borcceza',
-    icon: <i className="fas fa-exclamation-circle c-sidebar-nav-icon"></i>,
-    _children: [
-      {
-        _tag: 'CSidebarNavItem',
-        name: 'AKSESUAR ALIŞVERİŞ ROUTE',
-        to: '/borcceza/1',
-      }
-    ],
   }
 ]
 

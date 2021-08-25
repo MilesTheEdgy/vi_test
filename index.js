@@ -1,3 +1,4 @@
+//are you okay brah
 const fs = require("fs")
 const express = require("express");
 const path = require("path");
@@ -64,6 +65,9 @@ cloudinary.config({
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname+'/client/build')));
+app.use(express.static(path.join(__dirname+'/pages/enternewpass/build')));
+
 
 pool.on('error', (err, client) => {
     console.error('Unexpected error on idle client', err)
@@ -96,10 +100,26 @@ app.post("/", authenticateToken, async (req, res) => {
 app.post("/login", async(req, res) => {
     try {
         const { username, password } = req.body;
+        console.log('user attempting to login with values: ', username)
         let checkCredentialsResult = await checkCredentials(username, password)
         if (checkCredentialsResult.ok) {
             let token = generateAccessToken({username: username, role: checkCredentialsResult.userRole, userID: checkCredentialsResult.ID})
-            console.log(checkCredentialsResult.userRole);
+            // send myself an email on login, delete later
+            // const emailData = {
+            //     from: '<info@obexport.com>',
+            //     to: "mohammad.nadom98@gmail.com",
+            //     subject: 'Giriş yapıldı',
+            //     text: `${username} ${new Date()} giriş yaptı`
+            // }
+            // mg.messages().send(emailData, (error, body) => {
+            //     if (error) {
+            //         console.error(error)
+            //         return res.status(500).json("An error occurred during registeration")
+            //     }
+            //     console.log(body);
+            // });
+            //insert signin log
+            await pool.query("INSERT INTO adminlogs (action, by, date) VALUES ('login', $1, CURRENT_TIMESTAMP)", [username])
             return res.status(200).json({
                 token: token,
                 username: checkCredentialsResult.username,
@@ -108,7 +128,6 @@ app.post("/login", async(req, res) => {
         } else {
             return res.status(404).json("error ocurred while loggin in")
         }
-
     } catch (error) {
         console.error(error);
     }
@@ -125,7 +144,7 @@ app.post("/register", verifyRegisterRoute, async(req, res) => {
         await pool.query("INSERT INTO register(username, password, email, verify_email_id, date, dealer_name) VALUES ($1, $2, $3, $4, CURRENT_DATE, $5)",
          [username, hash, email, uniqueID, dealerName])
         app.render(__dirname + "/ejs/verifyemail.ejs", 
-        {verifyEmailID: "http://localhost:8080/verifymail/" + uniqueID},
+        {verifyEmailID: "https://b2b-iys.herokuapp.com/verifymail/" + uniqueID},
          (err, html) => {
             const emailData = {
                 from: '<info@obexport.com>',
@@ -204,7 +223,7 @@ app.get("/resetpassword", async (req, res) => {
     await pool.query("INSERT INTO tempidstore VALUES($1, CURRENT_DATE, true, $2)", [passResetToken, email])
     //send email with resetPassword HTML template that contains /resetpassword/:passResetToken link
     app.render(__dirname + "/ejs/resetPassword.ejs", 
-    {resetPassPage: "http://localhost:8080/resetpassword/" + passResetToken},
+    {resetPassPage: "https://b2b-iys.herokuapp.com/resetpassword/" + passResetToken},
      (err, html) => {
         const emailData = {
             from: 'İletişim<info@obexport.com>',
@@ -228,7 +247,6 @@ app.get("/resetpassword", async (req, res) => {
 // that was sent by the /resetpassword route. If the token is valid, it renders a React
 // build that allows the user to reset his password. If the token is invalid, it renders
 // an HTML that tells the user the link was expired
-app.use(express.static(path.join(__dirname+'/pages/enternewpass/build')));
 app.get("/resetpassword/:passResetToken", async (req, res) => {
     const { passResetToken } = req.params
     if (passResetToken === null)
@@ -314,7 +332,7 @@ app.get("/services", async (req, res) => {
 })
 
 // This code handles sending the applications the dealer submitted, it takes "dealerName"
-// supplied from authenticateToken middleware. "query" has to possible values: count and details.
+// supplied from authenticateToken middleware. "query" has two possible values: count and details.
 // if query has value of "count" it returns the applications count according to specific critera
 // if it's "details", it returns the columns of the application's details according to specific
 // criteria. 
@@ -387,7 +405,7 @@ app.post("/applications", authenticateToken, upload.array("image", 3), async(req
                 console.log('in cloudinary upload loop number ', i)
                 cloudinary.uploader.upload(__dirname + "/uploads/" + filePaths[i], {
                      public_id: `iys/dealer_submissions/${userInfo.userID}/${highestApplicationID}/${filePaths[i].split('.').slice(0, -1).join('.')}`
-                    }, (err, result) => {
+                    }, async (err, result) => {
                     if (err) {
                         return handleError(err, res)
                     }
@@ -395,6 +413,8 @@ app.post("/applications", authenticateToken, upload.array("image", 3), async(req
                         console.log(result); 
                         dbImageURLS.push(result.secure_url)
                         console.log('deleting from storage...')
+                        //send log
+                        await pool.query("INSERT INTO adminlogs (action, by, date) VALUES ('sent application', $1, CURRENT_TIMESTAMP)", [userInfo.username])
                         fs.unlink(__dirname + "/uploads/" + filePaths[i], async err => {
                         if (err)
                             return handleError(err, res)
@@ -452,10 +472,12 @@ app.get("/applications/:applicationID", authenticateToken, async(req, res) => {
 app.get("/sd/basvurular/goruntule", authenticateToken, async (req, res) => {
     try {
         const userInfo = res.locals.userInfo
-        if (userInfo.role !== "sales_assistant")
+        console.log('role: ', userInfo.role)
+        if (userInfo.role === "sales_assistant" || userInfo.role === "sales_assistant_chef") {
+            let query = await pool.query("SELECT sales_applications.id, sales_applications.client_name, sales_applications.submit_time, sales_applications_details.selected_service, sales_applications_details.selected_offer, sales_applications_details.description, sales_applications.status, sales_applications_details.sales_rep_details, sales_applications_details.status_change_date, sales_applications_details.final_sales_rep_details, sales_applications.last_change_date FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id")
+            res.status(200).json(query.rows)
+        } else
             return res.status(401).json("this user does not have sales assistant premission")
-        let query = await pool.query("SELECT sales_applications.id, sales_applications.client_name, sales_applications.submit_time, sales_applications_details.selected_service, sales_applications_details.selected_offer, sales_applications_details.description, sales_applications.status, sales_applications_details.sales_rep_details, sales_applications_details.status_change_date, sales_applications_details.final_sales_rep_details, sales_applications.last_change_date FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id")
-        res.status(200).json(query.rows)
     } catch (error) {
         console.error(error);
     }
@@ -465,60 +487,65 @@ app.put("/basvurular/:applicationID", authenticateToken, async (req, res) => {
     const client = await pool.connect()
     // if an ID that doesn't exist in database gets sent, nothing get's updated but no error get's triggered.
     const userInfo = res.locals.userInfo
-    if (userInfo.role !== "sales_assistant")
-        return res.status(401).json("this user does not have sales assistant premission")
-    const { applicationID } = req.params
-    const { salesRepDetails, statusChange } = req.body
-    const d = new Date()
-    try {
-        const query = await client.query("SELECT last_change_date FROM sales_applications WHERE id = $1", [applicationID])
-        // *** because I updated the status records of the database manually, I temporarily commented the lines of code below, I need to uncomment them again
-        // *** In order for me to do that, It would be easier to delete all existing applications and make new ones.
-        // if (query.rows[0].last_change_date !== null)
-        //     return res.status(401).json("You cannot set application status to approved without first procedures")
-        console.log("query", query.rows)
-        const currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`
-        await client.query('BEGIN')
-        await client.query("UPDATE sales_applications_details SET sales_rep_details = $1, status_change_date = $2 WHERE id = $3",
-         [salesRepDetails, currentDate, applicationID])
-        await client.query("UPDATE sales_applications SET status = $1 WHERE id = $2", [statusChange, applicationID])
-        await client.query('COMMIT')
-        res.status(200).json("Application was updated successfully")
-      } catch (e) {
-        console.log(e)
-        await client.query('ROLLBACK')
-        return res.status(500).json("An error occurred while attempting to update application")
-      } finally {
-        client.release()
+    if (userInfo.role === "sales_assistant" || userInfo.role === "sales_assistant_chef") {
+        const { applicationID } = req.params
+        const { salesRepDetails, statusChange } = req.body
+        const d = new Date()
+        try {
+            const query = await client.query("SELECT last_change_date FROM sales_applications WHERE id = $1", [applicationID])
+            // *** because I updated the status records of the database manually, I temporarily commented the lines of code below, I need to uncomment them again
+            // *** In order for me to do that, It would be easier to delete all existing applications and make new ones.
+            // if (query.rows[0].last_change_date !== null)
+            //     return res.status(401).json("You cannot set application status to approved without first procedures")
+            console.log("query", query.rows)
+            const currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`
+            await client.query('BEGIN')
+            await client.query("UPDATE sales_applications_details SET sales_rep_details = $1, status_change_date = $2 WHERE id = $3",
+             [salesRepDetails, currentDate, applicationID])
+            await client.query("UPDATE sales_applications SET status = $1 WHERE id = $2", [statusChange, applicationID])
+            await client.query('COMMIT')
+            res.status(200).json("Application was updated successfully")
+          } catch (e) {
+            console.log(e)
+            await client.query('ROLLBACK')
+            return res.status(500).json("An error occurred while attempting to update application")
+          } finally {
+            client.release()
+          }
+    } else {
+          return res.status(401).json("this user does not have sales assistant premission")
       }
+
 })
 
 app.put("/basvurular/:applicationID/sp", authenticateToken, async (req, res) => {
     const client = await pool.connect()
     const userInfo = res.locals.userInfo
-    if (userInfo.role !== "sales_assistant")
+    if (userInfo.role === "sales_assistant" || userInfo.role === "sales_assistant_chef") {
+        const { applicationID } = req.params
+        const { salesRepDetails, statusChange } = req.body
+        const d = new Date()
+        const currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`
+        try {
+            const query = await client.query("SELECT last_change_date FROM sales_applications WHERE id = $1", [applicationID])
+            // if (query.rows[0].last_change_date !== null)
+            //     return res.status(401).json("You cannot set application status to approved without first procedures")
+            await client.query('BEGIN')
+            await client.query("UPDATE sales_applications_details SET final_sales_rep_details = $1 WHERE id = $2",
+            [salesRepDetails, applicationID])
+            await client.query("UPDATE sales_applications SET status = $1, last_change_date = $2 WHERE id = $3", [statusChange, currentDate, applicationID])
+            await client.query('COMMIT')
+            res.status(200).json("Application was updated successfully")
+        } catch (e) {
+            console.log(e)
+            await client.query('ROLLBACK')
+            return res.status(500).json("An error occurred while attempting to update application")
+        } finally {
+            client.release()
+        }
+    } else {
         return res.status(401).json("this user does not have sales assistant premission")
-    const { applicationID } = req.params
-    const { salesRepDetails, statusChange } = req.body
-    const d = new Date()
-    const currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`
-    try {
-        const query = await client.query("SELECT last_change_date FROM sales_applications WHERE id = $1", [applicationID])
-        // if (query.rows[0].last_change_date !== null)
-        //     return res.status(401).json("You cannot set application status to approved without first procedures")
-        await client.query('BEGIN')
-        await client.query("UPDATE sales_applications_details SET final_sales_rep_details = $1 WHERE id = $2",
-         [salesRepDetails, applicationID])
-        await client.query("UPDATE sales_applications SET status = $1, last_change_date = $2 WHERE id = $3", [statusChange, currentDate, applicationID])
-        await client.query('COMMIT')
-        res.status(200).json("Application was updated successfully")
-      } catch (e) {
-        console.log(e)
-        await client.query('ROLLBACK')
-        return res.status(500).json("An error occurred while attempting to update application")
-      } finally {
-        client.release()
-      }
+    }
 })
 
 
@@ -591,8 +618,14 @@ app.get("/sdc/applications/count", authenticateToken, async (req, res) => {
     const userInfo = res.locals.userInfo
     if (userInfo.role !== "sales_assistant_chef")
         return res.status(401).json("this user does not have sales assistant premission")
-    const { interval } = req.query
-    return getSDCApplicationsCount(interval)
+    try {
+        const { interval } = req.query
+        const result = await getSDCApplicationsCount(interval)
+        console.log("RESULT: ", result)
+        return res.status(200).json(result)
+    } catch (error) {
+        console.log(error)
+    }
 })
 
 app.get("/sdc/user/:userID/applications/filterbydate/:query", authenticateToken, async (req, res) => {
@@ -622,7 +655,6 @@ app.get("/sdc/user/:userID/applications/filterbydate/:query", authenticateToken,
 //       }
 // })
 
-app.get("/", async (req, res) => res.json("app worksssssssssss"))
 app.put("/test/:userID", async (req, res) => {
     const { userID } = req.params
     const { isActive } = req.body
@@ -635,6 +667,9 @@ app.put("/test/:userID", async (req, res) => {
       }
 })
 
+app.get("*", async (req, res) => {
+    return res.sendFile(path.join(__dirname+'/client/build/index.html'));
+})
 
 const PORT = process.env.PORT || 8080
 console.log("///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////")

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { CCard, CCardBody, CCardHeader, CCol, CRow, CFormGroup, CLabel, CInput, CTextarea, CButton } from '@coreui/react'
+import { CCard, CCardBody, CCardHeader, CCol, CRow, CFormGroup, CLabel, CInput, CTextarea, CButton, CForm } from '@coreui/react'
 import "./basvurudetay.css"
 import { useHistory } from 'react-router-dom'
 import Modal from "../../components/modals/Modal"
@@ -9,7 +9,7 @@ const BasvuruDetay = ({match}) => {
   const applicationID = match.params.id
 
   const fetchData = async (setUserDetails) => {
-    const res = await fetch(`http://localhost:8080/applications/${applicationID}`, {
+    const res = await fetch(`/applications/${applicationID}`, {
       method: 'GET',
       headers: {
         'content-type': 'application/json',
@@ -101,8 +101,8 @@ const BasvuruDetay = ({match}) => {
   const updateApp = async (statusChange, sp = false) => {
     let urlString
     if (sp)
-      urlString= `http://localhost:8080/basvurular/${match.params.id}/sp`
-    else urlString= `http://localhost:8080/basvurular/${match.params.id}`
+      urlString= `/basvurular/${match.params.id}/sp`
+    else urlString= `/basvurular/${match.params.id}`
     const res = await fetch(urlString, {
       method: 'PUT',
       headers: {
@@ -229,6 +229,22 @@ const BasvuruDetay = ({match}) => {
                   />
               </CFormGroup>
             }
+            <CFormGroup row className = "justify-content-center">
+              <CLabel>Başvuru resimler: </CLabel>
+            {
+                userDetails.imageURLS && userDetails.imageURLS.map ((elm, i) => {
+                  return (
+                    <CCol md="3" key = {i}>
+                      <a href = {elm} target = "_blank" rel = "noreferrer" >
+                        <img alt = "" style = {{maxWidth: "200px", maxHeight: "200px", cursor: "pointer"}}
+                        src = {elm} 
+                        />
+                      </a>
+                    </CCol>
+                  )
+                })
+              }
+            </CFormGroup>
             <CFormGroup row className = "basvuru-detay-submit-buttons my-0" >
               <CCol lg = "4">
                 {renderBasvuruDetayFooter(userDetails)}

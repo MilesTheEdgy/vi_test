@@ -68,8 +68,8 @@ const AppDataForm = ({isEditable, userDetails, setSdDetay}) => {
                 userDetails.imageURLS && userDetails.imageURLS.map ((elm, i) => {
                   return (
                     <CCol md="4" key = {i}>
-                      <a href = {elm} target = "_blank" >
-                        <img style = {{maxWidth: "200px", maxHeight: "200px", cursor: "pointer"}}
+                      <a href = {elm} target = "_blank" rel = "noreferrer" >
+                        <img alt = "" style = {{maxWidth: "200px", maxHeight: "200px", cursor: "pointer"}}
                         src = {elm} 
                         />
                       </a>

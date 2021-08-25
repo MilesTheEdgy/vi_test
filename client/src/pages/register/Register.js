@@ -12,17 +12,14 @@ import {
   CInputGroupText,
   CRow
 } from '@coreui/react'
-import { Link } from "react-router-dom"
-import CIcon from '@coreui/icons-react'
 import Modal from '../../components/modals/Modal'
 import Toaster from '../../components/toaster/Toaster'
-import Loader from "../../components/loader/Loader"
 
 const Register = () => {
   const missingInfo = "Lütfen tüm alanları doldurunuz"
   const unmatchedPassword = "Şifreniz uyuşmuyor, lütfen şifrelerinizi kontrol edin"
   const invalidEmail = "Lütfen girilen E-Mail adresini kontrol edin"
-  const userAlreadyExists = "Bu kullanıcı adı alınmıştır. Lütfen farklı bir kullanıcı adı seçiniz"
+  // const userAlreadyExists = "Bu kullanıcı adı alınmıştır. Lütfen farklı bir kullanıcı adı seçiniz"
   const modalErrorObj = {
     header: "HATA",
     body: "Bilgileriniz kaydedilmedi, lütfen daha sonra tekrar deneyin",
@@ -50,15 +47,15 @@ const Register = () => {
   })
   const [modalOn, setModalOn] = useState(false)
   const [toasters, addToaster] = useState([])
-  const reset = () => {
-    setUsername("")
-    setDealerName("")
-    setPassword("")
-    setConfirmPassword("")
-  }
+  // const reset = () => {
+  //   setUsername("")
+  //   setDealerName("")
+  //   setPassword("")
+  //   setConfirmPassword("")
+  // }
 
   const verifyEmail = () => {
-    const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     if (re.test(email) === false) {
       addToaster([
         ...toasters,
@@ -92,7 +89,7 @@ const Register = () => {
 
   const onSubmit = async () => {
     if (verifyInput() && verifyEmail() && verifyPassword()) {
-      const res = await fetch("http://localhost:8080/register" , {
+      const res = await fetch("/register" , {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -226,7 +226,7 @@ class YeniBasvuru extends React.Component {
         }
         try {
           console.log("fetching")
-          const res = await fetch("http://localhost:8080/applications", {
+          const res = await fetch("/applications", {
             method: "POST",
             headers: {
             'authorization' :`Bearer ${document.cookie.slice(8)} `
@@ -263,7 +263,7 @@ class YeniBasvuru extends React.Component {
         // }
         // this.setState({isApplicationSubmitting: true})
 
-        // let res = await fetch("http://localhost:8080/bayi/basvuru/yeni", {
+        // let res = await fetch("/bayi/basvuru/yeni", {
         // method: 'POST',
         // headers: {
         //     'Content-Type': 'application/json',
@@ -367,7 +367,7 @@ class YeniBasvuru extends React.Component {
         }
         try {
           console.log("fetching")
-          const res = await fetch("http://localhost:8080/bayi/basvuru/yeni", {
+          const res = await fetch("/bayi/basvuru/yeni", {
             method: "POST",
             headers: {
             'authorization' :`Bearer ${document.cookie.slice(8)} `
@@ -501,25 +501,25 @@ class YeniBasvuru extends React.Component {
                         this.state.clientAppFiles === null ?
                         <CFormGroup row>
                             <CCol md="4">
-                                <img style = {{maxWidth: "200px", maxHeight: "200px"}} src = "https://res.cloudinary.com/papyum/image/upload/v1629721581/iys/placeholder_fb7gch.png" />
+                                <img alt = "" style = {{maxWidth: "200px", maxHeight: "200px"}} src = "https://res.cloudinary.com/papyum/image/upload/v1629721581/iys/placeholder_fb7gch.png" />
                             </CCol>
                             <CCol md="4">
-                                <img style = {{maxWidth: "200px", maxHeight: "200px"}} src = "https://res.cloudinary.com/papyum/image/upload/v1629721581/iys/placeholder_fb7gch.png" />
+                                <img alt = "" style = {{maxWidth: "200px", maxHeight: "200px"}} src = "https://res.cloudinary.com/papyum/image/upload/v1629721581/iys/placeholder_fb7gch.png" />
                             </CCol>
                             <CCol md="4">
-                                <img style = {{maxWidth: "200px", maxHeight: "200px"}} src = "https://res.cloudinary.com/papyum/image/upload/v1629721581/iys/placeholder_fb7gch.png" />
+                                <img alt = "" style = {{maxWidth: "200px", maxHeight: "200px"}} src = "https://res.cloudinary.com/papyum/image/upload/v1629721581/iys/placeholder_fb7gch.png" />
                             </CCol>
                         </CFormGroup>
                         :
                         <CFormGroup row>
                             <CCol md="4">
-                                <img style = {{maxWidth: "200px", maxHeight: "200px"}} src = {this.state.clientAppFilesObjURL[0]} />
+                                <img alt = "" style = {{maxWidth: "200px", maxHeight: "200px"}} src = {this.state.clientAppFilesObjURL[0]} />
                             </CCol>
                             <CCol md="4">
-                                <img style = {{maxWidth: "200px", maxHeight: "200px"}} src = {this.state.clientAppFilesObjURL[1]} />
+                                <img alt = "" style = {{maxWidth: "200px", maxHeight: "200px"}} src = {this.state.clientAppFilesObjURL[1]} />
                             </CCol>
                             <CCol md="4">
-                                <img style = {{maxWidth: "200px", maxHeight: "200px"}} src = {this.state.clientAppFilesObjURL[2]} />
+                                <img alt = "" style = {{maxWidth: "200px", maxHeight: "200px"}} src = {this.state.clientAppFilesObjURL[2]} />
                             </CCol>
                         </CFormGroup>
                         }

@@ -77,7 +77,7 @@ class Login extends React.Component {
   onSubmit = async () => {
     // document.cookie = 'token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     this.props.logoutUser()
-    let res = await fetch("http://localhost:8080/login", {
+    let res = await fetch("/login", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
