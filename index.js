@@ -600,8 +600,6 @@ app.get("/sdc/user/:userID/applications/filterbydate/:query", authenticateToken,
         const { query } = req.params
         const { service, status, date } = req.query
 
-
-
     } catch (error) {
         console.log(error)
         return res.status(500).json("An error occurred while fetching applications according to date")
