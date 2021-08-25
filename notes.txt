@@ -1,3 +1,8 @@
+CLEANING UP THE SERVER:
+    * Try out the routes folder one by one. starting with VERIFY
+
+Would having a single dotenv.config statement, alongside process.env statements, suffice?
+
 
 FEATURES TO ADD:
     ANASAYFA:
