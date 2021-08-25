@@ -25,6 +25,7 @@ process.env.TOKEN_SECRET;
 
 const app = module.exports = express();
 
+// Checks to see if the user's token is still valid, if it is, respond with the user's username, and role 
 app.post("/", authenticateToken, async (req, res) => {
     try {
         const dbUserTable = await pool.query("SELECT username, role FROM login WHERE username = $1", [res.locals.userInfo.username]);
@@ -80,11 +81,9 @@ app.post("/register", verifyRegisterRoute, async(req, res) => {
                 subject: 'Mail adresinizi onaylayın',
                 html: html
             }
-            mailgun.messages().send(emailData, (error, body) => {
-                if (error) {
-                    console.error(error)
-                    return res.status(500).json("An error occurred during registeration")
-                }
+            mailgun.messages().send(emailData, (err, body) => {
+                if (err)
+                    return handleError(err, res, "server error when attempting to register user")
                 console.log(body);
                 res.status(200).json("Register application is successful, awaiting client verification through client's email")
             });
