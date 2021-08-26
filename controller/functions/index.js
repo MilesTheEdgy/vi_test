@@ -1,12 +1,19 @@
-const handleError = (err, res, resErrorString) => {
-    console.log(err)
-    return res.status(500).json(resErrorString)
+const uniqid = require("uniqid")
+
+const status500Error = (err, res, resErrorString) => {
+    const errorID = uniqid("ERROR-ID-")
+    const errorDate = new Date()
+    console.log(err  + " " + errorID + " DATE: ", errorDate)
+    return res.status(500).json(resErrorString + errorID)
+}
+const customStatusError = (err, res, resStatus, resErrorString) => {
+    const errorID = uniqid("ERROR-ID-")
+    const errorDate = new Date()
+    console.log(err  + " " + errorID + " DATE: ", errorDate)
+    return res.status(resStatus).json(errorID + " " + resErrorString)
 }
 
-
-
-
-
 module.exports = {
-    handleError
+    status500Error,
+    customStatusError
 }

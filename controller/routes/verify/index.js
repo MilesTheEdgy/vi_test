@@ -17,7 +17,8 @@ const {
 } = require("./middleware");
 
 const {
-    handleError
+    customStatusError,
+    status500Error
 } = require("../../functions")
 
 dotenv.config();
@@ -42,6 +43,7 @@ app.post("/", authenticateToken, async (req, res) => {
 
 app.post("/login", async(req, res) => {
     try {
+        // ******* REFACTOR THIS WHOLE MESS ****** //
         const { username, password } = req.body;
         let checkCredentialsResult = await checkCredentials(username, password)
         if (checkCredentialsResult.ok) {
@@ -64,7 +66,6 @@ app.post("/login", async(req, res) => {
 app.post("/register", verifyRegisterRoute, async(req, res) => {
     try {
         const { username, password, dealerName, email } = req.body;
-
         // Generate a unique ID as email verification param
         const uniqueID = uniqid()
         // Hash user password
@@ -79,7 +80,7 @@ app.post("/register", verifyRegisterRoute, async(req, res) => {
         {verifyEmailID: "http://localhost:8080/verifymail/" + uniqueID},
          (err, html) => {
             if (err)
-                return handleError(err, res, "server error when attempting to register user")
+                return status500Error(err, res, "server error when attempting to register user")
             // insert the HTML into mailgun mailing options
             const emailData = {
                 from: '<info@obexport.com>',
@@ -87,16 +88,17 @@ app.post("/register", verifyRegisterRoute, async(req, res) => {
                 subject: 'Mail adresinizi onaylayın',
                 html: html
             }
+            // Send the email!
             mailgun.messages().send(emailData, (err, body) => {
                 if (err) {
-                    return handleError(err, res, "server error when attempting to register user")
+                    return status500Error(err, res, "server error when attempting to register user")
                 }
                 console.log(body);
                 res.status(200).json("Register application is successful, awaiting client verification through client's email")
             });
         })
     } catch (err) {
-        return handleError(err, res, "server error when attempting to register user")
+        return status500Error(err, res, "server error when attempting to register user")
     }
 });
 
@@ -106,27 +108,32 @@ app.post("/register", verifyRegisterRoute, async(req, res) => {
 // the application
 app.get("/verifymail/:emailID", async (req, res) => {
     const { emailID } = req.params
+    console.log('route hit')
+    const noEmailIDinDB = "The email verification ID queried returned empty, either expired or does not exist"
+    // Following lines are a database transaction
     const client = await pool.connect()
     try {
+        //verify the emailID that exists in the database. 
+        console.log('attempting to verify email ID')
         const emailIDQuery = await client.query("SELECT * FROM register WHERE verify_email_id = $1", [emailID])
         if (emailIDQuery.rows.length === 0)
-            return res.status(403).json("Your email verification ID has expired or doesn't exist")
-
+            return customStatusError(noEmailIDinDB, res, 403, "Your email verification ID has expired or doesn't exist")
+        console.log('email VERIFIED')
         const { username, password, email, dealer_name } = emailIDQuery.rows[0]
         const userID = uniqid()
-
+        console.log('begining USER DATABASE INSERTION')
         await client.query('BEGIN')
         const insertUserQuery = await client.query("INSERT INTO login(username, hash, role, active, register_date, user_id, email, name) VALUES($1, $2, 'dealer', true, CURRENT_DATE, $3, $4, $5) RETURNING email",
          [username, password, userID, email, dealer_name])
+         console.log('inserted user, deleting REGISTER ID')
         await client.query("DELETE FROM register WHERE email = $1",
          [insertUserQuery.rows[0].email])
         await client.query('COMMIT')
-
+        console.log('SUCCESS')
         return res.render(__dirname + '/ejs/emailVerified.ejs', {loginPage: "http://localhost:3000"})
-    } catch (e) {
-        console.log(e)
+    } catch (err) {
         await client.query('ROLLBACK')
-        return res.status(500).json("An error occurred while attempting to update application")
+        return status500Error(err, res, "An error occurred while attempting to verify your email authentication ID")
       } finally {
         client.release()
       }

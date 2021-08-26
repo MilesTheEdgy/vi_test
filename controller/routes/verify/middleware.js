@@ -1,6 +1,11 @@
 const pool = require("../../database/");
 const jwt = require("jsonwebtoken");
 const dotenv = require('dotenv');
+const {
+    status500Error,
+    customStatusError
+} = require("../../functions")
+
 
 dotenv.config();
 process.env.TOKEN_SECRET;
@@ -22,24 +27,26 @@ const authenticateToken = (req, res, next) => {
 }
 
 const verifyRegisterRoute = async (req, res, next) => {
+    const reqBodyFailedVerification = "Request body did not pass verification"
+    const emailExistsInDB = "Request body email already exists in email"
+    const unverifiedInput = () => (customStatusError(reqBodyFailedVerification, res, 403, "Your input verifications failed to pass"))
+    const userAlreadyExists = () => (customStatusError(emailExistsInDB, res, 406, "This user already exists"))
+    const {username, password, dealerName, email} = req.body
     try {
-        const {username, password, dealerName, email} = req.body
-        if (!username || !password || !dealerName || !email)
-            return res.status(403).json("Your input verifications failed to pass")
+        if (!username || !password || !dealerName || !email) 
         if (username === "" || password === "" || dealerName === "" || email === "")
-            return res.status(403).json("Your input verifications failed to pass")
+            return unverifiedInput()
         //verify the email
         const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
         if (re.test(email) === false)
-            return res.status(403).json("Your input verifications failed to pass")
+            return unverifiedInput()
         // check if email exists
         const emailQuery = await pool.query("SELECT email FROM login WHERE email = $1", [email])
         if (emailQuery.rows.length !== 0) 
-            return res.status(406).json("This user already exists")
+            return userAlreadyExists()
         next()
-    } catch (error) {
-        console.error(error)
-        return res.status(500).json("an error occurred while attempting to register user")
+    } catch (err) {
+        return status500Error(err, res, "server error when attempting to register user")
     }
 }
 
