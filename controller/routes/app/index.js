@@ -70,3 +70,15 @@ app.get("/applications/:applicationID", authenticateToken, async(req, res) => {
         res.status(500)
     }
 })
+
+app.get("/bayi/applications", authenticateToken, async(req, res) => {
+    try {
+        const username = res.locals.userInfo.username
+        const { status } = req.query
+        const response = await forDealerGetApplications(username, status)
+        res.status(200).json(response)
+    } catch (error) {
+        console.error(error)
+        res.status(500)
+    }
+})
