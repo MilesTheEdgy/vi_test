@@ -7,7 +7,7 @@ const pool = require("../../database/index");
 const mailgun = require("../../../lib/mailgun")
 const uniqid = require('uniqid');
 const {
-    checkCredentials,
+    verifyCredentials,
     generateAccessToken
 } = require("./functions");
 
@@ -41,21 +41,19 @@ app.post("/", authenticateToken, async (req, res) => {
     }
 });
 
-app.post("/login", async(req, res) => {
+app.post("/login", verifyCredentials, async(req, res) => {
     try {
-        // ******* REFACTOR THIS WHOLE MESS ****** //
-        const { username, password } = req.body;
-        let checkCredentialsResult = await checkCredentials(username, password)
-        if (checkCredentialsResult.ok) {
-            let token = generateAccessToken({username: username, role: checkCredentialsResult.userRole, userID: checkCredentialsResult.ID})
-            return res.status(200).json({
-                token: token,
-                username: checkCredentialsResult.username,
-                userRole: checkCredentialsResult.userRole,
-            });
-        } else {
-            return res.status(404).json("error ocurred while loggin in")
-        }
+        const { username, role, userID } = res.locals.userInfo
+        let token = generateAccessToken({
+            username, 
+            role, 
+            userID
+        })
+        return res.status(200).json({
+            token: token,
+            username,
+            userRole: role,
+        });
     } catch (error) {
         console.error(error);
     }
@@ -108,29 +106,26 @@ app.post("/register", verifyRegisterRoute, async(req, res) => {
 // the application
 app.get("/verifymail/:emailID", async (req, res) => {
     const { emailID } = req.params
-    console.log('route hit')
     const noEmailIDinDB = "The email verification ID queried returned empty, either expired or does not exist"
     // Following lines are a database transaction
     const client = await pool.connect()
     try {
         //verify the emailID that exists in the database. 
-        console.log('attempting to verify email ID')
         const emailIDQuery = await client.query("SELECT * FROM register WHERE verify_email_id = $1", [emailID])
         if (emailIDQuery.rows.length === 0)
             return customStatusError(noEmailIDinDB, res, 403, "Your email verification ID has expired or doesn't exist")
-        console.log('email VERIFIED')
         const { username, password, email, dealer_name } = emailIDQuery.rows[0]
         const userID = uniqid()
-        console.log('begining USER DATABASE INSERTION')
         await client.query('BEGIN')
+        //insert user record into login table
         const insertUserQuery = await client.query("INSERT INTO login(username, hash, role, active, register_date, user_id, email, name) VALUES($1, $2, 'dealer', true, CURRENT_DATE, $3, $4, $5) RETURNING email",
          [username, password, userID, email, dealer_name])
-         console.log('inserted user, deleting REGISTER ID')
+        // delete user register record (email ID) from register table
         await client.query("DELETE FROM register WHERE email = $1",
          [insertUserQuery.rows[0].email])
         await client.query('COMMIT')
-        console.log('SUCCESS')
-        return res.render(__dirname + '/ejs/emailVerified.ejs', {loginPage: "http://localhost:3000"})
+        // return a template HTML that tells the user his verification was a success, and a link to take them to the login page
+        return res.render(__dirname + '/../../../views/emailverification/emailverified.ejs', {loginPage: "http://localhost:3000"})
     } catch (err) {
         await client.query('ROLLBACK')
         return status500Error(err, res, "An error occurred while attempting to verify your email authentication ID")
@@ -139,21 +134,18 @@ app.get("/verifymail/:emailID", async (req, res) => {
       }
 })
 
-
 // This code handles resetting the client's password. it takes the client's email as the main
 // argument. If the client's email exists in the database, it inserts a reset token into the
 // database, and sends the same reset token to the client's email. The token expires in 1 hour
 // If the client's email doesn't exist, it sends a 200 status anyways.
 app.get("/resetpassword", async (req, res) => {
     const { email } = req.query
-
     const doesPrevResetToken = await pool.query("SELECT * FROM tempidstore WHERE pass_reset_for = $1", [email])
-
     // if client has alreacy submitted a reset request, invalidate the previous token
     if (doesPrevResetToken.rows !== 0)
         await pool.query("UPDATE tempidstore SET is_valid = false WHERE pass_reset_for = $1", [email])
-
     const emailIDQuery = await pool.query("SELECT * FROM login WHERE email = $1", [email])
+    // if request query email does not exist in the database
     if (emailIDQuery.rows.length === 0)
         // I'm returning a fake response to protect a potential attacker from finding a user's email
         // in reality the query failed
@@ -162,20 +154,20 @@ app.get("/resetpassword", async (req, res) => {
     //insert token into database
     await pool.query("INSERT INTO tempidstore VALUES($1, CURRENT_DATE, true, $2)", [passResetToken, email])
     //send email with resetPassword HTML template that contains /resetpassword/:passResetToken link
-    app.render(__dirname + "/ejs/resetPassword.ejs", 
-    {resetPassPage: "https://b2b-iys.herokuapp.com/resetpassword/" + passResetToken},
+    app.render(__dirname + "/../../../views/resetpassword/resetPassword.ejs", 
+    {resetPassPage: "http://localhost:8080/resetpassword/" + passResetToken},
      (err, html) => {
+        if (err)
+            return status500Error(err, res, "An error occurred during password reset")
         const emailData = {
             from: 'İletişim<info@obexport.com>',
             to: email,
             subject: 'Şifre Resetleme',
             html: html
         }
-        mailgun.messages().send(emailData, (error, body) => {
-            if (error) {
-                console.error(error)
-                return res.status(500).json("An error occurred during password reset")
-            }
+        mailgun.messages().send(emailData, (err, body) => {
+            if (err)
+                return status500Error(err, res, "An error occurred during password reset")
             console.log(body);
             res.status(200).json("Your account password reset query was successful, check incoming mail")
         });
@@ -189,24 +181,25 @@ app.get("/resetpassword", async (req, res) => {
 // an HTML that tells the user the link was expired
 app.get("/resetpassword/:passResetToken", async (req, res) => {
     const { passResetToken } = req.params
-    if (passResetToken === null)
-        return res.sendFile(path.join(__dirname+'/pages/passresetlinkexpired/index.html'));
-
+    const sendLinkExpiredHTML = () => (res.sendFile(path.join(__dirname+'/../../../views/resetpassword/passresetlinkexpired/index.html')))
+    const sendPassResetBuild = () => (res.sendFile(path.join(__dirname+'/../../../views/resetpassword/enternewpass/build/index.html')))
+    if (passResetToken === null) {
+        console.log('token was null')
+        return sendLinkExpiredHTML()
+    }
     const isTokenValid = await pool.query("SELECT * FROM tempidstore WHERE pass_reset_id = $1", [passResetToken])
-    if (!isTokenValid.rows[0])
-        return res.sendFile(path.join(__dirname+'/pages/passresetlinkexpired/index.html'));
-    
+    if (!isTokenValid.rows[0]) {
+        console.log('token does not exist')
+        return sendLinkExpiredHTML()
+    }
     if (isTokenValid.rows[0].is_valid === false)
-        return res.sendFile(path.join(__dirname+'/pages/passresetlinkexpired/index.html'));
+        return sendLinkExpiredHTML()
 
     jwt.verify(passResetToken, process.env.TOKEN_SECRET, async function(err, decoded) {
-        if (err) {
-            console.error(err)
-            return res.status(403).json("Token authentication failed")
-        } else {
-            const email = decoded.for
-            return res.sendFile(path.join(__dirname+'/pages/enternewpass/build/index.html'));
-        }
+        if (err)
+            return customStatusError(err, res, 403, "Token authentication failed")
+        else
+            return sendPassResetBuild()
     });
 })
 
@@ -220,38 +213,39 @@ app.put("/resetpassword/:passResetToken", async (req, res) => {
     const { password } = req.body
     if (passResetToken === null)
         return res.sendStatus(401).json("Token was null")
+    //check the validity of the token
     const isTokenValid = await pool.query("SELECT * FROM tempidstore WHERE pass_reset_id = $1", [passResetToken])
-    console.log(isTokenValid.rows[0])
-    if (!isTokenValid.rows[0])
-        return res.status(403).json("Token has expired")
+    // if the request token does exist in DB AND the request token's is_valid status is true, continue...
+    if (isTokenValid.rows[0] && isTokenValid.rows[0].is_valid === true) {
+        //verify the token...
+        jwt.verify(passResetToken, process.env.TOKEN_SECRET, async function(err, decoded) {
+            if (err)
+                return customStatusError(err, res, 403, "password reset ID verification FAILED") 
+            else {
+                // the email field embedded in the token when it was first created
+                const email = decoded.for
+                //hash the new password
+                const hash = await bcrypt.hash(password, 10);
+                // await client to start transaction
+                const client = await pool.connect()
+                try {
+                    await client.query('BEGIN')
+                    // delete the password reset ID (potentially all of them that fall under the same email) from table
+                    await client.query("DELETE FROM tempidstore WHERE pass_reset_for = $1", [email])
+                    // update the new hash (password) in the login table
+                    await client.query("UPDATE login SET hash = $1 WHERE email = $2", [hash, email])
     
-    if (isTokenValid.rows[0].is_valid === false)
+                    await client.query('COMMIT')
+                    return res.status(200).json("Password reset successfull.")
+                } catch (err) {
+                    await client.query('ROLLBACK')
+                    return status500Error(err, res, "An error occurred while resetting your password")
+                } finally {
+                    client.release()
+                }
+            }
+        });
+    } else {
         return res.status(403).json("Token has expired")
-
-    jwt.verify(passResetToken, process.env.TOKEN_SECRET, async function(err, decoded) {
-        if (err) {
-            console.error(err)
-            return res.status(403).json("Token authentication failed")
-        } else {
-            console.log("jwt token verification success, token: ", decoded)
-            const email = decoded.for
-            const hash = await bcrypt.hash(password, 10);
-            const client = await pool.connect()
-            try {
-                await client.query('BEGIN')
-
-                await client.query("DELETE FROM tempidstore WHERE pass_reset_for = $1", [email])
-                await client.query("UPDATE login SET hash = $1 WHERE email = $2", [hash, email])
-
-                await client.query('COMMIT')
-                return res.status(200).json("Password reset successfull.")
-            } catch (error) {
-                console.log(error)
-                await client.query('ROLLBACK')
-                return res.status(500).json("An error occurred while resetting your password")
-            } finally {
-                client.release()
-            }        
-        }
-    });
+    }
 })

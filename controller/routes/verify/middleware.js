@@ -28,7 +28,7 @@ const authenticateToken = (req, res, next) => {
 
 const verifyRegisterRoute = async (req, res, next) => {
     const reqBodyFailedVerification = "Request body did not pass verification"
-    const emailExistsInDB = "Request body email already exists in email"
+    const emailExistsInDB = "Request body email or username already exists in email"
     const unverifiedInput = () => (customStatusError(reqBodyFailedVerification, res, 403, "Your input verifications failed to pass"))
     const userAlreadyExists = () => (customStatusError(emailExistsInDB, res, 406, "This user already exists"))
     const {username, password, dealerName, email} = req.body
@@ -41,7 +41,8 @@ const verifyRegisterRoute = async (req, res, next) => {
         if (re.test(email) === false)
             return unverifiedInput()
         // check if email exists
-        const emailQuery = await pool.query("SELECT email FROM login WHERE email = $1", [email])
+        const emailQuery = await pool.query("SELECT email, username FROM login WHERE email = $1 OR username = $2", 
+         [email, username])
         if (emailQuery.rows.length !== 0) 
             return userAlreadyExists()
         next()

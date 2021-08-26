@@ -1,0 +1,56 @@
+DEALER:
+    * GET applications sales (
+        dealer OPTION(name, ALL, SD-AREA)
+        query OPTION(count, details)
+        interval OPTION(day, month, year, ALL)
+        status OPTION(approved, rejected, processing, ALL)
+        service OPTION($services, ALL, MAP)
+    )
+    * GET application (
+        id
+    )
+    * POST new application
+    * GET service (
+        all OPTION(true, false) 
+        offers ALL
+        profitable OPTION(true, false)
+    )
+    * GET user information
+    * Put user username, password
+SD:
+    * GET applications sales (
+        dealer OPTION(name, ALL, SD-AREA)
+        query OPTION(count, details)
+        interval OPTION(day, month, year, ALL)
+        status OPTION(approved, rejected, processing, ALL)
+        service OPTION($services, ALL, MAP)
+    )
+    * GET application (
+        id
+    )
+    * PUT application (
+        id
+    )
+    * GET user information
+    * Put user username, password
+
+SDC:
+    * GET applications sales (
+        dealer OPTION(name, ALL, SD-AREA)
+        query OPTION(count, details)
+        interval OPTION(day, month, year, ALL)
+        status OPTION(approved, rejected, processing, ALL)
+        service OPTION($services, ALL, MAP)
+    )
+    * GET application (
+        id
+    )
+    * PUT application (
+        id
+    )
+    * PUT user (
+        active
+    )
+    * POST service
+    * PUT service
+    * DELETE service

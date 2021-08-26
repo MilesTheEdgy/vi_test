@@ -2,32 +2,38 @@ const bcrypt = require("bcrypt");
 const pool = require("../../database");
 const jwt = require("jsonwebtoken");
 const dotenv = require('dotenv');
+const { status500Error } = require("../../functions");
 
 dotenv.config();
 process.env.TOKEN_SECRET;
 
-const checkCredentials = async (clientUsername, clientPassword) => {
+const verifyCredentials = async (req, res, next) => {
+    const clientUsername = req.body.username
+    const clientPassword = req.body.password
     try {
-        const dbUserTable = await pool.query("SELECT username, hash, role, user_id, active FROM login WHERE username = $1", [clientUsername]);
-        const dbUsername = dbUserTable.rows[0]?.username;
-        const dbUserHash = dbUserTable.rows[0]?.hash;
-        const dbUserRole = dbUserTable.rows[0]?.role;
-        const dbUserID = dbUserTable.rows[0]?.user_id;
-        if (dbUserTable.rows[0]?.active === false)
-            return {ok: false}
-        if (dbUsername === clientUsername) {
-            let hashResult = await bcrypt.compare(clientPassword, dbUserHash);
-            if (hashResult) {
-                return {ok: hashResult, username: dbUsername, userRole: dbUserRole, ID: dbUserID}
-            } else {
-                return {ok: hashResult}
-            }
-        } else {
-            return {ok: false}
-        }
-    } catch (error) {
-        console.error(error);
+        // VERIFY BEGIN
+        if (clientUsername === "" || clientPassword === "")
+            return res.status(403).json("one of or both of the submitted fields were empty")
+        const userQuery = await pool.query("SELECT username, hash, role, user_id, active FROM login WHERE username = $1", [clientUsername])
+        if (!userQuery.rows[0])
+            return res.status(403).json("username or password does not match")
+        const { username, hash, role, user_id, active } = userQuery.rows[0]
+        if (!active)
+            return res.status(406).json("Your account has been deactivated, please contact administration")
+        const hashResult = await bcrypt.compare(clientPassword, hash);
+        if (!hashResult)
+            return res.status(403).json("username or password does not match")
+        // VERIFY END
+        res.locals.userInfo = {
+            username, 
+            role, 
+            userID: user_id
+        };
+        next()
+    } catch (err) {
+        return status500Error(err, res, ("server error, failed to process your login information"))
     }
+    
 }
 
 const generateAccessToken = (payload) => {
@@ -35,6 +41,6 @@ const generateAccessToken = (payload) => {
 }
 
 module.exports = {
-    checkCredentials, 
-    generateAccessToken
+    generateAccessToken,
+    verifyCredentials
 }

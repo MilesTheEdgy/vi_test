@@ -5,6 +5,8 @@ Would having a single dotenv.config statement, alongside process.env statements,
 
 
 FEATURES TO ADD:
+    PASS RESET REACT BUILD:
+            * After user submits a successfull reset, have the pop up modal redirect to login
     ANASAYFA:
             * have the widgets be clickable, on Click, render the respective table
             * Show more info regarding sales
