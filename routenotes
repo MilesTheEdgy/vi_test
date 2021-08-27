@@ -1,3 +1,23 @@
+SHARED:
+    * GET applications sales (
+        dealer OPTION(name, ALL, SD-AREA)
+        query OPTION(count, details)
+        interval OPTION(day, month, year, ALL)
+        status OPTION(approved, rejected, processing, ALL)
+        service OPTION($services, ALL, MAP)
+    )
+    * GET application (
+        id
+    )
+    * GET user information
+    * PUT user username, password
+    * GET service (
+        all OPTION(true, false) 
+        offers ALL
+        profitable OPTION(true, false)
+    )
+    * GET goal   
+
 DEALER:
     * GET applications sales (
         dealer OPTION(name, ALL, SD-AREA)
@@ -31,6 +51,7 @@ SD:
     * PUT application (
         id
     )
+    * GET users(dealers)
     * GET user information
     * Put user username, password
 
@@ -48,9 +69,14 @@ SDC:
     * PUT application (
         id
     )
+    * GET users(SD, dealers)
     * PUT user (
         active
     )
+    * GET goal
+    * POST goal
+    * PUT goal
+    * DELETE goal
     * POST service
     * PUT service
     * DELETE service

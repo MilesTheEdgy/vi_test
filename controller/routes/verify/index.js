@@ -6,20 +6,18 @@ const jwt = require("jsonwebtoken");
 const pool = require("../../database/index");
 const mailgun = require("../../../lib/mailgun")
 const uniqid = require('uniqid');
+const { authenticateToken } = require("../../helpers/middleware")
 const {
     verifyCredentials,
     generateAccessToken
 } = require("./functions");
 
-const {
-    authenticateToken,
-    verifyRegisterRoute
-} = require("./middleware");
+const { verifyRegisterRoute } = require("./middleware");
 
 const {
     customStatusError,
     status500Error
-} = require("../../functions")
+} = require("../../helpers/functions")
 
 dotenv.config();
 process.env.TOKEN_SECRET;

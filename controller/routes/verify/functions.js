@@ -2,7 +2,7 @@ const bcrypt = require("bcrypt");
 const pool = require("../../database");
 const jwt = require("jsonwebtoken");
 const dotenv = require('dotenv');
-const { status500Error } = require("../../functions");
+const { status500Error } = require("../../helpers/functions.js");
 
 dotenv.config();
 process.env.TOKEN_SECRET;

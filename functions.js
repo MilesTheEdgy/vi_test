@@ -41,23 +41,23 @@ const generateAccessToken = (payload) => {
     return jwt.sign(payload, process.env.TOKEN_SECRET, { expiresIn: 1800 });
 }
 
-const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers['authorization']
-    // console.log("ORIGINAL COOKIE: ", authHeader);
-    const token = authHeader && authHeader.split(' ')[1]
-    // console.log("MODIFIED COOKIE: ", token)
-    console.log('Authenticating token...')
-    if (token == null) return res.sendStatus(401).json("Token was null")
-    jwt.verify(token, process.env.TOKEN_SECRET, function(err, decoded) {
-        if (err) {
-            console.error("AN ERROR OCCURRED WHEN VERIFYING TOKEN: ", err)
-            return res.status(403).json("USER AUTHENTICATION failed")
-        } else {
-            res.locals.userInfo = {username: decoded.username, role: decoded.role, userID: decoded.userID};
-            next()
-        }
-    });
-}
+// const authenticateToken = (req, res, next) => {
+//     const authHeader = req.headers['authorization']
+//     // console.log("ORIGINAL COOKIE: ", authHeader);
+//     const token = authHeader && authHeader.split(' ')[1]
+//     // console.log("MODIFIED COOKIE: ", token)
+//     console.log('Authenticating token...')
+//     if (token == null) return res.sendStatus(401).json("Token was null")
+//     jwt.verify(token, process.env.TOKEN_SECRET, function(err, decoded) {
+//         if (err) {
+//             console.error("AN ERROR OCCURRED WHEN VERIFYING TOKEN: ", err)
+//             return res.status(403).json("USER AUTHENTICATION failed")
+//         } else {
+//             res.locals.userInfo = {username: decoded.username, role: decoded.role, userID: decoded.userID};
+//             next()
+//         }
+//     });
+// }
 
 const loadAnasayfa = async (username, role) => {
     try {
@@ -182,7 +182,7 @@ const verifyRegisterRoute = async (req, res, next) => {
 module.exports = {
     checkCredentials, 
     generateAccessToken, 
-    authenticateToken, 
+    // authenticateToken, 
     loadAnasayfa, 
     sendApplication, 
     verifyRegisterRoute
