@@ -1,8 +1,9 @@
 const express = require("express")
+const bcrypt = require("bcrypt")
 const pool = require("../../database");
 const { status500Error, customStatusError } = require("../../helpers/functions");
 const { getDealerApplications } = require("./functions")
-const { authenticateToken } = require("../../helpers/middleware")
+const { authenticateToken, verifyInputNotEmpty, verifyPasswordNoWhiteSpace } = require("../../helpers/middleware")
 
 const app = module.exports = express();
 
@@ -54,32 +55,79 @@ app.get("/application/:applicationID", authenticateToken, async(req, res) => {
     }
 })
 
-app.get("/applications/:query", async (req, res) => {
-    // const { userID } = res.locals.userInfo
-    const userID = "1fa5915jwksg069fe" //FOR TESTING PURPOSES, DELETE LATER, also add authenticateToken middleware
+app.get("/applications/:query", authenticateToken, async (req, res) => {
+    const { userID } = res.locals.userInfo
     const { query } = req.params
     const { status, interval, service, month, year } = req.query
     try {
         let selectQuery
+        // If the REQUEST QUERY variables are month and year
         if (month && year)
             selectQuery = await getDealerApplications(query, [month, year], userID, status, service)
+        // ELSE IF the REQUEST QUERY variables are interval
         else
             selectQuery = await getDealerApplications(query, interval, userID, status, service)
         return res.status(200).json(selectQuery)
     } catch (error) {
         console.log(error)
-        return res.status(500).json("Unable to fetch dealer applications")
+        return res.status(500).json("server error, Unable to fetch dealer applications")
     }
 })
 
-app.get("/bayi/applications", authenticateToken, async(req, res) => {
+app.get("/user", authenticateToken, async (req, res) => {
     try {
-        const username = res.locals.userInfo.username
-        const { status } = req.query
-        const response = await forDealerGetApplications(username, status)
-        res.status(200).json(response)
-    } catch (error) {
-        console.error(error)
-        res.status(500)
+        const { userID } = res.locals.userInfo
+        const selectStatement = "SELECT username, role, register_date, user_id, email, name FROM login WHERE user_id = $1"
+        const query = await pool.query(selectStatement, [userID])
+        return res.status(200).json(query.rows)
+    } catch (err) {
+        return status500Error(err, res, "server error, Could not fetch your information")
     }
 })
+
+// This route is responsible for changing the submitter's password
+app.patch("/user/password", verifyInputNotEmpty, verifyPasswordNoWhiteSpace, async (req, res) => {
+    try {
+        // const { userID } = res.locals.userInfo
+        const userID = "1fa591a4cksg064ub"
+        const { password } = req.body
+        const hash = await bcrypt.hash(password, 10);
+        const updateStatement = "UPDATE login SET hash = $1 WHERE user_id = $2"
+        await pool.query(updateStatement, [hash, userID])
+        return res.status(200).json("Your password change was a success")
+    } catch (err) {
+        return status500Error(err, res, "server error, unable to change your password")
+    }
+})
+// This route is responsible for changing the submitter's name (account name)
+app.patch("/user/name", verifyInputNotEmpty, async (req, res) => {
+    try {
+        // const { userID, userRole } = res.locals.userInfo
+        const userID = "1fa5915jwksg069fe"
+        const { name } = req.body
+        const updateStatement = "UPDATE login SET name = $1 WHERE user_id = $2"
+        await pool.query(updateStatement, [name, userID])
+        return res.status(200).json("Your name change was a success")
+    } catch (err) {
+        return status500Error(err, res, "server error, unable to change your name")
+    }
+})
+
+app.get("/goal", async (req, res) => {
+    const servicesQueryStatement = "SELECT name FROM services WHERE active = true AND profitable = true"
+    const servicesQuery = await pool.query(servicesQueryStatement)
+    
+    // const goalQuery = await pool.query("")
+})
+
+// app.get("/bayi/applications", authenticateToken, async(req, res) => {
+//     try {
+//         const username = res.locals.userInfo.username
+//         const { status } = req.query
+//         const response = await forDealerGetApplications(username, status)
+//         res.status(200).json(response)
+//     } catch (error) {
+//         console.error(error)
+//         res.status(500)
+//     }
+// })
