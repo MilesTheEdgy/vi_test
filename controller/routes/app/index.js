@@ -114,7 +114,17 @@ app.patch("/user/name", verifyInputNotEmpty, async (req, res) => {
 })
 
 app.get("/goal", async (req, res) => {
+    // if (res.locals.userInfo.userRole !== "")
+    // const reqSubmitter = res.locals.userInfo.username
+    // const { month, year, for } = req.query
+    const month = "8"
+    const year = "2021"
     const reqSubmitter = "ademiletişim"
+
+    const forUserCondition = " AND for_user = " + submitterParam
+    const extractMonthStatement = "AND EXTRACT(MONTH FROM for_date) = "
+    const extractYearStatement = "AND EXTRACT(YEAR FROM for_date) = "
+    const goalQueryStatement = "SELECT * FROM goals WHERE service IN (" + joinedParams + ") "
     const servicesQueryStatement = "SELECT name FROM services WHERE active = true AND profitable = true"
     // Get the services
     const servicesQuery = await pool.query(servicesQueryStatement)
@@ -123,21 +133,17 @@ app.get("/goal", async (req, res) => {
         return obj.name
     })
     // query parameters values EG: ['$1', '$2', '$3']
-    let params = [];
+    let serviceInParams = [];
     for(let i = 1; i <= services.length; i++) {
-        params.push('$' + i);
+        serviceInParams.push('$' + i);
     }
-    // ADD one more $ param for the SUBMITTER condition
-    const submitterParam = "$" + (params.length + 1)
-    // Prepare the parameter array for the query, create an array with the values of services array + reqSubmitter 
-    const paramArrayValues = [...services, reqSubmitter]
+    // Prepare the parameter array for the query, create an array with the values of services array + reqSubmitter
     // joined query params EG: "$1, $2, $3"
-    const joinedParams = params.join(',')
-    const goalQueryStatement = "SELECT * FROM goals WHERE service IN (" + joinedParams + ") AND for_user = " + submitterParam
+    const joinedParams = serviceInParams.join(',')
     console.log('FINAL STATEMENT: ', goalQueryStatement)
     const goalQuery = await pool.query(goalQueryStatement, paramArrayValues)
     console.log(goalQuery.rows)
-    return res.json(goalQuery.rows)
+    return res.json("okey")
 })
 
 // app.get("/bayi/applications", authenticateToken, async(req, res) => {
