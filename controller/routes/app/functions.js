@@ -96,7 +96,7 @@ const fetchDigerServices = async (userID) => {
 }
 
 const fetchAppsAccordToInterval = async (query, interval, selectStatement, conditionArr, conditionQueryArr) => {
-    // DATE Interval is REQUIRED
+    const conditionTime = conditionQueryArr[0]
     //verified condition params and query arrays
     let verifiedConditionParamsArr = []
     // if interval = ALL, add conditionTime at first index. Reason is the for loops pushes any value that !== ALL.
@@ -147,7 +147,6 @@ const getDealerApplications = async (query, date = "ALL", userID, status = "ALL"
         return mapAppsAccordToServices(userID)
     if (service === "diger")
         return fetchDigerServices(userID)
-
     // Get dealer's username according to his user ID
     const getDealerName = await pool.query("SELECT username FROM login WHERE user_id = $1", [userID])
     const dealerName = getDealerName.rows[0].username
@@ -162,15 +161,15 @@ const getDealerApplications = async (query, date = "ALL", userID, status = "ALL"
     const conditionStatus = "sales_applications.status = "
     const conditionService = "sales_applications_details.selected_service = "
     const serviceTUR = switchServiceNameToTurkish(service)
+
+    // IF user is querying as an interval(day, month, year)...
     if (typeof date === "string" ||typeof date === "number") {
-        //original condition params and query arrays
         const interval = date
         const conditionTime = convertDateInputToSQLInterval(interval)
         const conditionArr = [interval, dealerName, status, serviceTUR]
         const conditionQueryArr = [conditionTime, conditionSubmitter, conditionStatus, conditionService]
         return fetchAppsAccordToInterval(query, interval, selectStatement, conditionArr, conditionQueryArr)
-    } else { // ELSE if user is querying as an exact date with month and year format
-        //original condition params and query arrays
+    } else { // ELSE if user is querying as an exact date with month and year format...
         const [month, year] = date
         const extractMonthCondition = "EXTRACT(MONTH FROM sales_applications.submit_time) = "
         const extracYearCondition = "EXTRACT(YEAR FROM sales_applications.submit_time) = "    
