@@ -24,6 +24,7 @@ DEALER:
     )
     * POST new application
 ----------------------------------------------------
+SD AND SDC CAN GET SPECIFIC USER THROUGH user/:userid
 SD:
     * PUT application (
         id

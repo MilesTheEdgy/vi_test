@@ -115,9 +115,23 @@ app.patch("/user/name", verifyInputNotEmpty, async (req, res) => {
 
 app.get("/goal", async (req, res) => {
     const servicesQueryStatement = "SELECT name FROM services WHERE active = true AND profitable = true"
+    // Get the services
     const servicesQuery = await pool.query(servicesQueryStatement)
-    
-    // const goalQuery = await pool.query("")
+    // Map the values to make services array
+    const services = servicesQuery.rows.map(obj => {
+        return obj.name
+    })
+    // query parameters values EG: ['$1', '$2', '$3']
+    let params = [];
+    for(let i = 1; i <= services.length; i++) {
+        params.push('$' + i);
+    }
+    // joined query params EG: "$1, $2, $3"
+    const joinedParams = params.join(',')
+    const goalQueryStatement = "SELECT * FROM goals WHERE service IN (" + joinedParams + ")"
+    const goalQuery = await pool.query(goalQueryStatement, services)
+    console.log(goalQuery.rows)
+    return res.json("okey")
 })
 
 // app.get("/bayi/applications", authenticateToken, async(req, res) => {
