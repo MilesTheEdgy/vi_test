@@ -114,6 +114,7 @@ app.patch("/user/name", verifyInputNotEmpty, async (req, res) => {
 })
 
 app.get("/goal", async (req, res) => {
+    const reqSubmitter = "ademiletişim"
     const servicesQueryStatement = "SELECT name FROM services WHERE active = true AND profitable = true"
     // Get the services
     const servicesQuery = await pool.query(servicesQueryStatement)
@@ -126,12 +127,17 @@ app.get("/goal", async (req, res) => {
     for(let i = 1; i <= services.length; i++) {
         params.push('$' + i);
     }
+    // ADD one more $ param for the SUBMITTER condition
+    const submitterParam = "$" + (params.length + 1)
+    // Prepare the parameter array for the query, create an array with the values of services array + reqSubmitter 
+    const paramArrayValues = [...services, reqSubmitter]
     // joined query params EG: "$1, $2, $3"
     const joinedParams = params.join(',')
-    const goalQueryStatement = "SELECT * FROM goals WHERE service IN (" + joinedParams + ")"
-    const goalQuery = await pool.query(goalQueryStatement, services)
+    const goalQueryStatement = "SELECT * FROM goals WHERE service IN (" + joinedParams + ") AND for_user = " + submitterParam
+    console.log('FINAL STATEMENT: ', goalQueryStatement)
+    const goalQuery = await pool.query(goalQueryStatement, paramArrayValues)
     console.log(goalQuery.rows)
-    return res.json("okey")
+    return res.json(goalQuery.rows)
 })
 
 // app.get("/bayi/applications", authenticateToken, async(req, res) => {
