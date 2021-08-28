@@ -1,4 +1,7 @@
 CLEANING UP THE SERVER:
+
+    * ADD AN ADRESS FIELD TO EACH USER!!!!
+
     * Try out the routes folder one by one. starting with VERIFY
 
 Would having a single dotenv.config statement, alongside process.env statements, suffice?

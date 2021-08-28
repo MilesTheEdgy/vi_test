@@ -1,6 +1,7 @@
 const pool = require("../../database")
 
-const queryConstructor = (selectStatement, conditionArr) => {
+// a query constructor specific to INTERVAL queries
+const queryConstructorInterval = (selectStatement, conditionArr) => {
     let conditionText = ""
     for (let i = 0; i < conditionArr.length; i++) {
         if (i === 0)
@@ -10,6 +11,8 @@ const queryConstructor = (selectStatement, conditionArr) => {
     }
     return selectStatement + conditionText
 }
+
+// Converts the INTERVAL input sent through the REQUEST INTERVAL QUERY PARAMS to an sql statement, and returns an sql statement
 const convertDateInputToSQLInterval = (interval) => {
     console.log('VALUE OF INTERVAL ', interval)
     let conditionTime = "submit_time > now() - interval"
@@ -35,6 +38,7 @@ const convertDateInputToSQLInterval = (interval) => {
     return conditionTime
 }
 
+// no explanation needed
 const switchServiceNameToTurkish = (service) => {
     let q_service = ""
     switch (service) {
@@ -54,6 +58,7 @@ const switchServiceNameToTurkish = (service) => {
     return q_service
 }
 
+// a query constructor specific to DATE queries
 const queryConstructorDate = (selectStatement, conditionArr) => {
     let conditionText = ""
     for (let i = 0; i < conditionArr.length; i++) {
@@ -65,7 +70,15 @@ const queryConstructorDate = (selectStatement, conditionArr) => {
     return selectStatement + conditionText
 }
 
-// ADD THIS FUNCTION SOME EXPLANATION!!!!!!!!!
+// This function runs through a special condition, it maps through all the services, and it returns an array of objects
+// each object has a unique key property which is the 'service', and a status count for each service. EG:
+//  {
+//     "service": "Taahüt"
+//     "approvedCount": "0",
+//     "rejectedCount": "1",
+//     "processingCount": "3",
+//     "sentCount": "0",
+//   }
 const mapAppsAccordToServices = async (userID) => {
     const FOR_SDC_GET_APPLICATION_CRITERIA_COUNT = "SELECT COUNT(sales_applications.submitter) FROM sales_applications WHERE sales_applications.status = $1 AND sales_applications.id IN (SELECT id FROM sales_applications_details WHERE selected_service = $2) AND sales_applications.submitter = (SELECT username FROM login WHERE user_id = $3)"
     const services = await pool.query("SELECT (name) FROM services WHERE active = true")
@@ -112,17 +125,14 @@ const fetchAppsAccordToInterval = async (query, interval, selectStatement, condi
     // the query statement.
     if (interval !== "ALL")
         verifiedConditionParamsArr.shift()
-    const queryString = queryConstructor(selectStatement, verifiedConditionQueryArr)
+    const queryString = queryConstructorInterval(selectStatement, verifiedConditionQueryArr)
     // console.log(queryString, verifiedConditionParamsArr)
     const dbQuery = await pool.query(queryString, verifiedConditionParamsArr)
-    if (query !== "details") {
-        console.log(queryString)
-    }
     // if query is details, return the entire array of objects, else return only the object in the array.
     return query === "details" ? dbQuery.rows : dbQuery.rows[0]
 }
 
-const fetchAppsAccordToDate = async (selectStatement, conditionArr, conditionQueryArr) => {
+const fetchAppsAccordToDate = async (query, selectStatement, conditionArr, conditionQueryArr) => {
     //verified condition params and query arrays
     let verifiedConditionParamsArr = []
     let verifiedConditionQueryArr = []
@@ -133,7 +143,7 @@ const fetchAppsAccordToDate = async (selectStatement, conditionArr, conditionQue
         }
     }
     const queryString = queryConstructorDate(selectStatement, verifiedConditionQueryArr)
-    // console.log(queryString, verifiedConditionParamsArr)
+    // console.log(queryString, "\n", verifiedConditionParamsArr)
     const dbQuery = await pool.query(queryString, verifiedConditionParamsArr)
 
     // if query is details, return the entire array of objects, else return only the object in the array.
@@ -175,7 +185,7 @@ const getDealerApplications = async (query, date = "ALL", userID, status = "ALL"
         const extracYearCondition = "EXTRACT(YEAR FROM sales_applications.submit_time) = "    
         const conditionArr = [Number(month), Number(year), dealerName, status, serviceTUR]
         const conditionQueryArr = [extractMonthCondition, extracYearCondition, conditionSubmitter, conditionStatus, conditionService]
-        return fetchAppsAccordToDate(selectStatement, conditionArr, conditionQueryArr)
+        return fetchAppsAccordToDate(query, selectStatement, conditionArr, conditionQueryArr)
     }
 }
 

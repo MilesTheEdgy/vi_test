@@ -9,71 +9,39 @@ SHARED:
     * GET application (
         id
     )
-    * GET user information
-    * PUT user username, password
     * GET service (
         all OPTION(true, false) 
         offers ALL
         profitable OPTION(true, false)
     )
-    * GET goal   
-
+    * GET user information
+    * PATCH user username, password
+    * GET goal
+----------------------------------------------------
 DEALER:
-    * GET applications sales (
-        dealer OPTION(name, ALL, SD-AREA)
-        query OPTION(count, details)
-        interval OPTION(day, month, year, ALL)
-        status OPTION(approved, rejected, processing, ALL)
-        service OPTION($services, ALL, MAP)
-    )
     * GET application (
         id
     )
     * POST new application
-    * GET service (
-        all OPTION(true, false) 
-        offers ALL
-        profitable OPTION(true, false)
-    )
-    * GET user information
-    * Put user username, password
+----------------------------------------------------
+SD AND SDC CAN GET SPECIFIC USER THROUGH user/:userid
 SD:
-    * GET applications sales (
-        dealer OPTION(name, ALL, SD-AREA)
-        query OPTION(count, details)
-        interval OPTION(day, month, year, ALL)
-        status OPTION(approved, rejected, processing, ALL)
-        service OPTION($services, ALL, MAP)
-    )
-    * GET application (
-        id
-    )
     * PUT application (
         id
     )
     * GET users(dealers)
-    * GET user information
-    * Put user username, password
-
+    * GET goals
+----------------------------------------------------
 SDC:
-    * GET applications sales (
-        dealer OPTION(name, ALL, SD-AREA)
-        query OPTION(count, details)
-        interval OPTION(day, month, year, ALL)
-        status OPTION(approved, rejected, processing, ALL)
-        service OPTION($services, ALL, MAP)
-    )
-    * GET application (
-        id
-    )
     * PUT application (
         id
     )
     * GET users(SD, dealers)
     * PUT user (
         active
+        role
     )
-    * GET goal
+    * GET goals
     * POST goal
     * PUT goal
     * DELETE goal
