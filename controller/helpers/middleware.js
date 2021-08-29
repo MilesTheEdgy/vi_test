@@ -39,6 +39,7 @@ const verifyInputNotEmpty = (req, res, next) => {
             i++
         }
     }
+    console.log('REQ BODY: ', req.body)
     //Map object values to array
     const reqBodyArr = Object.values(req.body)
     // loop over it
