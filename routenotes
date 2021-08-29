@@ -19,9 +19,6 @@ SHARED:
     * GET goal
 ----------------------------------------------------
 DEALER:
-    * GET application (
-        id
-    )
     * POST new application
 ----------------------------------------------------
 SD AND SDC CAN GET SPECIFIC USER THROUGH user/:userid

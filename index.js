@@ -33,6 +33,7 @@ const {
 
 const verifyRoute = require("./controller/routes/verify")
 const generalRoute = require("./controller/routes/app")
+const dealerRoute = require("./controller/routes/dealer")
 
 // dotenv.config();
 // process.env.TOKEN_SECRET;
@@ -72,6 +73,7 @@ app.use(express.static(path.join(__dirname+'/pages/enternewpass/build')));
 app.use(cors());
 app.use(verifyRoute)
 app.use(generalRoute)
+app.use(dealerRoute)
 
 pool.on('error', (err, client) => {
     console.error('Unexpected error on idle client', err)
@@ -129,73 +131,73 @@ app.get("/bayi/anasayfa", authenticateToken, async(req, res) => {
     }
 })
 
-app.post("/applications", authenticateToken, upload.array("image", 3), async(req, res) => {
-    try {
-        const handleError = (err, res) => {
-            console.log(err)
-            res.status(500).json("An error occurred during application submission")
-        };
+// app.post("/applications", authenticateToken, upload.array("image", 3), async(req, res) => {
+//     try {
+//         const handleError = (err, res) => {
+//             console.log(err)
+//             res.status(500).json("An error occurred during application submission")
+//         };
 
-        const userInfo = res.locals.userInfo
-        const { files } = req
-        const { selectedService, selectedOffer, clientDescription, clientWantsRouter, clientName} = req.body;
+//         const userInfo = res.locals.userInfo
+//         const { files } = req
+//         const { selectedService, selectedOffer, clientDescription, clientWantsRouter, clientName} = req.body;
 
-        if (!selectedService || !clientDescription || !clientName)
-            return res.status(403).json("one or more field was empty")
+//         if (!selectedService || !clientDescription || !clientName)
+//             return res.status(403).json("one or more field was empty")
 
-        console.log(files)
-        console.log(req.body)
-        const highestApplicationIDQuery = await pool.query("SELECT MAX(id) FROM sales_applications;")
-        const highestApplicationID = highestApplicationIDQuery.rows[0].max
-        for (let i = 0; i < files.length; i++) {
-            const fileExtension = path.extname(files[i].originalname).toLowerCase() 
-            console.log("fileExtension", fileExtension)
-            const imageUniqID = `${userInfo.userID}-${uniqid.process()}`
-            console.log("imageUniqID", imageUniqID);
-            fs.renameSync(`${files[i].path}`, `${files[i].destination}/${imageUniqID+fileExtension}`);
-        }
-        const imageFolderPath = path.join(__dirname + "/uploads")
-        console.log('imageFolderPath', imageFolderPath)
-        let dbImageURLS = []
-        fs.readdir(imageFolderPath, (err, filePaths) => {
-            console.log('in READDIR function...')
-            if (err)
-                return handleError(err, res)
-            console.log('passed readdir function, moving onto cloudinary upload loop...')
-            console.log("filePaths", filePaths)
-            for (let i = 0; i < filePaths.length; i++) {
-                console.log('in cloudinary upload loop number ', i)
-                cloudinary.uploader.upload(__dirname + "/uploads/" + filePaths[i], {
-                     public_id: `iys/dealer_submissions/${userInfo.userID}/${highestApplicationID}/${filePaths[i].split('.').slice(0, -1).join('.')}`
-                    }, async (err, result) => {
-                    if (err) {
-                        return handleError(err, res)
-                    }
-                    else {
-                        console.log(result); 
-                        dbImageURLS.push(result.secure_url)
-                        console.log('deleting from storage...')
-                        //send log
-                        await pool.query("INSERT INTO adminlogs (action, by, date) VALUES ('sent application', $1, CURRENT_TIMESTAMP)", [userInfo.username])
-                        fs.unlink(__dirname + "/uploads/" + filePaths[i], async err => {
-                        if (err)
-                            return handleError(err, res)
-                        console.log('deleted')
-                        console.log("dbImageURLS", dbImageURLS)
-                        if (dbImageURLS.length === 3)
-                            await sendApplication(userInfo, selectedService, selectedOffer, clientWantsRouter, clientDescription, clientName, dbImageURLS, res)
-                        });
-                    }
-                });
-            }
-            // return res.status(200).json("an error occurred during application submission")
-        })
+//         console.log(files)
+//         console.log(req.body)
+//         const highestApplicationIDQuery = await pool.query("SELECT MAX(id) FROM sales_applications;")
+//         const highestApplicationID = highestApplicationIDQuery.rows[0].max
+//         for (let i = 0; i < files.length; i++) {
+//             const fileExtension = path.extname(files[i].originalname).toLowerCase() 
+//             console.log("fileExtension", fileExtension)
+//             const imageUniqID = `${userInfo.userID}-${uniqid.process()}`
+//             console.log("imageUniqID", imageUniqID);
+//             fs.renameSync(`${files[i].path}`, `${files[i].destination}/${imageUniqID+fileExtension}`);
+//         }
+//         const imageFolderPath = path.join(__dirname + "/uploads")
+//         console.log('imageFolderPath', imageFolderPath)
+//         let dbImageURLS = []
+//         fs.readdir(imageFolderPath, (err, filePaths) => {
+//             console.log('in READDIR function...')
+//             if (err)
+//                 return handleError(err, res)
+//             console.log('passed readdir function, moving onto cloudinary upload loop...')
+//             console.log("filePaths", filePaths)
+//             for (let i = 0; i < filePaths.length; i++) {
+//                 console.log('in cloudinary upload loop number ', i)
+//                 cloudinary.uploader.upload(__dirname + "/uploads/" + filePaths[i], {
+//                      public_id: `iys/dealer_submissions/${userInfo.userID}/${highestApplicationID}/${filePaths[i].split('.').slice(0, -1).join('.')}`
+//                     }, async (err, result) => {
+//                     if (err) {
+//                         return handleError(err, res)
+//                     }
+//                     else {
+//                         console.log(result); 
+//                         dbImageURLS.push(result.secure_url)
+//                         console.log('deleting from storage...')
+//                         //send log
+//                         await pool.query("INSERT INTO adminlogs (action, by, date) VALUES ('sent application', $1, CURRENT_TIMESTAMP)", [userInfo.username])
+//                         fs.unlink(__dirname + "/uploads/" + filePaths[i], async err => {
+//                         if (err)
+//                             return handleError(err, res)
+//                         console.log('deleted')
+//                         console.log("dbImageURLS", dbImageURLS)
+//                         if (dbImageURLS.length === 3)
+//                             await sendApplication(userInfo, selectedService, selectedOffer, clientWantsRouter, clientDescription, clientName, dbImageURLS, res)
+//                         });
+//                     }
+//                 });
+//             }
+//             // return res.status(200).json("an error occurred during application submission")
+//         })
 
-    } catch (error) {
-        console.error(error)
-        res.status(500)
-    }
-})
+//     } catch (error) {
+//         console.error(error)
+//         res.status(500)
+//     }
+// })
 
 // app.get("/bayi/applications", authenticateToken, async(req, res) => {
 //     try {

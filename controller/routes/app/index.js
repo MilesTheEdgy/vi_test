@@ -2,7 +2,7 @@ const express = require("express")
 const bcrypt = require("bcrypt")
 const pool = require("../../database");
 const { status500Error, customStatusError } = require("../../helpers/functions");
-const { getDealerApplications } = require("./functions")
+const { getDealerApplications, getGoal, getServices } = require("./functions")
 const { authenticateToken, verifyInputNotEmpty, verifyPasswordNoWhiteSpace } = require("../../helpers/middleware")
 
 const app = module.exports = express();
@@ -113,37 +113,24 @@ app.patch("/user/name", verifyInputNotEmpty, async (req, res) => {
     }
 })
 
+// This route is responsible for returning goals, it takes the arguments in req.query
+// The arguments are dynamic and can be omitted. It returns an object with details
+// regarding the respective query.
 app.get("/goal", async (req, res) => {
-    // if (res.locals.userInfo.userRole !== "")
-    // const reqSubmitter = res.locals.userInfo.username
-    // const { month, year, for } = req.query
-    const month = "8"
-    const year = "2021"
-    const reqSubmitter = "ademiletişim"
-
-    const forUserCondition = " AND for_user = " + submitterParam
-    const extractMonthStatement = "AND EXTRACT(MONTH FROM for_date) = "
-    const extractYearStatement = "AND EXTRACT(YEAR FROM for_date) = "
-    const goalQueryStatement = "SELECT * FROM goals WHERE service IN (" + joinedParams + ") "
-    const servicesQueryStatement = "SELECT name FROM services WHERE active = true AND profitable = true"
-    // Get the services
-    const servicesQuery = await pool.query(servicesQueryStatement)
-    // Map the values to make services array
-    const services = servicesQuery.rows.map(obj => {
-        return obj.name
-    })
-    // query parameters values EG: ['$1', '$2', '$3']
-    let serviceInParams = [];
-    for(let i = 1; i <= services.length; i++) {
-        serviceInParams.push('$' + i);
+    try {
+        const { service, userID, month, date } = req.query
+        let submitterID
+        // If the submitter's role is a dealer, assign submitter ID to his own ID
+        if (res.locals.userInfo.userRole === "dealer")
+            submitterID = res.locals.userInfo.userID
+        // else assign submitterID to whatever the requester sent in req.query
+        else
+            submitterID = userID
+        const result = await getGoal(service, submitterID, month, date)
+        return res.json(result)
+    } catch (err) {
+        return status500Error(err, res, "server error, could not fetch your goal")
     }
-    // Prepare the parameter array for the query, create an array with the values of services array + reqSubmitter
-    // joined query params EG: "$1, $2, $3"
-    const joinedParams = serviceInParams.join(',')
-    console.log('FINAL STATEMENT: ', goalQueryStatement)
-    const goalQuery = await pool.query(goalQueryStatement, paramArrayValues)
-    console.log(goalQuery.rows)
-    return res.json("okey")
 })
 
 // app.get("/bayi/applications", authenticateToken, async(req, res) => {
