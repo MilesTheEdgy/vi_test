@@ -6,7 +6,7 @@ const jwt = require("jsonwebtoken");
 const pool = require("../../database/index");
 const mailgun = require("../../../lib/mailgun")
 const uniqid = require('uniqid');
-const { authenticateToken } = require("../../helpers/middleware")
+const { authenticateToken, verifyPasswordNoWhiteSpace } = require("../../helpers/middleware")
 const {
     verifyCredentials,
     generateAccessToken
@@ -28,11 +28,12 @@ const app = module.exports = express();
 app.post("/", authenticateToken, async (req, res) => {
     try {
         const dbUserTable = await pool.query("SELECT username, role FROM login WHERE username = $1", [res.locals.userInfo.username]);
-        const { username, role } = dbUserTable.rows[0];
+        const { username, role, name } = dbUserTable.rows[0];
         console.log(role);
         return res.status(200).json({
-            username: username,
+            username,
             userRole: role,
+            name
         })
     } catch (error) {
         console.error(error);
@@ -41,16 +42,18 @@ app.post("/", authenticateToken, async (req, res) => {
 
 app.post("/login", verifyCredentials, async(req, res) => {
     try {
-        const { username, role, userID } = res.locals.userInfo
+        const { username, role, userID, name } = res.locals.userInfo
         let token = generateAccessToken({
             username, 
             role, 
-            userID
+            userID,
+            name
         })
         return res.status(200).json({
             token: token,
             username,
             userRole: role,
+            name
         });
     } catch (error) {
         console.error(error);
@@ -59,7 +62,7 @@ app.post("/login", verifyCredentials, async(req, res) => {
 
 // this code handles the registeration prodcedure by inserting a new record into the database
 // that contains the user's info, and sends a verification link to the user's email.
-app.post("/register", verifyRegisterRoute, async(req, res) => {
+app.post("/register", verifyRegisterRoute, verifyPasswordNoWhiteSpace, async(req, res) => {
     try {
         const { username, password, dealerName, email } = req.body;
         // Generate a unique ID as email verification param

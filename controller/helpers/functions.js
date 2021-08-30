@@ -1,4 +1,5 @@
 const uniqid = require("uniqid")
+const pool = require("../database")
 
 const status500Error = (err, res, resErrorString) => {
     console.log(err)
@@ -38,9 +39,9 @@ const arrayCompare = (_arr1, _arr2) => {
     return true;
 }
 
-const verifyReqBodyExpectedObjKeys = (objKeysArr, req, res) => {
+const verifyReqObjExpectedObjKeys = (objKeysArr, reqObj, res) => {
     let requestObjArr = []
-    for (const key in req.body) {
+    for (const key in reqObj) {
         requestObjArr.push(key)
     }
     if (!arrayCompare(requestObjArr, objKeysArr)) {
@@ -50,8 +51,48 @@ const verifyReqBodyExpectedObjKeys = (objKeysArr, req, res) => {
         
 }
 
+const switchServiceNameToTurkish = (service) => {
+    let q_service = ""
+    switch (service) {
+        case "Faturasiz":
+            q_service = "Faturasız"; break;
+        case "Faturali":
+            q_service = "Faturalı"; break;
+        case "taahut":
+            q_service = "Taahüt"; break;
+        case "iptal":
+            q_service = "İptal"; break;
+        case "tivibu":
+            q_service = "Tivibu"; break;
+        default:
+            q_service = service;
+    }
+    return q_service
+}
+
+// a query constructor specific to DATE queries
+const queryConstructorDate = (selectStatement, conditionArr) => {
+    let conditionText = ""
+    for (let i = 0; i < conditionArr.length; i++) {
+        if (i === 0)
+            conditionText = ` WHERE ${conditionArr[i]} $${i+1}`
+        else
+            conditionText = conditionText + " AND " + conditionArr[i] + `$${i+1}`
+    }
+    return selectStatement + conditionText
+}
+
+const getDealerName = async (userID) => {
+    const query = await pool.query("SELECT username FROM login WHERE user_id = $1", [userID])
+    return query.rows[0].username
+}
+
+
 module.exports = {
     status500Error,
     customStatusError,
-    verifyReqBodyExpectedObjKeys
+    verifyReqObjExpectedObjKeys,
+    switchServiceNameToTurkish,
+    queryConstructorDate,
+    getDealerName
 }

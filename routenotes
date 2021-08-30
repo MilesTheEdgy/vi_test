@@ -30,9 +30,6 @@ SD:
     * GET goals
 ----------------------------------------------------
 SDC:
-    * PUT application (
-        id
-    )
     * GET users(SD, dealers)
     * PUT user (
         active

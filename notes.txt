@@ -1,3 +1,10 @@
+TOKEN VALUES {
+            username, 
+            role, 
+            userID,
+            name
+}
+
 CLEANING UP THE SERVER:
 
     * ADD AN ADRESS FIELD TO EACH USER!!!!

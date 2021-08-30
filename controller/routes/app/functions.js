@@ -1,9 +1,5 @@
 const pool = require("../../database")
-
-const getDealerName = async (userID) => {
-    const query = await pool.query("SELECT username FROM login WHERE user_id = $1", [userID])
-    return query.rows[0].username
-}
+const { switchServiceNameToTurkish, queryConstructorDate, getDealerName } = require("../../helpers/functions")
 
 // a query constructor specific to INTERVAL queries
 const queryConstructorInterval = (selectStatement, conditionArr) => {
@@ -43,37 +39,7 @@ const convertDateInputToSQLInterval = (interval) => {
     return conditionTime
 }
 
-// no explanation needed
-const switchServiceNameToTurkish = (service) => {
-    let q_service = ""
-    switch (service) {
-        case "Faturasiz":
-            q_service = "Faturasız"; break;
-        case "Faturali":
-            q_service = "Faturalı"; break;
-        case "taahut":
-            q_service = "Taahüt"; break;
-        case "iptal":
-            q_service = "İptal"; break;
-        case "tivibu":
-            q_service = "Tivibu"; break;
-        default:
-            q_service = service;
-    }
-    return q_service
-}
 
-// a query constructor specific to DATE queries
-const queryConstructorDate = (selectStatement, conditionArr) => {
-    let conditionText = ""
-    for (let i = 0; i < conditionArr.length; i++) {
-        if (i === 0)
-            conditionText = ` WHERE ${conditionArr[i]} $${i+1}`
-        else
-            conditionText = conditionText + " AND " + conditionArr[i] + `$${i+1}`
-    }
-    return selectStatement + conditionText
-}
 
 // This function runs through a special condition, it maps through all the services, and it returns an array of objects
 // each object has a unique key property which is the 'service', and a status count for each service. EG:
@@ -205,47 +171,7 @@ const getServices = async () => {
     return services
 }
 
-const getGoal = async (services = "ALL", userID = "ALL", month = "ALL", year = "ALL") => {
-    // Statements...
-    const goalSelectStatement = "SELECT * FROM goals"
-    const serviceConditionStatement = "service ="
-    const userConditionStatement = "for_user = "
-    const extractMonthStatement = "EXTRACT(MONTH FROM for_date) ="
-    const extractYearStatement = "EXTRACT(YEAR FROM for_date) ="
-
-    // If username == "ALL", dont change it since it will be omitted below anyways, ELSE get username accord to it's ID
-    let username
-    if (userID === "ALL")
-        username = "ALL"
-    else username = await getDealerName(userID)
-    // If service == "ALL", dont change it since it will be omitted below anyways, ELSE, to prevent unicode in URL query
-    // params, switch the service name to turkish letters to match it in the database
-    let service
-    if (services === "ALL")
-        service = services
-    else service = switchServiceNameToTurkish(services)
-
-    // Original arrays of query parameters and statements
-    const queryParams = [service, username, month, year]
-    const queryConditionStatements = [serviceConditionStatement, userConditionStatement, extractMonthStatement, extractYearStatement]
-
-    // Verified arrays of query parameters and statements
-    let verifiedQueryParams = []
-    let verifiedQueryConditionStatements = []
-    for (let i = 0; i < queryParams.length; i++) {
-        if (queryParams[i] !== "ALL") {
-            verifiedQueryParams.push(queryParams[i])
-            verifiedQueryConditionStatements.push(queryConditionStatements[i])
-        }
-    }
-    // Final statement that will get submitted
-    const finalQueryStatement = queryConstructorDate(goalSelectStatement, verifiedQueryConditionStatements)
-    const finalQuery = await pool.query(finalQueryStatement, verifiedQueryParams)
-    return finalQuery.rows
-}
-
 module.exports = {
     getDealerApplications,
-    getGoal,
     getServices
 }

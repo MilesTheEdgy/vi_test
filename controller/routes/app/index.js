@@ -2,7 +2,8 @@ const express = require("express")
 const bcrypt = require("bcrypt")
 const pool = require("../../database");
 const { status500Error, customStatusError } = require("../../helpers/functions");
-const { getDealerApplications, getGoal, getServices } = require("./functions")
+const { getDealerApplications, getServices } = require("./functions")
+const { getGoal } = require("../sharedfunctions")
 const { authenticateToken, verifyInputNotEmpty, verifyPasswordNoWhiteSpace } = require("../../helpers/middleware")
 
 const app = module.exports = express();
@@ -55,6 +56,7 @@ app.get("/application/:applicationID", authenticateToken, async(req, res) => {
     }
 })
 
+
 app.get("/applications/:query", authenticateToken, async (req, res) => {
     const { userID } = res.locals.userInfo
     const { query } = req.params
@@ -86,10 +88,10 @@ app.get("/user", authenticateToken, async (req, res) => {
 })
 
 // This route is responsible for changing the submitter's password
-app.patch("/user/password", verifyInputNotEmpty, verifyPasswordNoWhiteSpace, async (req, res) => {
+app.patch("/user/password", authenticateToken, verifyInputNotEmpty, verifyPasswordNoWhiteSpace, async (req, res) => {
     try {
-        // const { userID } = res.locals.userInfo
-        const userID = "1fa591a4cksg064ub"
+        const { userID } = res.locals.userInfo
+        // const userID = "1fa591a4cksg064ub"
         const { password } = req.body
         const hash = await bcrypt.hash(password, 10);
         const updateStatement = "UPDATE login SET hash = $1 WHERE user_id = $2"
@@ -100,10 +102,10 @@ app.patch("/user/password", verifyInputNotEmpty, verifyPasswordNoWhiteSpace, asy
     }
 })
 // This route is responsible for changing the submitter's name (account name)
-app.patch("/user/name", verifyInputNotEmpty, async (req, res) => {
+app.patch("/user/name", authenticateToken, verifyInputNotEmpty, async (req, res) => {
     try {
-        // const { userID, userRole } = res.locals.userInfo
-        const userID = "1fa5915jwksg069fe"
+        const { userID } = res.locals.userInfo
+        // const userID = "1fa5915jwksg069fe"
         const { name } = req.body
         const updateStatement = "UPDATE login SET name = $1 WHERE user_id = $2"
         await pool.query(updateStatement, [name, userID])

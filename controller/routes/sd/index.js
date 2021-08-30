@@ -1,18 +1,33 @@
 const express = require("express");
 const pool = require("../../database");
-const { customStatusError, status500Error, verifyReqBodyExpectedObjKeys } = require("../../helpers/functions");
+const { customStatusError, status500Error, verifyReqObjExpectedObjKeys } = require("../../helpers/functions");
 const { authenticateToken, verifyInputNotEmpty } = require("../../helpers/middleware");
 const { verifyUpdateApplication } = require("./middleware");
-const { updateApplicationPhase1, updateApplicationPhase2 } = require("./functions");
+const { 
+    updateApplicationPhase1, 
+    updateApplicationPhase2, 
+    getSdUsers,
+    verifyUserID,
+    verifySdResponsibleForUser
+} = require("./functions");
+const { getGoal } = require("../sharedfunctions")
 
 const app = module.exports = express();
 
+// This route is responsible for updating an application's status, alongside a short explanation regarding the status change.
+// It accepts two fields from req.body. { salesRepDetails, statusChange }. These two fields are mandatory. It fires two functions
+// based on a condition:
+// IF the application has the current status of 'sent', call updateApplicationPhase1 function.
+// IF the application has the current status of 'sent' and statusChange of 'rejected', call updateApplicationPhase2 function.
+// IF the application DOES NOT have current status of 'sent', call updateApplicationPhase2 function.
 app.put(
-    "/application/:applicationID", 
+    "/application/:applicationID",
+    authenticateToken,
     verifyInputNotEmpty, 
     verifyUpdateApplication,
     async (req, res) => {
-    verifyReqBodyExpectedObjKeys(["salesRepDetails", "statusChange"], req, res)
+    // verify expected request body object keys
+    verifyReqObjExpectedObjKeys(["salesRepDetails", "statusChange"], req, res)
 
     // deconstructure the appID and status values from verifyUpdateApplication middleware
     const { appID, currentStatus } = res.locals.updateAppQuery
@@ -22,21 +37,23 @@ app.put(
     const serverErrorStr = "server error occurred while attempting to update application"
     const unexpectedStatusChangePhase1 = "Expected 'processing' or 'rejected' instead got '" + statusChange + "' AT " + __dirname 
     const unexpectedStatusChangePhase2 = "Expected 'approved' or 'rejected' instead got '" + statusChange + "' AT " + __dirname 
-    // const d = new Date()
-    // const currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`
 
     const client = await pool.connect()
     try {
         await client.query('BEGIN')
-        // define server error string in case of error
-        let result // result returns an object that contains done bool, and if err, error string keys.
-        // if the application has not been processed yet
+        let result // result returns an object that contains done bool, and IF err, error string keys.
+        // if the application has not been processed yet...
         if (currentStatus === "sent") {
-            // prevent unexpected status change input
+            // IF approved, return error to prevent unexpected status change input (user can not update an application to 'approved' that has current status of 'sent')
             if (statusChange === "approved")
                 return customStatusError(unexpectedStatusChangePhase1, res, 401, "Unexpected input")
-            result = await updateApplicationPhase1(client, statusChange, salesRepDetails, appID)
-        // else the application has been processed, and awaits approval or rejection
+            // IF rejected, jump to phase2 since no further updates will be allowed after 'rejected' status
+            else if (statusChange === "rejected")
+                result = await updateApplicationPhase2(client, statusChange, salesRepDetails, appID)
+            // ELSE
+            else
+                result = await updateApplicationPhase1(client, statusChange, salesRepDetails, appID)
+        // else the application has been processed, and awaits approval or rejection...
         } else {
             // prevent unexpected status change input
             if (statusChange === "processing")
@@ -62,34 +79,33 @@ app.put(
 
 })
 
-// THE CODE ABOVE AND THE CODE BELOW CAN BE A SINGLE ROUTE WITH TWO functions that one of them runs on condition!!!!
+// This route is pretty straight forward. It returns a list of dealer users that fall under the responsibility of the SD who submitted
+// this request.
+app.get("/users", authenticateToken, async (req, res) => {
+    const userInfo = res.locals
+    const { userRole, name } = userInfo
+    if (userRole === "sales_assistant")
+        await getSdUsers(name, res)
+    else
+        return customStatusError("user '" + name + "' attempted to access /users but did not have 'sales_assistant' role", res, 403, "You do not have permission to access this route")
+})
 
-app.put("/basvurular/:applicationID/sp", authenticateToken, async (req, res) => {
-    const client = await pool.connect()
-    const userInfo = res.locals.userInfo
-    if (userInfo.role === "sales_assistant" || userInfo.role === "sales_assistant_chef") {
-        const { applicationID } = req.params
-        const { salesRepDetails, statusChange } = req.body
-        const d = new Date()
-        const currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`
-        try {
-            const query = await client.query("SELECT last_change_date FROM sales_applications WHERE id = $1", [applicationID])
-            // if (query.rows[0].last_change_date !== null)
-            //     return res.status(401).json("You cannot set application status to approved without first procedures")
-            await client.query('BEGIN')
-            await client.query("UPDATE sales_applications_details SET final_sales_rep_details = $1 WHERE id = $2",
-            [salesRepDetails, applicationID])
-            await client.query("UPDATE sales_applications SET status = $1, last_change_date = $2 WHERE id = $3", [statusChange, currentDate, applicationID])
-            await client.query('COMMIT')
-            res.status(200).json("Application was updated successfully")
-        } catch (e) {
-            console.log(e)
-            await client.query('ROLLBACK')
-            return res.status(500).json("An error occurred while attempting to update application")
-        } finally {
-            client.release()
+
+// This route returns a specific user's goal, it first verifies if the SD request submitter's requested user's goal BELONGS to his area
+// along with some other checks, if all checks pass, it returns that user's goal 
+app.get("/goal/sd", async(req, res) => {
+    // const sdID = res.locals.userInfo.userID
+    const { userID, services, month, year } = req.query
+    const sdID = "1fa591a4cksg064ub"
+    if (userID) {
+        await verifyUserID(userID, res)
+        if (!await verifySdResponsibleForUser(userID, sdID)) {
+            const errorStr = "user ID '" + userInfo.userID + "' attempted to access /goal/sd and fetch specific user ID '"+ req.query.userID +"'s goal but did not have permission because the user does not fall under their responsibility at "+ __dirname
+            return customStatusError(errorStr, res, 403, "you are not responsible for this user")
         }
+        const dealerGoals = await getGoal(services, userID, month, year)
+        return res.json(dealerGoals)
     } else {
-        return res.status(401).json("this user does not have sales assistant premission")
+        res.json('req query is empty')
     }
 })
