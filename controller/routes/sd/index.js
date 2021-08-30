@@ -1,42 +1,63 @@
 const express = require("express");
 const pool = require("../../database");
 const { customStatusError, status500Error, verifyReqBodyExpectedObjKeys } = require("../../helpers/functions");
-const { authenticateToken, verifyInputNotEmpty } = require("../../helpers/middleware")
+const { authenticateToken, verifyInputNotEmpty } = require("../../helpers/middleware");
+const { verifyUpdateApplication } = require("./middleware");
+const { updateApplicationPhase1, updateApplicationPhase2 } = require("./functions");
 
 const app = module.exports = express();
 
-app.put("/application/:applicationID", verifyInputNotEmpty, async (req, res) => {
-    verifyReqBodyExpectedObjKeys(["salesRepDetails", "statusChange"], res)
-    const client = await pool.connect()
-    // if an ID that doesn't exist in database gets sent, nothing get's updated but no error get's triggered.
+app.put(
+    "/application/:applicationID", 
+    verifyInputNotEmpty, 
+    verifyUpdateApplication,
+    async (req, res) => {
+    verifyReqBodyExpectedObjKeys(["salesRepDetails", "statusChange"], req, res)
 
-    // const { userRole } = res.locals.userInfo
-    const userRole = "sales_assistant_chef"
-    if (userRole !== "sales_assistant" && userRole !== "sales_assistant_chef")
-        return customStatusError("submitted request does not have SD or SDC role", res, 401, "You are not authorized to update applications")
-    const { applicationID } = req.params
+    // deconstructure the appID and status values from verifyUpdateApplication middleware
+    const { appID, currentStatus } = res.locals.updateAppQuery
+    // get the sales rep (sales assistant) details and new status from req.body
     const { salesRepDetails, statusChange } = req.body
-    const d = new Date()
+    // error strings
+    const serverErrorStr = "server error occurred while attempting to update application"
+    const unexpectedStatusChangePhase1 = "Expected 'processing' or 'rejected' instead got '" + statusChange + "' AT " + __dirname 
+    const unexpectedStatusChangePhase2 = "Expected 'approved' or 'rejected' instead got '" + statusChange + "' AT " + __dirname 
+    // const d = new Date()
+    // const currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`
+
+    const client = await pool.connect()
     try {
-        const query = await client.query("SELECT last_change_date FROM sales_applications WHERE id = $1", [applicationID])
-        // *** because I updated the status records of the database manually, I temporarily commented the lines of code below, I need to uncomment them again
-        // *** In order for me to do that, It would be easier to delete all existing applications and make new ones.
-        // if (query.rows[0].last_change_date !== null)
-        //     return res.status(401).json("You cannot set application status to approved without first procedures")
-        console.log("query", query.rows)
-        const currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`
         await client.query('BEGIN')
-        await client.query("UPDATE sales_applications_details SET sales_rep_details = $1, status_change_date = $2 WHERE id = $3",
-            [salesRepDetails, currentDate, applicationID])
-        await client.query("UPDATE sales_applications SET status = $1 WHERE id = $2", [statusChange, applicationID])
-        await client.query('COMMIT')
-        res.status(200).json("Application was updated successfully")
-        
+        // define server error string in case of error
+        let result // result returns an object that contains done bool, and if err, error string keys.
+        // if the application has not been processed yet
+        if (currentStatus === "sent") {
+            // prevent unexpected status change input
+            if (statusChange === "approved")
+                return customStatusError(unexpectedStatusChangePhase1, res, 401, "Unexpected input")
+            result = await updateApplicationPhase1(client, statusChange, salesRepDetails, appID)
+        // else the application has been processed, and awaits approval or rejection
+        } else {
+            // prevent unexpected status change input
+            if (statusChange === "processing")
+                return customStatusError(unexpectedStatusChangePhase2, res, 401, "Unexpected input")
+            result = await updateApplicationPhase2(client, statusChange, salesRepDetails, appID)
+        }
+        // if everything runs successfully...
+        if (result.done) {
+            await client.query('COMMIT')
+            return res.status(200).json("Application was updated successfully")
+        // ELSE
+        } else {
+            await client.query('ROLLBACK')
+            return status500Error(result.error, res, serverErrorStr)
+        }
+        // an extra catch block in main function that does more or less the same as the above error functions
         } catch (err) {
-        await client.query('ROLLBACK')
-        return status500Error(err, res, "server error occurred while attempting to update application")
+            await client.query('ROLLBACK')
+            return status500Error(err, res, serverErrorStr)
         } finally {
-        client.release()
+            client.release()
         }
 
 })

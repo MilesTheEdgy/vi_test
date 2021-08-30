@@ -38,14 +38,16 @@ const arrayCompare = (_arr1, _arr2) => {
     return true;
 }
 
-const verifyReqBodyExpectedObjKeys = (objKeysArr, res) => {
-    const errorStr = "Compared the requested obj keys array and expected obj keys array returned false at "+__dirname
+const verifyReqBodyExpectedObjKeys = (objKeysArr, req, res) => {
     let requestObjArr = []
     for (const key in req.body) {
         requestObjArr.push(key)
     }
-    if (arrayCompare(requestObjArr, objKeysArr))
+    if (!arrayCompare(requestObjArr, objKeysArr)) {
+        const errorStr = `Expected object keys: { ${objKeysArr} } GOT: { ${requestObjArr} } at ${__dirname}`
         return customStatusError(errorStr, res, 401, "Unexpected input")
+    }
+        
 }
 
 module.exports = {
