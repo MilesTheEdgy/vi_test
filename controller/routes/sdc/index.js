@@ -3,6 +3,7 @@ const pool = require("../../database");
 const { customStatusError, status500Error, verifyUserAndReturnInfo } = require("../../helpers/functions");
 const { authenticateToken, verifyReqBodyObjValuesNotEmpty, verifyReqBodyObjNoWhiteSpace } = require("../../helpers/middleware");
 const { verifyReqObjExpectedObjKeys, verifyInputNotEmptyFunc } = require("../../helpers/functions")
+const { verifyDateNotOlderThanCurnt, verifyGoalDoesNotExist } = require("./functions")
 
 const app = module.exports = express();
 
@@ -108,19 +109,21 @@ app.put("/user/assign/role", authenticateToken, async (req, res) => {
   }
 })
 
-app.post("/goal", verifyReqBodyObjValuesNotEmpty, verifyReqBodyObjNoWhiteSpace, async (req, res) => {
-  const userInfo = {
-    userID: "1fa591688ksg060ch",
-    userRole: "sales_assistant_chef"
-  }
+app.post("/goal", authenticateToken, verifyReqBodyObjValuesNotEmpty, verifyReqBodyObjNoWhiteSpace, async (req, res) => {
+  // const userInfo = {
+  //   userID: "1fa591688ksg060ch",
+  //   userRole: "sales_assistant_chef"
+  // }
+
+  const userInfo = res.locals
 
   // VERIFICATION BEGINS
   verifyReqObjExpectedObjKeys(["userID", "date", "service", "goal"], req.body, res)
   const { userID, date, service, goal } = req.body
   if (userInfo.userRole !== "sales_assistant_chef")
-    return customStatusError("unauthorized access, no sales_assistant_chef role /user/assign/role at"+__dirname, res, 401, "Unauthorized route")
+    return customStatusError("unauthorized access, no sales_assistant_chef role /goal at"+__dirname, res, 401, "Unauthorized route")
   try {
-    const requestedUserInfo = await verifyUserAndReturnInfo(userID) 
+    const requestedUserInfo = await verifyUserAndReturnInfo(userID)
     // check if returned user information object from verifyUserAndReturnInfo query is empty
     if (Object.keys(requestedUserInfo).length === 0 && requestedUserInfo.constructor === Object) {
       const errorUserDoesNotExist = "user with ID '" + userID + "' does not exist in database"
@@ -133,15 +136,77 @@ app.post("/goal", verifyReqBodyObjValuesNotEmpty, verifyReqBodyObjNoWhiteSpace, 
       return customStatusError(errorUnauthorizedUpdate, res, 400, "You are not authorized to make this update")
     }
 
-    const servicesStatement = "SELECT "
-
+    // get services and store them in array
+    const servicesStatement = "SELECT * FROM services WHERE active = true AND profitable = TRUE"
+    const servicesQuery = await pool.query(servicesStatement)
+    const servicesArr = servicesQuery.rows.map(obj => obj.name)
+    // check if 'service' value from req.body exists in services array, if false return 401
+    if (servicesArr.includes(service) === false) {
+      const errorStrUnexpectedInput = "expected input in array '" + servicesArr + "' got " + service
+      return customStatusError(errorStrUnexpectedInput, res, 401, "Unexpected input")
+    }
+    // I'm verifying if the input date is older than the present date, the func below returns an object with keys {ok, error, verifiedDate} and I'm basing my condition on that
+    const isDateOlderThanPresent = verifyDateNotOlderThanCurnt(date)
+    if (isDateOlderThanPresent.ok === false)
+      return customStatusError(isDateOlderThanPresent.error, res, 401, "inputted date is old UNACCEPTED INPUT")
+    // doing something similar here, verifiyng if the goal with the same date, service and userID values already exists
+    const doesGoalAlreadyExist = await verifyGoalDoesNotExist(date, service, userID)
+    if(doesGoalAlreadyExist.ok === false)
+      return customStatusError(doesGoalAlreadyExist.error, doesGoalAlreadyExist.statusCode, 401, "This goal already exists")
+    // This verification function returns a date value called verifiedDate, that has the normal year month input, but it resets day to 01 EG: 2021-08-01 OR 2022-11-01
+    const { verifiedDate } = isDateOlderThanPresent
     // VERIFICATION ENDS
+    try {
+      const queryString = "INSERT INTO goals(service, goal, for_date, for_user_id, submit_date, done, success) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, 0, false)"
+      await pool.query(queryString, [service, goal, verifiedDate, userID])
+    } catch (error) {
+      return status500Error(error, res, "Could not insert goal")
+    }
 
-    await pool.query("UPDATE login SET role = $1 WHERE user_id = $2", [toRole, userID])
-    res.status(200).json("User status update was a success")
+    res.status(200).json("Your goal was added successfully!")
   } catch (err) {
     return status500Error(err, res, "server error occurred while attempting to PUT user")
   }
+})
 
-  
+app.post("/service", async (req, res) => {
+  const userInfo = {
+    userID: "1fa591688ksg060ch",
+    userRole: "sales_assistant_chef"
+  }
+  const { newServiceName, newServiceDescription, isProfitable } = req.body
+  if (userInfo.userRole !== "sales_assistant_chef")
+    return customStatusError("unauthorized access, no sales_assistant_chef role /service at"+__dirname, res, 401, "Unauthorized route")
+  try {
+    // get services and store them in array
+    const servicesStatement = "SELECT * FROM services WHERE active = true AND profitable = TRUE"
+    const servicesQuery = await pool.query(servicesStatement)
+    const servicesArr = servicesQuery.rows.map(obj => obj.name)
+    // check if 'service' value from req.body exists in services array, if false return 401
+    if (servicesArr.includes(service) === false) {
+      const errorStrUnexpectedInput = "expected input in array '" + servicesArr + "' got " + service
+      return customStatusError(errorStrUnexpectedInput, res, 401, "Unexpected input")
+    }
+    // I'm verifying if the input date is older than the present date, the func below returns an object with keys {ok, error, verifiedDate} and I'm basing my condition on that
+    const isDateOlderThanPresent = verifyDateNotOlderThanCurnt(date)
+    if (isDateOlderThanPresent.ok === false)
+      return customStatusError(isDateOlderThanPresent.error, res, 401, "inputted date is old UNACCEPTED INPUT")
+    // doing something similar here, verifiyng if the goal with the same date, service and userID values already exists
+    const doesGoalAlreadyExist = await verifyGoalDoesNotExist(date, service, userID)
+    if(doesGoalAlreadyExist.ok === false)
+      return customStatusError(doesGoalAlreadyExist.error, doesGoalAlreadyExist.statusCode, 401, "This goal already exists")
+    // This verification function returns a date value called verifiedDate, that has the normal year month input, but it resets day to 01 EG: 2021-08-01 OR 2022-11-01
+    const { verifiedDate } = isDateOlderThanPresent
+    // VERIFICATION ENDS
+    try {
+      const queryString = "INSERT INTO goals(service, goal, for_date, for_user_id, submit_date, done, success) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, 0, false)"
+      await pool.query(queryString, [service, goal, verifiedDate, userID])
+    } catch (error) {
+      return status500Error(error, res, "Could not insert goal")
+    }
+
+    res.status(200).json("Your goal was added successfully!")
+  } catch (err) {
+    return status500Error(err, res, "server error occurred while attempting to PUT user")
+  }
 })

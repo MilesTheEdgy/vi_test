@@ -37,8 +37,8 @@ SDC:
     )
     * GET goals
     * POST goal
-    * PUT goal
-    * DELETE goal
+    * PUT goal (maybe in the future)
+    * DELETE goal (maybe in the future)
     * POST service
     * PUT service
     * DELETE service
