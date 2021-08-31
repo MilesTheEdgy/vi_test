@@ -2,14 +2,14 @@ const express = require("express")
 const bcrypt = require("bcrypt")
 const pool = require("../../database");
 const { status500Error, customStatusError } = require("../../helpers/functions");
-const { getDealerApplications, getServices } = require("./functions")
+const { getDealerApplications, getServices, getSdUsers, getSdcUsers, getSdUser, getSdcUser } = require("./functions")
 const { getGoal } = require("../sharedfunctions")
-const { authenticateToken, verifyInputNotEmpty, verifyPasswordNoWhiteSpace } = require("../../helpers/middleware")
+const { authenticateToken, verifyReqBodyObjValuesNotEmpty, verifyReqBodyPasswordNoWhiteSpace } = require("../../helpers/middleware")
 
 const app = module.exports = express();
 
 // This route returns all of the services, takes profitable as route query argument. 
-app.get("/services", async (req, res) => {
+app.get("/services", authenticateToken, async (req, res) => {
     try {
         const { profitable } = req.query
         let serviceQuery
@@ -88,7 +88,7 @@ app.get("/user", authenticateToken, async (req, res) => {
 })
 
 // This route is responsible for changing the submitter's password
-app.patch("/user/password", authenticateToken, verifyInputNotEmpty, verifyPasswordNoWhiteSpace, async (req, res) => {
+app.patch("/user/password", authenticateToken, verifyReqBodyObjValuesNotEmpty, verifyReqBodyPasswordNoWhiteSpace, async (req, res) => {
     try {
         const { userID } = res.locals.userInfo
         // const userID = "1fa591a4cksg064ub"
@@ -102,7 +102,7 @@ app.patch("/user/password", authenticateToken, verifyInputNotEmpty, verifyPasswo
     }
 })
 // This route is responsible for changing the submitter's name (account name)
-app.patch("/user/name", authenticateToken, verifyInputNotEmpty, async (req, res) => {
+app.patch("/user/name", authenticateToken, verifyReqBodyObjValuesNotEmpty, async (req, res) => {
     try {
         const { userID } = res.locals.userInfo
         // const userID = "1fa5915jwksg069fe"
@@ -115,10 +115,46 @@ app.patch("/user/name", authenticateToken, verifyInputNotEmpty, async (req, res)
     }
 })
 
+// This route is pretty straight forward. dealer role are not allowed to access it but SD and SDC can.
+// It returns a specific user that fall under the responsibility of the SD who submitted
+// this request. Or if the submitter is SDC, returns any specific user requested by SDC
+app.get("/user/:requestedUserID", authenticateToken, async (req, res) => {
+    // FOR TESTING PURPOSES DELETE BELOW OBJECT LATER
+    // const userInfo = {
+    //     userRole: "sales_assistant_chef",
+    //     name: "Adnan Oktar",
+    //     userID: "1fa591a4cksg064ub"
+    // }
+    const { userInfo } = res.locals
+    const requesterID = userInfo.userID
+    const { requestedUserID } = req.params
+    const { userRole } = userInfo
+    if (userRole === "sales_assistant")
+        await getSdUser(requesterID, requestedUserID, res)
+    else if (userRole === "sales_assistant_chef")
+        await getSdcUser(requestedUserID, res)
+    else
+        return customStatusError("user ID'" + requesterID + "' attempted to access /users but did not have 'sales_assistant' role", res, 403, "You do not have permission to access this route")
+})
+
+// This route is also pretty straight forward. dealer role are not allowed to access it but SD and SDC can.
+// It returns a list of dealer users that fall under the responsibility of the SD who submitted
+// this request. Or if the submitter is SDC, returns all users
+app.get("/users", authenticateToken, async (req, res) => {
+    const { userInfo } = res.locals
+    const { userRole, name } = userInfo
+    if (userRole === "sales_assistant")
+        await getSdUsers(name, res)
+    else if (userRole === "sales_assistant_chef")
+        await getSdcUsers(res)
+    else
+        return customStatusError("user '" + name + "' attempted to access /users but did not have 'sales_assistant' role", res, 403, "You do not have permission to access this route")
+})
+
 // This route is responsible for returning goals, it takes the arguments in req.query
 // The arguments are dynamic and can be omitted. It returns an object with details
 // regarding the respective query.
-app.get("/goal", async (req, res) => {
+app.get("/goal", authenticateToken, async (req, res) => {
     try {
         const { service, userID, month, date } = req.query
         let submitterID

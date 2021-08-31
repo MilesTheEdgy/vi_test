@@ -8,7 +8,7 @@ const uniqid = require('uniqid');
 const { authenticateToken } = require("../../helpers/middleware")
 const { sendApplication } = require("./functions");
 const { status500Error, customStatusError } = require("../../helpers/functions");
-const { verifyInputNotEmpty } = require("../../helpers/middleware");
+const { verifyReqBodyObjValuesNotEmpty } = require("../../helpers/middleware");
 
 const imageStorage = multer.diskStorage({
     // Destination to store image     
@@ -41,7 +41,7 @@ cloudinary.config({
 
 const app = module.exports = express();
 
-app.post("/applications", authenticateToken, verifyInputNotEmpty, upload.array("image", 3), async(req, res) => {
+app.post("/applications", authenticateToken, verifyReqBodyObjValuesNotEmpty, upload.array("image", 3), async(req, res) => {
     try {
         if (userInfo.userRole !== "dealer")
             return customStatusError("user does not have premission to submit", res, 401, "user does not have premission to submit")

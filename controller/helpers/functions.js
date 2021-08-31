@@ -47,8 +47,16 @@ const verifyReqObjExpectedObjKeys = (objKeysArr, reqObj, res) => {
     if (!arrayCompare(requestObjArr, objKeysArr)) {
         const errorStr = `Expected object keys: { ${objKeysArr} } GOT: { ${requestObjArr} } at ${__dirname}`
         return customStatusError(errorStr, res, 401, "Unexpected input")
+    }       
+}
+
+const verifyInputNotEmptyFunc = (reqObj, res) => {
+    const reqObjArr = Object.values(reqObj)
+    for (let i = 0; i < reqObjArr.length; i++) {
+        if (reqObjArr[i] === "")
+            return false            
     }
-        
+    return true
 }
 
 const switchServiceNameToTurkish = (service) => {
@@ -87,12 +95,21 @@ const getDealerName = async (userID) => {
     return query.rows[0].username
 }
 
+const verifyUserAndReturnInfo = async (userID) => {
+    const query = await pool.query("SELECT username, hash, role, active, register_date, user_id, email, name, assigned_area FROM login WHERE user_id = $1", [userID])
+    if (query.rows.length === 0)
+        return {}
+    return query.rows[0]
+}
+
 
 module.exports = {
     status500Error,
     customStatusError,
     verifyReqObjExpectedObjKeys,
+    verifyInputNotEmptyFunc,
     switchServiceNameToTurkish,
     queryConstructorDate,
-    getDealerName
+    getDealerName,
+    verifyUserAndReturnInfo
 }

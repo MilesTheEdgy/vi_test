@@ -6,7 +6,7 @@ const jwt = require("jsonwebtoken");
 const pool = require("../../database/index");
 const mailgun = require("../../../lib/mailgun")
 const uniqid = require('uniqid');
-const { authenticateToken, verifyPasswordNoWhiteSpace } = require("../../helpers/middleware")
+const { authenticateToken, verifyReqBodyPasswordNoWhiteSpace } = require("../../helpers/middleware")
 const {
     verifyCredentials,
     generateAccessToken
@@ -62,7 +62,7 @@ app.post("/login", verifyCredentials, async(req, res) => {
 
 // this code handles the registeration prodcedure by inserting a new record into the database
 // that contains the user's info, and sends a verification link to the user's email.
-app.post("/register", verifyRegisterRoute, verifyPasswordNoWhiteSpace, async(req, res) => {
+app.post("/register", verifyRegisterRoute, verifyReqBodyPasswordNoWhiteSpace, async(req, res) => {
     try {
         const { username, password, dealerName, email } = req.body;
         // Generate a unique ID as email verification param

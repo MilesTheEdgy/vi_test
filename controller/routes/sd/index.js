@@ -1,12 +1,11 @@
 const express = require("express");
 const pool = require("../../database");
 const { customStatusError, status500Error, verifyReqObjExpectedObjKeys } = require("../../helpers/functions");
-const { authenticateToken, verifyInputNotEmpty } = require("../../helpers/middleware");
+const { authenticateToken, verifyReqBodyObjValuesNotEmpty } = require("../../helpers/middleware");
 const { verifyUpdateApplication } = require("./middleware");
 const { 
     updateApplicationPhase1, 
     updateApplicationPhase2, 
-    getSdUsers,
     verifyUserID,
     verifySdResponsibleForUser
 } = require("./functions");
@@ -20,10 +19,9 @@ const app = module.exports = express();
 // IF the application has the current status of 'sent', call updateApplicationPhase1 function.
 // IF the application has the current status of 'sent' and statusChange of 'rejected', call updateApplicationPhase2 function.
 // IF the application DOES NOT have current status of 'sent', call updateApplicationPhase2 function.
-app.put(
-    "/application/:applicationID",
+app.put("/application/:applicationID",
     authenticateToken,
-    verifyInputNotEmpty, 
+    verifyReqBodyObjValuesNotEmpty, 
     verifyUpdateApplication,
     async (req, res) => {
     // verify expected request body object keys
@@ -78,18 +76,6 @@ app.put(
         }
 
 })
-
-// This route is pretty straight forward. It returns a list of dealer users that fall under the responsibility of the SD who submitted
-// this request.
-app.get("/users", authenticateToken, async (req, res) => {
-    const userInfo = res.locals
-    const { userRole, name } = userInfo
-    if (userRole === "sales_assistant")
-        await getSdUsers(name, res)
-    else
-        return customStatusError("user '" + name + "' attempted to access /users but did not have 'sales_assistant' role", res, 403, "You do not have permission to access this route")
-})
-
 
 // This route returns a specific user's goal, it first verifies if the SD request submitter's requested user's goal BELONGS to his area
 // along with some other checks, if all checks pass, it returns that user's goal 

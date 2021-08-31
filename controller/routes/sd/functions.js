@@ -26,16 +26,6 @@ const updateApplicationPhase2 = async (client, statusChange, salesRepDetails, ap
     }
 }
 
-const getSdUsers = async (name, res) => {
-    try {
-        getUsersQueryStatement = "SELECT name, register_date, active, role FROM login WHERE assigned_to = (SELECT responsible_area FROM login WHERE name = $1)"
-        const getUsersAccordToResponibleArea = await pool.query(getUsersQueryStatement, [name])
-        return res.status(200).json(getUsersAccordToResponibleArea.rows)
-    } catch (err) {
-        return status500Error(err, res, "server error could not fetch dealer users")
-    }
-}
-
 const verifyUserID = async (userID, res) => {
     try {
         verifyStatement = "SELECT user_id FROM login WHERE user_id = $1"
@@ -62,7 +52,6 @@ const verifySdResponsibleForUser = async (userID, sdID) => {
 module.exports = {
     updateApplicationPhase1,
     updateApplicationPhase2,
-    getSdUsers,
     verifyUserID,
     verifySdResponsibleForUser,
 }

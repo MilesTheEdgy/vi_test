@@ -1,5 +1,5 @@
 const pool = require("../../database")
-const { switchServiceNameToTurkish, queryConstructorDate, getDealerName } = require("../../helpers/functions")
+const { switchServiceNameToTurkish, queryConstructorDate, getDealerName, customStatusError } = require("../../helpers/functions")
 
 // a query constructor specific to INTERVAL queries
 const queryConstructorInterval = (selectStatement, conditionArr) => {
@@ -171,7 +171,59 @@ const getServices = async () => {
     return services
 }
 
+const getSdUsers = async (name, res) => {
+    try {
+        getUsersQueryStatement = "SELECT name, register_date, active, role FROM login WHERE assigned_area = (SELECT assigned_area FROM login WHERE name = $1)"
+        const getUsersAccordToResponibleArea = await pool.query(getUsersQueryStatement, [name])
+        return res.status(200).json(getUsersAccordToResponibleArea.rows)
+    } catch (err) {
+        return status500Error(err, res, "server error could not fetch dealer users")
+    }
+}
+
+const getSdcUsers = async (res) => {
+    try {
+        getUsersQueryStatement = "SELECT name, user_id register_date, active, role FROM login"
+        const getUserQuery = await pool.query(getUsersQueryStatement)
+        return res.status(200).json(getUserQuery.rows)
+    } catch (err) {
+        return status500Error(err, res, "server error could not fetch dealer users")
+    }
+}
+
+const getSdUser = async (requesterID, userID, res) => {
+    try {
+        getUsersQueryStatement = "SELECT name, register_date, active, role, assigned_area FROM login WHERE assigned_area = (SELECT assigned_area FROM login WHERE user_id = $1) AND user_id = $2"
+        const getUsersAccordToResponibleArea = await pool.query(getUsersQueryStatement, [requesterID, userID])
+        if (getUsersAccordToResponibleArea.rows.length === 0) {
+            const errorStr = "SD queried ID '" + userID + "' but no such id exist or SD does not have permission"
+            return customStatusError(errorStr, res, 400, "user does not exist or you do not have permission")
+        }
+        return res.status(200).json(getUsersAccordToResponibleArea.rows)
+    } catch (err) {
+        return status500Error(err, res, "server error could not fetch dealer user")
+    }
+}
+
+const getSdcUser = async (userID, res) => {
+    try {
+        getUsersQueryStatement = "SELECT name, user_id, register_date, active, role, assigned_area FROM login WHERE user_id = $1"
+        const getUserQuery = await pool.query(getUsersQueryStatement, [userID])
+        if (getUserQuery.rows.length === 0) {
+            const errorStr = "SDC queried ID '" + userID + "' but no such id exist"
+            return customStatusError(errorStr, res, 400, "user does not exist")
+        }
+        return res.status(200).json(getUserQuery.rows)
+    } catch (err) {
+        return status500Error(err, res, "server error could not fetch dealer user")
+    }
+}
+
 module.exports = {
     getDealerApplications,
-    getServices
+    getServices,
+    getSdUsers,
+    getSdcUsers,
+    getSdUser,
+    getSdcUser
 }

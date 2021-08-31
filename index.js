@@ -77,7 +77,7 @@ app.use(verifyRoute)
 app.use(generalRoute)
 app.use(dealerRoute)
 app.use(sdRoute)
-// app.use(sdcRoute)
+app.use(sdcRoute)
 
 pool.on('error', (err, client) => {
     console.error('Unexpected error on idle client', err)
@@ -104,133 +104,21 @@ app.get("/services", async (req, res) => {
 // if query has value of "count" it returns the applications count according to specific critera
 // if it's "details", it returns the columns of the application's details according to specific
 // criteria. 
-app.get("/dealer/applications/:query", authenticateToken, async (req, res) => {
-    const { userID } = res.locals.userInfo
-    // const dealerName = "ademiletişim"
-    const { query } = req.params
-    const { status, interval, service, month, year } = req.query
-    try {
-        let selectQuery
-        if (month && year)
-            selectQuery = await getDealerApplications(query, [month, year], userID, status, service)
-        else
-            selectQuery = await getDealerApplications(query, interval, userID, status, service)
-        return res.status(200).json(selectQuery)
-    } catch (error) {
-        console.log(error)
-        return res.status(500).json("Unable to fetch dealer applications")
-    }
-})
-
-app.get("/bayi/anasayfa", authenticateToken, async(req, res) => {
-    try {
-        let query = await loadAnasayfa(res.locals.userInfo.username, res.locals.userInfo.role)
-        if (query.ok)
-            return res.status(200).json(query.result)
-        else
-            return res.status(500).json("error at /bayi/anasayfa")
-    } catch (error) {
-        console.error(error)
-        res.status(500).json("error at /bayi/anasayfa")
-    }
-})
-
-// app.post("/applications", authenticateToken, upload.array("image", 3), async(req, res) => {
+// app.get("/dealer/applications/:query", authenticateToken, async (req, res) => {
+//     const { userID } = res.locals.userInfo
+//     // const dealerName = "ademiletişim"
+//     const { query } = req.params
+//     const { status, interval, service, month, year } = req.query
 //     try {
-//         const handleError = (err, res) => {
-//             console.log(err)
-//             res.status(500).json("An error occurred during application submission")
-//         };
-
-//         const userInfo = res.locals.userInfo
-//         const { files } = req
-//         const { selectedService, selectedOffer, clientDescription, clientWantsRouter, clientName} = req.body;
-
-//         if (!selectedService || !clientDescription || !clientName)
-//             return res.status(403).json("one or more field was empty")
-
-//         console.log(files)
-//         console.log(req.body)
-//         const highestApplicationIDQuery = await pool.query("SELECT MAX(id) FROM sales_applications;")
-//         const highestApplicationID = highestApplicationIDQuery.rows[0].max
-//         for (let i = 0; i < files.length; i++) {
-//             const fileExtension = path.extname(files[i].originalname).toLowerCase() 
-//             console.log("fileExtension", fileExtension)
-//             const imageUniqID = `${userInfo.userID}-${uniqid.process()}`
-//             console.log("imageUniqID", imageUniqID);
-//             fs.renameSync(`${files[i].path}`, `${files[i].destination}/${imageUniqID+fileExtension}`);
-//         }
-//         const imageFolderPath = path.join(__dirname + "/uploads")
-//         console.log('imageFolderPath', imageFolderPath)
-//         let dbImageURLS = []
-//         fs.readdir(imageFolderPath, (err, filePaths) => {
-//             console.log('in READDIR function...')
-//             if (err)
-//                 return handleError(err, res)
-//             console.log('passed readdir function, moving onto cloudinary upload loop...')
-//             console.log("filePaths", filePaths)
-//             for (let i = 0; i < filePaths.length; i++) {
-//                 console.log('in cloudinary upload loop number ', i)
-//                 cloudinary.uploader.upload(__dirname + "/uploads/" + filePaths[i], {
-//                      public_id: `iys/dealer_submissions/${userInfo.userID}/${highestApplicationID}/${filePaths[i].split('.').slice(0, -1).join('.')}`
-//                     }, async (err, result) => {
-//                     if (err) {
-//                         return handleError(err, res)
-//                     }
-//                     else {
-//                         console.log(result); 
-//                         dbImageURLS.push(result.secure_url)
-//                         console.log('deleting from storage...')
-//                         //send log
-//                         await pool.query("INSERT INTO adminlogs (action, by, date) VALUES ('sent application', $1, CURRENT_TIMESTAMP)", [userInfo.username])
-//                         fs.unlink(__dirname + "/uploads/" + filePaths[i], async err => {
-//                         if (err)
-//                             return handleError(err, res)
-//                         console.log('deleted')
-//                         console.log("dbImageURLS", dbImageURLS)
-//                         if (dbImageURLS.length === 3)
-//                             await sendApplication(userInfo, selectedService, selectedOffer, clientWantsRouter, clientDescription, clientName, dbImageURLS, res)
-//                         });
-//                     }
-//                 });
-//             }
-//             // return res.status(200).json("an error occurred during application submission")
-//         })
-
+//         let selectQuery
+//         if (month && year)
+//             selectQuery = await getDealerApplications(query, [month, year], userID, status, service)
+//         else
+//             selectQuery = await getDealerApplications(query, interval, userID, status, service)
+//         return res.status(200).json(selectQuery)
 //     } catch (error) {
-//         console.error(error)
-//         res.status(500)
-//     }
-// })
-
-// app.get("/bayi/applications", authenticateToken, async(req, res) => {
-//     try {
-//         const username = res.locals.userInfo.username
-//         const { status } = req.query
-//         const response = await forDealerGetApplications(username, status)
-//         res.status(200).json(response)
-//     } catch (error) {
-//         console.error(error)
-//         res.status(500)
-//     }
-// })
-
-// app.get("/applications/:applicationID", authenticateToken, async(req, res) => {
-//     try {
-//         // THIS ROUTE RETURNS ANY APPLICATION, ANY DEALER CAN ACCESS IT
-//         // ADD SOME VERIFICATION HERE!!!!!!!!!!!!!!!!!!!!!!
-//         //
-//         //
-//         //
-//         console.log("route hit")
-//         const { applicationID } = req.params
-//         let query = await pool.query("SELECT sales_applications.id, sales_applications.client_name, sales_applications.submit_time, sales_applications_details.selected_service, sales_applications_details.selected_offer, sales_applications_details.description, sales_applications.status, sales_applications_details.sales_rep_details, sales_applications_details.status_change_date, sales_applications_details.final_sales_rep_details, sales_applications.last_change_date, sales_applications_details.image_urls FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id WHERE sales_applications.id = $1",
-//         [applicationID])
-//         console.log(query.rows)
-//         res.status(200).json(query.rows)
-//     } catch (error) {
-//         console.error(error)
-//         res.status(500)
+//         console.log(error)
+//         return res.status(500).json("Unable to fetch dealer applications")
 //     }
 // })
 
@@ -250,74 +138,6 @@ app.get("/sd/basvurular/goruntule", authenticateToken, async (req, res) => {
         console.error(error);
     }
 })
-
-// app.put("/basvurular/:applicationID", authenticateToken, async (req, res) => {
-//     const client = await pool.connect()
-//     // if an ID that doesn't exist in database gets sent, nothing get's updated but no error get's triggered.
-//     const userInfo = res.locals.userInfo
-//     if (userInfo.role === "sales_assistant" || userInfo.role === "sales_assistant_chef") {
-//         const { applicationID } = req.params
-//         const { salesRepDetails, statusChange } = req.body
-//         const d = new Date()
-//         try {
-//             const query = await client.query("SELECT last_change_date FROM sales_applications WHERE id = $1", [applicationID])
-//             // *** because I updated the status records of the database manually, I temporarily commented the lines of code below, I need to uncomment them again
-//             // *** In order for me to do that, It would be easier to delete all existing applications and make new ones.
-//             // if (query.rows[0].last_change_date !== null)
-//             //     return res.status(401).json("You cannot set application status to approved without first procedures")
-//             console.log("query", query.rows)
-//             const currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`
-//             await client.query('BEGIN')
-//             await client.query("UPDATE sales_applications_details SET sales_rep_details = $1, status_change_date = $2 WHERE id = $3",
-//              [salesRepDetails, currentDate, applicationID])
-//             await client.query("UPDATE sales_applications SET status = $1 WHERE id = $2", [statusChange, applicationID])
-//             await client.query('COMMIT')
-//             res.status(200).json("Application was updated successfully")
-//           } catch (e) {
-//             console.log(e)
-//             await client.query('ROLLBACK')
-//             return res.status(500).json("An error occurred while attempting to update application")
-//           } finally {
-//             client.release()
-//           }
-//     } else {
-//           return res.status(401).json("this user does not have sales assistant premission")
-//       }
-
-// })
-
-// // THE CODE ABOVE AND THE CODE BELOW CAN BE A SINGLE ROUTE WITH TWO functions that one of them runs on condition!!!!
-
-// app.put("/basvurular/:applicationID/sp", authenticateToken, async (req, res) => {
-//     const client = await pool.connect()
-//     const userInfo = res.locals.userInfo
-//     if (userInfo.role === "sales_assistant" || userInfo.role === "sales_assistant_chef") {
-//         const { applicationID } = req.params
-//         const { salesRepDetails, statusChange } = req.body
-//         const d = new Date()
-//         const currentDate = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`
-//         try {
-//             const query = await client.query("SELECT last_change_date FROM sales_applications WHERE id = $1", [applicationID])
-//             // if (query.rows[0].last_change_date !== null)
-//             //     return res.status(401).json("You cannot set application status to approved without first procedures")
-//             await client.query('BEGIN')
-//             await client.query("UPDATE sales_applications_details SET final_sales_rep_details = $1 WHERE id = $2",
-//             [salesRepDetails, applicationID])
-//             await client.query("UPDATE sales_applications SET status = $1, last_change_date = $2 WHERE id = $3", [statusChange, currentDate, applicationID])
-//             await client.query('COMMIT')
-//             res.status(200).json("Application was updated successfully")
-//         } catch (e) {
-//             console.log(e)
-//             await client.query('ROLLBACK')
-//             return res.status(500).json("An error occurred while attempting to update application")
-//         } finally {
-//             client.release()
-//         }
-//     } else {
-//         return res.status(401).json("this user does not have sales assistant premission")
-//     }
-// })
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////// SATIŞ DESTEK ÇEF///////////////////////////////////////////////////////////////////////////////////////
@@ -357,10 +177,10 @@ app.put("/sdc/user/:userID", authenticateToken, async (req, res) => {
     try {
         await pool.query("UPDATE login SET active = NOT active WHERE user_id = $1", [userID])
         res.status(200).json("User status update was a success")
-      } catch (e) {
+    } catch (e) {
         console.log(e)
         return res.status(500).json("An error occurred while attempting to toggle user active status ")
-      }
+    }
 })
 
 app.get("/sdc/user/:userID/:query", authenticateToken, async (req, res) => {

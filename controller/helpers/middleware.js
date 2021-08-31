@@ -24,7 +24,7 @@ const authenticateToken = (req, res, next) => {
 
 
 // This middleware is responsible for checking whether req.body values are empty or not
-const verifyInputNotEmpty = (req, res, next) => {
+const verifyReqBodyObjValuesNotEmpty = (req, res, next) => {
     //arrIndex is the loop's index below at reqBodyArr, 
     const findObjKeyAndRtrnErrorString = (arrIndex) => {
         // declare index variable, initialize it to 0
@@ -53,8 +53,8 @@ const verifyInputNotEmpty = (req, res, next) => {
     next()
 }
 
-const verifyPasswordNoWhiteSpace = (req, res, next) => {
-    const errorStr = "Password field in req.body contains an empty space"
+const verifyReqBodyPasswordNoWhiteSpace = (req, res, next) => {
+    const errorStr = "verifyReqBodyPasswordNoWhiteSpace() Password field in req.body contains an empty space at"+__dirname
     const { password } = req.body
     const re = /\s/
     if (re.test(password))
@@ -62,9 +62,21 @@ const verifyPasswordNoWhiteSpace = (req, res, next) => {
     next()
 }
 
+const verifyReqBodyObjNoWhiteSpace = (req, res, next) => {
+    const errorStr = "verifyReqBodyObjNoWhiteSpace() req.body object values must not contain an empty space at"+__dirname
+    const reqBodyArr = Object.values(req.body)
+    const re = /\s/
+    for (let i = 0; i < reqBodyArr.length; i++) {
+        if (re.test(reqBodyArr[i]))
+            return customStatusError(errorStr, res, 403, "Your input must not contain an empty string")
+    }
+    next()
+}
+
 
 module.exports = {
     authenticateToken,
-    verifyInputNotEmpty,
-    verifyPasswordNoWhiteSpace
+    verifyReqBodyObjValuesNotEmpty,
+    verifyReqBodyPasswordNoWhiteSpace,
+    verifyReqBodyObjNoWhiteSpace
 }
