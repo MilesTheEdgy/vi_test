@@ -169,15 +169,64 @@ app.post("/goal", authenticateToken, verifyReqBodyObjValuesNotEmpty, verifyReqBo
   }
 })
 
-app.post("/service", async (req, res) => {
-  const userInfo = {
-    userID: "1fa591688ksg060ch",
-    userRole: "sales_assistant_chef"
-  }
+app.post("/service", authenticateToken, verifyReqBodyObjValuesNotEmpty, async (req, res) => {
+  // const userInfo = {
+  //   userID: "1fa591688ksg060ch",
+  //   userRole: "sales_assistant_chef"
+  // }
+  // VERIFICATION BEGINS
+  verifyReqObjExpectedObjKeys(["newServiceName", "newServiceDescription", "isProfitable"], req.body, res)
+  const { userInfo } = res.locals
   const { newServiceName, newServiceDescription, isProfitable } = req.body
   if (userInfo.userRole !== "sales_assistant_chef")
     return customStatusError("unauthorized access, no sales_assistant_chef role /service at"+__dirname, res, 401, "Unauthorized route")
   try {
+    // get services and store them in array to check if user's submitted service is not duplicate (The name column
+    // already has a unique constraint but still having a custom error message would be usefull)
+    const servicesStatement = "SELECT * FROM services WHERE active = true AND profitable = TRUE"
+    const servicesQuery = await pool.query(servicesStatement)
+    const servicesArr = servicesQuery.rows.map(obj => obj.name)
+    // check if 'service' value from req.body exists in services array, if true return 401
+    if (servicesArr.includes(newServiceName) === true) {
+      const errorStrUnexpectedInput = "services array '" + servicesArr + "' already contains the value '" + newServiceName + "' submitted by requester"
+      return customStatusError(errorStrUnexpectedInput, res, 401, "Service already exists")
+    }
+    // VERIFICATION ENDS
+    const queryString = "INSERT INTO services(name, description, profitable) VALUES ($1, $2, $3)"
+    await pool.query(queryString, [newServiceName, newServiceDescription, isProfitable])
+    return res.status(200).json("Your goal was added successfully!")
+  } catch (err) {
+    return status500Error(err, res, "Could not insert goal")
+  }
+})
+
+app.put("/service", authenticateToken, verifyReqBodyObjValuesNotEmpty, verifyReqBodyObjNoWhiteSpace, async (req, res) => {
+  // const userInfo = {
+  //   userID: "1fa591688ksg060ch",
+  //   userRole: "sales_assistant_chef"
+  // }
+
+  const userInfo = res.locals
+
+  // VERIFICATION BEGINS
+  verifyReqObjExpectedObjKeys(["userID", "date", "service", "goal"], req.body, res)
+  const { userID, date, service, goal } = req.body
+  if (userInfo.userRole !== "sales_assistant_chef")
+    return customStatusError("unauthorized access, no sales_assistant_chef role /goal at"+__dirname, res, 401, "Unauthorized route")
+  try {
+    const requestedUserInfo = await verifyUserAndReturnInfo(userID)
+    // check if returned user information object from verifyUserAndReturnInfo query is empty
+    if (Object.keys(requestedUserInfo).length === 0 && requestedUserInfo.constructor === Object) {
+      const errorUserDoesNotExist = "user with ID '" + userID + "' does not exist in database"
+      return customStatusError(errorUserDoesNotExist, res, 400, "This user does not exist")
+    }
+    const requestedUserRole = requestedUserInfo.role
+    // Requester cannot update sales_assistant_chef or admin.
+    if (requestedUserRole === "sales_assistant_chef" || requestedUserRole === "admin") {
+      const errorUnauthorizedUpdate = "user ID '" + userID + "' who is a '" + requestedUserRole +  "' attempted to get updated by requester, unauthorized! at "+__dirname
+      return customStatusError(errorUnauthorizedUpdate, res, 400, "You are not authorized to make this update")
+    }
+
     // get services and store them in array
     const servicesStatement = "SELECT * FROM services WHERE active = true AND profitable = TRUE"
     const servicesQuery = await pool.query(servicesStatement)
@@ -209,4 +258,9 @@ app.post("/service", async (req, res) => {
   } catch (err) {
     return status500Error(err, res, "server error occurred while attempting to PUT user")
   }
+})
+
+app.get("/testingstuff", async (req, res) => {
+  const query = await pool.query("SELECT * FROM services")
+  return res.json(query.rows)
 })

@@ -5,6 +5,9 @@ TOKEN VALUES {
             name
 }
 
+DATABASE:
+    Add UNIQUE CONSTRAINT to columns like username, user_id etc... check which one needs a unique constraint
+
 CLEANING UP THE SERVER:
 
     * ADD AN ADRESS FIELD TO EACH USER!!!!
