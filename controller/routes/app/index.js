@@ -17,7 +17,23 @@ app.get("/services", authenticateToken, async (req, res) => {
             serviceQuery = await pool.query("SELECT * FROM services WHERE active = true AND profitable = true")
         else
             serviceQuery = await pool.query("SELECT * FROM services WHERE active = true")
+        
         return res.status(200).json(serviceQuery.rows)
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json("an error occurred while fetching services data")
+    }
+})
+
+app.get("/service/:serviceID", async (req, res) => {
+    try {
+        const { serviceID } = req.params
+        const offersQuery = await pool.query("SELECT * FROM offers WHERE service_id = $1", [serviceID])
+        if (offersQuery.rowCount === 0) {
+            const errorStr = "offers under requested service ID " + serviceID + " does not exist in database"
+            return customStatusError(errorStr, res, 401, "offers under your requested service ID does not exist")
+        }
+        return res.status(200).json(offersQuery.rows)
     } catch (error) {
         console.log(error)
         return res.status(500).json("an error occurred while fetching services data")
@@ -79,7 +95,7 @@ app.get("/applications/:query", authenticateToken, async (req, res) => {
 app.get("/user", authenticateToken, async (req, res) => {
     try {
         const { userID } = res.locals.userInfo
-        const selectStatement = "SELECT username, role, register_date, user_id, email, name FROM login WHERE user_id = $1"
+        const selectStatement = "SELECT username, role, balance, register_date, email, name FROM login WHERE user_id = $1"
         const query = await pool.query(selectStatement, [userID])
         return res.status(200).json(query.rows)
     } catch (err) {

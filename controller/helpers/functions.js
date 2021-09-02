@@ -39,24 +39,48 @@ const arrayCompare = (_arr1, _arr2) => {
     return true;
 }
 
-const verifyReqObjExpectedObjKeys = (objKeysArr, reqObj, res) => {
+const verifyReqObjExpectedObjKeys = (objKeysArr, reqObj) => {
     let requestObjArr = []
     for (const key in reqObj) {
         requestObjArr.push(key)
     }
     if (!arrayCompare(requestObjArr, objKeysArr)) {
         const errorStr = `Expected object keys: { ${objKeysArr} } GOT: { ${requestObjArr} } at ${__dirname}`
-        return customStatusError(errorStr, res, 401, "Unexpected input")
-    }       
+        return {
+            ok: false,
+            error: errorStr,
+            statusCode: 401,
+            resString: "Unexpected input"
+        }
+    }
+    return {
+        ok: true
+    }   
 }
 
-const verifyInputNotEmptyFunc = (reqObj, res) => {
+const verifyInputNotEmptyFunc = (reqObj) => {
+    const errorStr = `one of the object's values was empty`
+    if (!reqObj)
+        return {
+            ok: false,
+            error: errorStr,
+            statusCode: 401,
+            resString: "One of your inputs was empty"
+        }
     const reqObjArr = Object.values(reqObj)
     for (let i = 0; i < reqObjArr.length; i++) {
-        if (reqObjArr[i] === "")
-            return false            
+        if (reqObjArr[i].trim() === "") {
+            return {
+                ok: false,
+                error: errorStr,
+                statusCode: 401,
+                resString: "One of your inputs was empty"
+            }
+        }
     }
-    return true
+    return {
+        ok: true
+    }
 }
 
 const switchServiceNameToTurkish = (service) => {
@@ -102,6 +126,49 @@ const verifyUserAndReturnInfo = async (userID) => {
     return query.rows[0]
 }
 
+// returns a lowercased string that had it's turkish characters replaced with english ones
+const replaceTURCharWithENG = (string) => {
+    const turkishCharactersArray = [ "İ", "ı", "Ö", "ö", "Ü", "ü", "Ç", "ç", "Ğ", "ğ", "Ş", "ş"]
+    const englishEquivilant = ["I", "i", "O", "o", "U", "u", "C", "c", "G", "g", "S", "s"]
+    const strArray = string.split("")
+    let newStr = ""
+
+    for (let i = 0; i < strArray.length; i++) {
+        let tempStr = []
+        for (let j = 0; j < turkishCharactersArray.length; j++) {
+            if (strArray[i] === turkishCharactersArray[j]) {
+                tempStr.push(englishEquivilant[j])
+            }
+        }
+        if (tempStr.length !== 0)
+            newStr = newStr + tempStr[0]
+        else
+            newStr = newStr + strArray[i]
+        tempStr.splice(0, tempStr.length)
+    }
+    return newStr.toLowerCase()
+}
+
+const verifyServiceNameFromInput = async (service = undefined, serviceEng = undefined) => {
+    let errorStr = ""
+    let query
+    if (service) {
+        errorStr = "service name '" + service + " does not exist in database"
+        query = await pool.query("SELECT name FROM services WHERE name = $1", [service])
+    }
+    else {
+        errorStr = "service name's english equivalent '" + serviceEng + " does not exist in database"
+        query = await pool.query("SELECT eng_equivalent FROM services WHERE eng_equivalent = $1", [serviceEng])
+    }
+    if (query.rowCount === 0)
+        return {
+            ok: false,
+            err: errorStr,
+            statusCode: 401,
+            resString: "Service input does not exist in database"
+        }
+    return {ok: true}
+}
 
 module.exports = {
     status500Error,
@@ -111,5 +178,7 @@ module.exports = {
     switchServiceNameToTurkish,
     queryConstructorDate,
     getDealerName,
-    verifyUserAndReturnInfo
+    verifyUserAndReturnInfo,
+    replaceTURCharWithENG,
+    verifyServiceNameFromInput
 }

@@ -173,7 +173,7 @@ const getServices = async () => {
 
 const getSdUsers = async (name, res) => {
     try {
-        getUsersQueryStatement = "SELECT name, register_date, active, role FROM login WHERE assigned_area = (SELECT assigned_area FROM login WHERE name = $1)"
+        getUsersQueryStatement = "SELECT name, register_date, active, role, balance FROM login WHERE assigned_area = (SELECT assigned_area FROM login WHERE name = $1)"
         const getUsersAccordToResponibleArea = await pool.query(getUsersQueryStatement, [name])
         return res.status(200).json(getUsersAccordToResponibleArea.rows)
     } catch (err) {
@@ -183,7 +183,7 @@ const getSdUsers = async (name, res) => {
 
 const getSdcUsers = async (res) => {
     try {
-        getUsersQueryStatement = "SELECT name, user_id register_date, active, role FROM login"
+        getUsersQueryStatement = "SELECT name, user_id register_date, active, role, balance FROM login"
         const getUserQuery = await pool.query(getUsersQueryStatement)
         return res.status(200).json(getUserQuery.rows)
     } catch (err) {
@@ -193,7 +193,7 @@ const getSdcUsers = async (res) => {
 
 const getSdUser = async (requesterID, userID, res) => {
     try {
-        getUsersQueryStatement = "SELECT name, register_date, active, role, assigned_area FROM login WHERE assigned_area = (SELECT assigned_area FROM login WHERE user_id = $1) AND user_id = $2"
+        getUsersQueryStatement = "SELECT name, register_date, active, role, assigned_area, balance FROM login WHERE assigned_area = (SELECT assigned_area FROM login WHERE user_id = $1) AND user_id = $2"
         const getUsersAccordToResponibleArea = await pool.query(getUsersQueryStatement, [requesterID, userID])
         if (getUsersAccordToResponibleArea.rows.length === 0) {
             const errorStr = "SD queried ID '" + userID + "' but no such id exist or SD does not have permission"
@@ -207,7 +207,7 @@ const getSdUser = async (requesterID, userID, res) => {
 
 const getSdcUser = async (userID, res) => {
     try {
-        getUsersQueryStatement = "SELECT name, user_id, register_date, active, role, assigned_area FROM login WHERE user_id = $1"
+        getUsersQueryStatement = "SELECT name, user_id, register_date, active, role, assigned_area, balance FROM login WHERE user_id = $1"
         const getUserQuery = await pool.query(getUsersQueryStatement, [userID])
         if (getUserQuery.rows.length === 0) {
             const errorStr = "SDC queried ID '" + userID + "' but no such id exist"

@@ -25,7 +25,9 @@ app.put("/application/:applicationID",
     verifyUpdateApplication,
     async (req, res) => {
     // verify expected request body object keys
-    verifyReqObjExpectedObjKeys(["salesRepDetails", "statusChange"], req, res)
+    const isReqObjVerified = verifyReqObjExpectedObjKeys(["salesRepDetails", "statusChange"], req, res)
+    if (isReqObjVerified.ok === false)
+        return customStatusError(isReqObjVerified.error, res, isReqObjVerified.statusCode, isReqObjVerified.resString)
 
     // deconstructure the appID and status values from verifyUpdateApplication middleware
     const { appID, currentStatus } = res.locals.updateAppQuery

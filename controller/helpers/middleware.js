@@ -43,11 +43,14 @@ const verifyReqBodyObjValuesNotEmpty = (req, res, next) => {
     const reqBodyArr = Object.values(req.body)
     // loop over it
     for (let i = 0; i < reqBodyArr.length; i++) {
-        // if one of the array (object values) is empty
-        if (reqBodyArr[i] === "") {
-            //find the object's key according to the above index 'i', get the key's name, and return it
-            const errorStr = findObjKeyAndRtrnErrorString(i)
-            return customStatusError(errorStr, res, 403, "One-some-all of the submitted values were empty")
+        // I need to check if its a string first because string.trim() throws an error if it hits a number
+        if (typeof reqBodyArr[i] === "string") {
+            // if one of the array (object values) is empty
+            if (reqBodyArr[i].trim() === "") {
+                //find the object's key according to the above index 'i', get the key's name, and return it
+                const errorStr = findObjKeyAndRtrnErrorString(i)
+                return customStatusError(errorStr, res, 403, "One-some-all of the submitted values were empty")
+            }
         }
     }
     next()

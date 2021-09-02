@@ -1,44 +1,52 @@
+I WILL ALSO NEED TO CHECK THE OTHER ROUTES, REFACTOR CODE IF NEEDS BE (for tur to eng conversion)
+
+Fix offers route,
+then resume working on the test route in send application
+
 SHARED:
     * GET applications sales (
-        dealer OPTION(name, ALL, SD-AREA)
-        query OPTION(count, details)
-        interval OPTION(day, month, year, ALL)
-        status OPTION(approved, rejected, processing, ALL)
-        service OPTION($services, ALL, MAP)
+        dealer OPTION(name, ALL, SD-AREA)                           DONE!
+        query OPTION(count, details)                                DONE!
+        interval OPTION(day, month, year, ALL)                      DONE!
+        status OPTION(approved, rejected, processing, ALL)          DONE!
+        service OPTION($services, ALL, MAP)                         DONE!
     )
-    * GET application (
+    * GET application (                                             DONE!
         id
     )
-    * GET service (
-        all OPTION(true, false) 
-        offers ALL
-        profitable OPTION(true, false)
+    * GET service (                                                 DONE!
+        all OPTION(true, false)                                     DONE!
+        offers ALL                                                  DONE!
+        profitable OPTION(true, false)                              DONE!
     )
-    * GET user information
-    * PATCH user username, password
-    * GET goal
+    * GET balance                                                   DONE!
+    * GET user information                                          DONE!
+    * PATCH user username, password                                 DONE!
+    * GET goal                                                      DONE!
+    * GET transaction report                                        PENDING!
 ----------------------------------------------------
 DEALER:
-    * POST new application
+    * POST new application                                          DONE!
 ----------------------------------------------------
-SD AND SDC CAN GET SPECIFIC USER THROUGH user/:userid
 SD:
-    * PUT application (
+    * PUT application (                                             PENDING! (needs to increment the respective goal column for dealer, on approval increment dealer's balance.)
         id
     )
-    * GET users(dealers)
-    * GET goals
+    * GET users(dealers)                                            DONE!
+    * GET goals                                                     DONE!
 ----------------------------------------------------
 SDC:
-    * GET users(SD, dealers)
+    * GET users(SD, dealers)                                        DONE!
     * PUT user (
-        active
-        role
+        active                                                      DONE!
+        role                                                        DONE!
     )
-    * GET goals
-    * POST goal
-    * PUT goal (maybe in the future)
-    * DELETE goal (maybe in the future)
-    * POST service
-    * PUT service
-    * DELETE service
+    * GET goals                                                     DONE!
+    * POST goal                                                     DONE!
+    * PUT goal (maybe in the future)                                PENDING!
+    * DELETE goal (maybe in the future)                             PENDING!
+    * POST service (FIGURE OUT HOW TO INSERT ENGLISH EQUIVILANT)    DONE!
+    * PUT service                                                   DONE!
+    * POST offer                                                    PENDING!
+    * PUT offer                                                     PENDING!
+    * DELETE offer                                                  PENDING!
