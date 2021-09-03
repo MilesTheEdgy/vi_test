@@ -5,21 +5,14 @@ TOKEN VALUES {
             name
 }
 
-DATABASE:
-    Add UNIQUE CONSTRAINT to columns like username, user_id etc... check which one needs a unique constraint
-
-CLEANING UP THE SERVER:
-
-    * ADD AN ADRESS FIELD TO EACH USER!!!!
-
-    * Try out the routes folder one by one. starting with VERIFY
-
 Would having a single dotenv.config statement, alongside process.env statements, suffice?
 
 
 FEATURES TO ADD:
     PASS RESET REACT BUILD:
             * After user submits a successfull reset, have the pop up modal redirect to login
+    LOGIN:
+            * have the option to sign in with your usename or email
     ANASAYFA:
             * have the widgets be clickable, on Click, render the respective table
             * Show more info regarding sales

@@ -56,6 +56,7 @@ const verifyReqBodyObjValuesNotEmpty = (req, res, next) => {
     next()
 }
 
+// This middleware checks the PASSWORD field in REQUEST.BODY and verifies it does not contain any whitespace
 const verifyReqBodyPasswordNoWhiteSpace = (req, res, next) => {
     const errorStr = "verifyReqBodyPasswordNoWhiteSpace() Password field in req.body contains an empty space at"+__dirname
     const { password } = req.body
@@ -65,6 +66,7 @@ const verifyReqBodyPasswordNoWhiteSpace = (req, res, next) => {
     next()
 }
 
+// This middleware checks the ALL fields in REQUEST.BODY and verifies it does not contain any whitespace
 const verifyReqBodyObjNoWhiteSpace = (req, res, next) => {
     const errorStr = "verifyReqBodyObjNoWhiteSpace() req.body object values must not contain an empty space at"+__dirname
     const reqBodyArr = Object.values(req.body)

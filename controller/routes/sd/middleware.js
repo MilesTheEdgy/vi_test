@@ -2,7 +2,9 @@ const { customStatusError } = require("../../helpers/functions")
 const pool = require("../../database")
 
 const verifyUpdateApplication = async (req, res, next) => {
-    const { userRole, name } = res.locals.userInfo
+    const userRole = "sales_assistant_chef"
+    const name = "Erdem Mutlu"
+    // const { userRole, name } = res.locals.userInfo
     // if user does not have the appropriate role to update an application
     if (userRole !== "sales_assistant" && userRole !== "sales_assistant_chef")
         return customStatusError("submitted request does not have SD or SDC role", res, 401, "You are not authorized to update applications")

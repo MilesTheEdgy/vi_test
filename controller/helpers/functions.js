@@ -1,15 +1,15 @@
 const uniqid = require("uniqid")
 const pool = require("../database")
 
-const status500Error = (err, res, resErrorString) => {
-    console.log(err)
+const status500Error = (error, res, resErrorString) => {
+    console.log(error)
     const errorDate = new Date()
     const errorID = uniqid("ERROR-ID-")
     console.log("-*-*-*-" + errorID + " DATE: ", errorDate)
     return res.status(500).json(resErrorString  + " " + errorID)
 }
-const customStatusError = (err, res, resStatus, resErrorString) => {
-    console.log(err)
+const customStatusError = (error, res, resStatus, resErrorString) => {
+    console.log(error)
     const errorDate = new Date()
     const errorID = uniqid("ERROR-ID-")
     console.log("-*-*-*-" + errorID + " DATE: ", errorDate)
@@ -49,7 +49,7 @@ const verifyReqObjExpectedObjKeys = (objKeysArr, reqObj) => {
         return {
             ok: false,
             error: errorStr,
-            statusCode: 401,
+            statusCode: 406,
             resString: "Unexpected input"
         }
     }
@@ -59,12 +59,12 @@ const verifyReqObjExpectedObjKeys = (objKeysArr, reqObj) => {
 }
 
 const verifyInputNotEmptyFunc = (reqObj) => {
-    const errorStr = `one of the object's values was empty`
+    const errorStr = `verifyInputNotEmptyFunc returned 'one of the object's values was empty'`
     if (!reqObj)
         return {
             ok: false,
             error: errorStr,
-            statusCode: 401,
+            statusCode: 406,
             resString: "One of your inputs was empty"
         }
     const reqObjArr = Object.values(reqObj)
@@ -73,7 +73,7 @@ const verifyInputNotEmptyFunc = (reqObj) => {
             return {
                 ok: false,
                 error: errorStr,
-                statusCode: 401,
+                statusCode: 406,
                 resString: "One of your inputs was empty"
             }
         }
@@ -149,12 +149,16 @@ const replaceTURCharWithENG = (string) => {
     return newStr.toLowerCase()
 }
 
-const verifyServiceNameFromInput = async (service = undefined, serviceEng = undefined) => {
+const verifyServiceNameFromInput = async (service = undefined, serviceEng = undefined, ID = undefined) => {
     let errorStr = ""
     let query
     if (service) {
-        errorStr = "service name '" + service + " does not exist in database"
+        errorStr = "service name '" + service + "' does not exist in database"
         query = await pool.query("SELECT name FROM services WHERE name = $1", [service])
+    }
+    else if (ID) {
+        errorStr = "service ID '" + ID + " does not exist in database"
+        query = await pool.query("SELECT service_id FROM services WHERE service_id = $1", [ID])
     }
     else {
         errorStr = "service name's english equivalent '" + serviceEng + " does not exist in database"
@@ -163,9 +167,30 @@ const verifyServiceNameFromInput = async (service = undefined, serviceEng = unde
     if (query.rowCount === 0)
         return {
             ok: false,
-            err: errorStr,
-            statusCode: 401,
+            error: errorStr,
+            statusCode: 406,
             resString: "Service input does not exist in database"
+        }
+    return {ok: true}
+}
+
+const verifyOfferFromInput = async (offer = undefined, ID = undefined) => {
+    let errorStr = ""
+    let query
+    if (offer) {
+        errorStr = "offer name '" + offer + " does not exist in database"
+        query = await pool.query("SELECT name FROM offers WHERE name = $1", [offer])
+    }
+    else {
+        errorStr = "offer ID '" + ID + " does not exist in database"
+        query = await pool.query("SELECT offer_id FROM services WHERE offer_id = $1", [ID])
+    }
+    if (query.rowCount === 0)
+        return {
+            ok: false,
+            error: errorStr,
+            statusCode: 406,
+            resString: "Offer input does not exist in database"
         }
     return {ok: true}
 }
@@ -180,5 +205,6 @@ module.exports = {
     getDealerName,
     verifyUserAndReturnInfo,
     replaceTURCharWithENG,
-    verifyServiceNameFromInput
+    verifyServiceNameFromInput,
+    verifyOfferFromInput
 }

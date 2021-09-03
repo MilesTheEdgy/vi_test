@@ -20,12 +20,11 @@ const app = module.exports = express();
 // IF the application has the current status of 'sent' and statusChange of 'rejected', call updateApplicationPhase2 function.
 // IF the application DOES NOT have current status of 'sent', call updateApplicationPhase2 function.
 app.put("/application/:applicationID",
-    authenticateToken,
     verifyReqBodyObjValuesNotEmpty, 
     verifyUpdateApplication,
     async (req, res) => {
     // verify expected request body object keys
-    const isReqObjVerified = verifyReqObjExpectedObjKeys(["salesRepDetails", "statusChange"], req, res)
+    const isReqObjVerified = verifyReqObjExpectedObjKeys(["salesRepDetails", "statusChange"], req.body)
     if (isReqObjVerified.ok === false)
         return customStatusError(isReqObjVerified.error, res, isReqObjVerified.statusCode, isReqObjVerified.resString)
 
@@ -69,14 +68,12 @@ app.put("/application/:applicationID",
             await client.query('ROLLBACK')
             return status500Error(result.error, res, serverErrorStr)
         }
-        // an extra catch block in main function that does more or less the same as the above error functions
-        } catch (err) {
-            await client.query('ROLLBACK')
-            return status500Error(err, res, serverErrorStr)
-        } finally {
-            client.release()
-        }
-
+    } catch (err) {
+        await client.query('ROLLBACK')
+        return status500Error(err, res, serverErrorStr)
+    } finally {
+        client.release()
+    }
 })
 
 // This route returns a specific user's goal, it first verifies if the SD request submitter's requested user's goal BELONGS to his area
