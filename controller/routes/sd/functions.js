@@ -27,7 +27,6 @@ const updateApplicationPhase1 = async (client, statusChange, salesRepDetails, ap
 
 const updateApplicationPhase2 = async (client, statusChange, salesRepDetails, appID) => {
     try {
-        console.log('statusChange', statusChange)
         await client.query("UPDATE sales_applications_details SET final_sales_rep_details = $1 WHERE id = $2", [salesRepDetails, appID])
         await client.query("UPDATE sales_applications SET status = $1, last_change_date = CURRENT_TIMESTAMP WHERE id = $2", [statusChange, appID])
         if (statusChange === "approved") {
@@ -48,9 +47,7 @@ const updateApplicationPhase2 = async (client, statusChange, salesRepDetails, ap
             // it's fullfilled or not (the goal barrem reached), if true, it updates success to true then performs the increment. if false, it performs the
             // increment regardless
             const checkGoalSuccessStatement = "SELECT goal, done, goal_id FROM goals WHERE EXTRACT(month from for_date) = (SELECT date_part('month', (SELECT current_timestamp))) AND service = $1 AND for_user_id = $2"
-            console.log('checkGoalSuccessStatement ', checkGoalSuccessStatement, [selected_service, submitter])
             const checkGoalSuccessQuery = await client.query(checkGoalSuccessStatement, [selected_service, submitter])
-            console.log('checkGoalSuccessQuery ', checkGoalSuccessQuery.rows)
             if (checkGoalSuccessQuery.rowCount === 1) {
                 if (checkGoalSuccessQuery.rows[0].done === checkGoalSuccessQuery.rows[0].goal)
                     await client.query("UPDATE goals SET success = true, done = done + 1 WHERE goal_id = $1", [checkGoalSuccessQuery.rows[0].goal_id])
