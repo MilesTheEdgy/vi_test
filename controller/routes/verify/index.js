@@ -24,36 +24,48 @@ process.env.TOKEN_SECRET;
 
 const app = module.exports = express();
 
+app.use(express.static(path.join(__dirname+'/../../../views/resetpassword/enternewpass/build')));
+
+
 // Checks to see if the user's token is still valid, if it is, respond with the user's username, and role 
-app.post("/", authenticateToken, async (req, res) => {
+app.get("/validate-token", authenticateToken, async (req, res) => {
     try {
-        const dbUserTable = await pool.query("SELECT username, role FROM login WHERE username = $1", [res.locals.userInfo.username]);
-        const { username, role, name } = dbUserTable.rows[0];
+        console.log('res.locals.userInfo ', res.locals.userInfo)
+        const dbUserTable = await pool.query("SELECT email, role, balance, assigned_area, active FROM login WHERE email = $1", [res.locals.userInfo.email]);
+        console.log('dbUserTable ', dbUserTable.rows[0])
+        const { role, name, balance, assigned_area, active} = dbUserTable.rows[0];
+        if (active === false)
+            return customStatusError("User with email "+email+" was deactivated", res, 401, "You have been deactivated")
         console.log(role);
         return res.status(200).json({
-            username,
             userRole: role,
-            name
+            name,
+            balance,
+            assigned_area
         })
     } catch (error) {
-        console.error(error);
+        return status500Error(error, res, "Could not authenticate")
     }
 });
 
 app.post("/login", verifyCredentials, async(req, res) => {
     try {
-        const { username, role, userID, name } = res.locals.userInfo
+        const { username, role, userID, name, balance, assigned_area } = res.locals.userInfo
         let token = generateAccessToken({
             username, 
             role, 
             userID,
-            name
+            name,
+            assigned_area,
+            balance
         })
         return res.status(200).json({
             token: token,
             username,
             userRole: role,
-            name
+            name,
+            balance,
+            assigned_area
         });
     } catch (error) {
         console.error(error);
@@ -199,8 +211,10 @@ app.get("/resetpassword/:passResetToken", async (req, res) => {
     jwt.verify(passResetToken, process.env.TOKEN_SECRET, async function(err, decoded) {
         if (err)
             return customStatusError(err, res, 403, "Token authentication failed")
-        else
+        else {
+            console.log('sending build')
             return sendPassResetBuild()
+        }
     });
 })
 

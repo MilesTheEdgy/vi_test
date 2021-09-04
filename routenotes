@@ -5,9 +5,6 @@
 
 I WILL ALSO NEED TO CHECK THE OTHER ROUTES, REFACTOR CODE IF NEEDS BE (for tur to eng conversion)
 
-Fix offers route,
-then resume working on the test route in send application
-
 SHARED:
     * GET applications sales (
         dealer OPTION(name, ALL, SD-AREA)                           DONE!
@@ -28,7 +25,10 @@ SHARED:
     * GET user information                                          DONE!
     * PATCH user username, password                                 DONE!
     * GET goal                                                      DONE!
-    * GET transaction report                                        PENDING!
+    * GET transactions                                              DONE!
+    * GET transactions/userID                                       DONE!
+    * GET transaction/appID                                         DONE!
+    * GET transaction report                                        DONE!
 ----------------------------------------------------
 DEALER:
     * POST new application                                          DONE!
@@ -56,4 +56,4 @@ SDC:
     * PUT offer                                                     DONE!
 ----------------------------------------------------
 TIMED FUNCTION:
-    * Insert new report record on each end of month                 PENDING!
+    * Insert new report record on each end of month                 DONE!

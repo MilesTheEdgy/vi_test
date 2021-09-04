@@ -16,7 +16,7 @@ const authenticateToken = (req, res, next) => {
             console.error("AN ERROR OCCURRED WHEN VERIFYING TOKEN: ", err)
             return res.status(403).json("USER AUTHENTICATION failed")
         } else {
-            res.locals.userInfo = {username: decoded.username, role: decoded.role, userID: decoded.userID, name: decoded.name};
+            res.locals.userInfo = {email: decoded.email, role: decoded.role, userID: decoded.userID, name: decoded.name};
             next()
         }
     });

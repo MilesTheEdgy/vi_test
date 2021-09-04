@@ -15,7 +15,7 @@ import "./theheader.css"
 const TheHeader = () => {
   const dispatch = useDispatch()
   const sidebarShow = useSelector(state => state.sidebarState.sidebarShow)
-  const username = useSelector(state => state.reducer.loggedInUserInfo.loggedInUserName)
+  const name = useSelector(state => state.reducer.loggedInUserInfo.loggedInName)
   const loggedInRole = useSelector(state => state.reducer.loggedInUserInfo.loggedInRole)
 
   const toggleSidebar = () => {
@@ -57,7 +57,7 @@ const TheHeader = () => {
       <CHeaderNav className="px-3">
         <div className="headerNavLinkFontFlex">
           <p className = "headerNavLinkFontWelcome">Hoş Geldiniz</p>
-          <h6 className = "headerNavLinkFontUser">{username}</h6>
+          <h6 className = "headerNavLinkFontUser">{name}</h6>
         </div>
         <TheHeaderDropdown/>
       </CHeaderNav>

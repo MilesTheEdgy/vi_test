@@ -6,8 +6,9 @@ const initialState = {
   sidebarShow: 'responsive',
   isUserLoggedIn: false,
   loggedInUserInfo: {
-    loggedInUserName: "",
+    loggedInName: "",
     loggedInRole: "",
+    loggedInEmail: ""
   },
   loginErr: false,
   ///////////////////////
@@ -19,7 +20,7 @@ const initialState = {
 }
 
 const defaultUserInfo = {
-  loggedInUserName: "",
+  loggedInName: "",
   loggedInRole: "",
   loggedInUserFullName: ""
 }
@@ -64,14 +65,14 @@ const reducer = (state = initialState, action) => {
       };
 
     case "FILL_USER_INFO":
-      const { username, userRole } = action.payload;
-      // console.log("in the reducer, payload are: ", username, userRole, userFullName)
+      const { name, userRole, email } = action.payload;
       return {
         ...state,
         loggedInUserInfo: {
           ...state.loggedInUserInfo,
-          loggedInUserName: username,
+          loggedInName: name,
           loggedInRole: userRole,
+          loggedInEmail: email
         }
       }
     

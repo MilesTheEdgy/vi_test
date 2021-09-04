@@ -8,9 +8,9 @@ const AuthHOC = (props) => {
   const isUserLoggedIn = useSelector(state => state.reducer.isUserLoggedIn)
   const history = useHistory();
   useEffect(() => {
-    return history.listen(async (location) => { 
-        const res = await fetch("/", {
-            method: 'POST',
+    return history.listen(async (location) => {
+        const res = await fetch("/validate-token", {
+            method: 'GET',
             headers: {
               'content-type': 'application/json',
               'authorization' :`Bearer ${document.cookie.slice(8)} `

@@ -8,6 +8,13 @@ const { authenticateToken, verifyReqBodyObjValuesNotEmpty, verifyReqBodyPassword
 
 const app = module.exports = express();
 
+
+
+//**************
+//************** I could work on more authentication regarding the expected input from object in the transaction routes below
+//**************
+
+
 // This route returns all of the services, takes profitable as route query argument. 
 app.get("/services", authenticateToken, async (req, res) => {
     try {
@@ -186,6 +193,115 @@ app.get("/goal", authenticateToken, async (req, res) => {
         return status500Error(err, res, "server error, could not fetch your goal")
     }
 })
+
+
+// This route is responsible for fetching all the transactions made by the requester(dealer)
+// it takes date as a query parameter, if omitted, it returns all transactions regardless of date
+// if its appended, it returns all transactions made in the entire month in the date
+app.get("/transactions", authenticateToken, async (req, res) => {
+    const { userInfo } = res.locals
+    const { userID } = userInfo
+    const { date } = req.query
+    try {
+        if (date) {
+            const queryStatement = "SELECT * FROM transactions WHERE EXTRACT(month from date) = (SELECT date_part('month', $1 ::timestamp)) AND EXTRACT(year from date) = (SELECT date_part('year', $1 ::timestamp)) AND user_id = $2"
+            const query = await pool.query(queryStatement, [date, userID])
+            return res.json(query.rows)
+        } else {
+            const queryStatement = "SELECT * FROM transactions WHERE user_id = $1"
+            const query = await pool.query(queryStatement, [userID])
+            return res.json(query.rows)
+        }        
+    } catch (error) {
+        return status500Error(error, res, "Could not fetch your transactions")
+    }
+})
+
+// This route is responsible for fetching all the transactions made by the requested userID
+// it takes userID as a mandatory url parameter and date as a query parameter, if omitted, it returns all transactions regardless of date by that user
+// if its appended, it returns all transactions made in the entire month in the date by that user
+app.get("/transactions/:userID", authenticateToken, async (req, res) => {
+    const { userInfo } = res.locals
+
+    const { userRole } = userInfo
+    if (userRole === "sales_assistant")
+        return customStatusError("userRole is " + userRole, res, 401, "You are not authorized to make this query")
+    const { userID } = req.params
+    const { date } = req.query
+    try {
+        if (date) {
+            const queryStatement = "SELECT * FROM transactions WHERE EXTRACT(month from date) = (SELECT date_part('month', $1 ::timestamp)) AND EXTRACT(year from date) = (SELECT date_part('year', $1 ::timestamp)) AND user_id = $2"
+            const query = await pool.query(queryStatement, [date, userID])
+            return res.json(query.rows)
+        } else {
+            const queryStatement = "SELECT * FROM transactions WHERE user_id = $1"
+            const query = await pool.query(queryStatement, [userID])
+            return res.json(query.rows)
+        }   
+    } catch (error) {
+        return status500Error(error, res, "Could not fetch this user's transactions")        
+    }
+})
+
+
+// This route is responsible for fetching a specific application's transaction (if the transaction exists).
+// it has two possible return values according to the submitter's role
+// if it's 'dealer', it returns the app's transaction if the app belongs to the submitter(dealer)
+// if it's sales assistant or chef, it returns the app's transaction regardless
+app.get("/transaction/:appID", async (req, res) => {
+    const { userInfo } = res.locals
+
+    const { appID } = req.params
+    const { userRole } = userInfo
+    try {
+        if (userRole === "dealer") {
+            const { userID } = userInfo
+            const queryStatement = "SELECT * FROM transactions WHERE user_id = $1 AND app_id = $2"
+            const query = await pool.query(queryStatement, [userID, appID])
+            return res.json(query.rows)
+        } else if (userRole === "sales_assistant" || userRole === "sales_assistant_chef") {
+            const queryStatement = "SELECT * FROM transactions WHERE app_id = $1"
+            const query = await pool.query(queryStatement, [appID])
+            return res.json(query.rows)
+        }
+    } catch (error) {
+        return status500Error(error, res, "Could not fetch that specific application's transaction")
+    }
+})
+
+// This route is responsible for fetching the requester's transaction reports, it returns the sum of all earnings made in the
+// queried month, it takes date as a mandatory url parameter.
+app.get("/report/transactions/:date", authenticateToken, async (req, res) => {
+    const { userInfo } = res.locals
+
+    const { date } = req.params
+    try {
+        const queryStatement = "SELECT * FROM transactions WHERE EXTRACT(month from date) = (SELECT date_part('month', $1 ::timestamp)) AND EXTRACT(year from date) = (SELECT date_part('year', $1 ::timestamp)) AND user_id = $2"
+        const query = await pool.query(queryStatement, [date, userInfo.userID])
+        return res.json(query.rows)
+    } catch (error) {
+        return status500Error(error, res, "Could not fetch transaction report")        
+    }
+
+})
+
+// This route is responsible for fetching the requester's requested user's transactions' reports.
+// it takes { userID, date } as mandatory url parameters 
+app.get("/report/transactions/:userID/:date", authenticateToken, async (req, res) => {
+    const { userInfo } = res.locals
+
+    if (userInfo.userRole !== "sales_assistant_chef" && userInfo.userRole !== "sales_assistant")
+        return customStatusError("user role: '"+userInfo.userRole+"' is not authenticated", res , 401, "You're not authenticated to make this request")
+    const { date, userID } = req.params
+    try {
+        const queryStatement = "SELECT * FROM transactions WHERE EXTRACT(month from date) = (SELECT date_part('month', $1 ::timestamp)) AND EXTRACT(year from date) = (SELECT date_part('year', $1 ::timestamp)) AND user_id = $2"
+        const query = await pool.query(queryStatement, [date, userID])
+        return res.json(query.rows)
+    } catch (error) {
+        return status500Error(error, res, "Could not fetch that user's transaction report")        
+    }
+})
+
 
 // app.get("/bayi/applications", authenticateToken, async(req, res) => {
 //     try {

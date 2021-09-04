@@ -5,7 +5,7 @@ import './scss/style.scss';
 import "./app.css";
 import AuthHOC from './views/authHOC/AuthHOC';
 
-class ErrorBoundary extends React.Component {
+class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
     this.state = { error: null, errorInfo: null };
@@ -54,25 +54,26 @@ const TheLayout = React.lazy(() => import('./components/layout/Layout'));
 class App extends Component {
   
   validate = async () => {
-      //validating token on first start
-      const res = await fetch("/", {
-
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        //slice the work 'vitoken' from document.cookie
-        'authorization' :`Bearer ${document.cookie.slice(8)} `
+    //validating token on first start
+    const res = await fetch("/validate-token", {
+    method: 'GET',
+    headers: {
+      'content-type': 'application/json',
+      //slice the work 'vitoken' from document.cookie
+      'authorization' :`Bearer ${document.cookie.slice(8)} `
       }
     })
     if (res.status < 405 && res.status > 400) {
     return
     } else if (res.status === 200) {
+    console.log('ITS TRUE!!!!')
       //set login to true
     this.props.userLoggingin()
       //pushing user to /anasayfa
     this.props.history.push("/anasayfa")
       //awaiting data regarding user info
     let data = await res.json();
+    console.log("!!!!data!!!!:  ", data)
       //sending user data to redux store
     this.props.fillUserInfo(data)
     }

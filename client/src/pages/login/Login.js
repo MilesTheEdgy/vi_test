@@ -60,13 +60,13 @@ class Login extends React.Component {
   constructor() {
     super()
     this.state = {
-      username: "",
+      email: "",
       password: ""
     }
   };
 
-  onUsernameChange = (e) => {
-    this.setState({username: e.target.value});
+  onEmailChange = (e) => {
+    this.setState({email: e.target.value});
   };
 
   onPasswordChange = (e) => {
@@ -84,7 +84,7 @@ class Login extends React.Component {
         'authorization' :'Bearer '
       },
       body: JSON.stringify({
-        username: this.state.username,
+        email: this.state.email,
         password: this.state.password
       })
     })
@@ -93,8 +93,9 @@ class Login extends React.Component {
       // console.log("token from login: ", data.token)
       document.cookie = `vitoken=${data.token}`
       let userData = {
-        username: data.username,
-        userRole: data.userRole
+        email: data.email,
+        userRole: data.userRole,
+        name: data.name
       }
       this.props.userLoggingin()
       this.props.fillUserInfo(userData)
@@ -130,10 +131,10 @@ class Login extends React.Component {
                       <CInputGroup className="mb-3">
                         <CInputGroupPrepend>
                           <CInputGroupText>
-                            <CIcon name="cil-user" />
+                            <i className="far fa-envelope"></i>
                           </CInputGroupText>
                         </CInputGroupPrepend>
-                        <CInput type="text" placeholder="Kullanıcı adı" autoComplete="username" onChange = {this.onUsernameChange} />
+                        <CInput type="text" placeholder="E-Mailiniz" autoComplete="email" onChange = {this.onEmailChange} />
                       </CInputGroup>
                       <CInputGroup className="mb-4">
                         <CInputGroupPrepend>
