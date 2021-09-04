@@ -1,6 +1,6 @@
 //are you okay brah
 const fs = require("fs")
-const bree = require("./controller/bree")
+const Bree = require("bree")
 const express = require("express");
 const path = require("path");
 const app = express();
@@ -38,7 +38,20 @@ const dealerRoute = require("./controller/routes/dealer")
 const sdRoute = require("./controller/routes/sd")
 const sdcRoute = require("./controller/routes/sdc")
 
-// bree.start();
+const bree = new Bree({
+    jobs: [
+    //   {
+    //     name: 'printreport',
+    //     cron: "0 0 23 L * ? *"
+    //   },
+      {
+        name: 'printreport',
+        // cron: "* * * ? * *"
+        interval: 3000
+      }
+    ]
+  });
+bree.start();
 
 const imageStorage = multer.diskStorage({
     // Destination to store image     

@@ -94,3 +94,18 @@ app.get("/goal/sd", async(req, res) => {
         res.json('req query is empty')
     }
 })
+
+// app.get("/testtest", async(req, res) => {
+//     const getDealersQuery = await pool.query("SELECT user_id FROM login WHERE role = 'dealer'")
+//     const dealers = getDealersQuery.rows.map(obj => (obj.user_id))
+
+//     const transactionStatement = "SELECT SUM(amount) FROM transactions WHERE EXTRACT(month from date) = (SELECT date_part('month', (SELECT current_timestamp))) AND EXTRACT(year from date) = (SELECT date_part('year', (SELECT current_timestamp))) AND user_id = $1"
+//     for (let i = 0; i < dealers.length; i++) {
+//         const transactionsQuery = await pool.query(transactionStatement, [dealers[i]])
+//         const transactionSum = transactionsQuery.rows[0].sum
+//         if (transactionSum !== null) {
+//             await pool.query("INSERT INTO transaction_reports VALUES ($1, $2)", [dealers[i], transactionSum])
+//         }
+//     }
+//     return res.json("done")
+// })

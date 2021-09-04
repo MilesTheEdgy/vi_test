@@ -29,24 +29,40 @@ const updateApplicationPhase2 = async (client, statusChange, salesRepDetails, ap
     try {
         await client.query("UPDATE sales_applications_details SET final_sales_rep_details = $1 WHERE id = $2", [salesRepDetails, appID])
         await client.query("UPDATE sales_applications SET status = $1, last_change_date = CURRENT_TIMESTAMP WHERE id = $2", [statusChange, appID])
+        // The code below runs only when the SD approved the application, it makes a transaction to the dealer who submitted the app.
+        // Adds a transaction record, checks for goals if they exist and whether they're fullfilled or not and increment them
         if (statusChange === "approved") {
+            // get the offer name and service name
             const getServiceAndOffer = await client.query("SELECT selected_service, selected_offer FROM sales_applications_details WHERE id = $1", [appID])
             const { selected_service, selected_offer } = getServiceAndOffer.rows[0]
 
+            // submitter holds the same value as user_id
             const getSubmitter = await client.query("SELECT submitter FROM sales_applications WHERE id = $1", [appID])
             const { submitter } = getSubmitter.rows[0]
 
-            const getServiceID = await pool.query("SELECT service_id FROM services WHERE name = $1", [selected_service])
+            // get the id of the service
+            const getServiceID = await client.query("SELECT service_id FROM services WHERE name = $1", [selected_service])
             const serviceID = getServiceID.rows[0].service_id
 
+            // get the value (money) of that specific offer
             const offerValue = await getOfferValue(serviceID, selected_offer)
 
+            // user's balance before transaction
+            const userBalanceBefore = await client.query("SELECT balance FROM login WHERE user_id = $1", [submitter])
+            const balanceBefore = userBalanceBefore.rows[0].balance
+
+            // user's balance after transaction
+            const balanceAfter = Number(balanceBefore) + Number(offerValue)
+
+            // insert the tranasction record
+            await client.query("INSERT INTO transactions VALUES($1, $2, $3, $4, $5)",
+             [submitter, appID, balanceBefore, offerValue, balanceAfter])
             await client.query("UPDATE login SET balance = balance + $1 WHERE user_id = $2", [offerValue, submitter])
 
             // this code block checks if a goal exists for the respective service, respective user and the respective date. If it exists, it checks whether
             // it's fullfilled or not (the goal barrem reached), if true, it updates success to true then performs the increment. if false, it performs the
             // increment regardless
-            const checkGoalSuccessStatement = "SELECT goal, done, goal_id FROM goals WHERE EXTRACT(month from for_date) = (SELECT date_part('month', (SELECT current_timestamp))) AND service = $1 AND for_user_id = $2"
+            const checkGoalSuccessStatement = "SELECT goal, done, goal_id FROM goals WHERE EXTRACT(month from for_date) = (SELECT date_part('month', (SELECT current_timestamp))) AND EXTRACT(year from for_date) = (SELECT date_part('year', (SELECT current_timestamp))) AND service = $1 AND for_user_id = $2"
             const checkGoalSuccessQuery = await client.query(checkGoalSuccessStatement, [selected_service, submitter])
             if (checkGoalSuccessQuery.rowCount === 1) {
                 if (checkGoalSuccessQuery.rows[0].done === checkGoalSuccessQuery.rows[0].goal)
