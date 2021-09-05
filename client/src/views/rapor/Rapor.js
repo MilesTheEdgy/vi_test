@@ -16,7 +16,7 @@ import XLSX from "xlsx";
 import { getBadge, mapDataToTurkish } from '../../components'
 import { switchRaporHeader } from "."
 
-const RaporOnaylanan = ({match, location}) => {
+const Rapor = ({match, location}) => {
   const history = useHistory()
   const queryPage = useLocation().search.match(/sayfa=([0-9]+)/, '')
   const currentPage = Number(queryPage && queryPage[1] ? queryPage[1] : 1)
@@ -24,9 +24,14 @@ const RaporOnaylanan = ({match, location}) => {
   const [loading, setLoading] = useState(true)
   const [usersData, setUsersData] = useState(undefined)
   const qsQuery = qs.parse(location.search)
+  let urlStatusParam = ""
+  if (qsQuery.status)
+    urlStatusParam  = qsQuery.status
+  else
+    urlStatusParam = qsQuery["?status"]
 
   const pageChange = newPage => {
-    currentPage !== newPage && history.push(`/basvuru/takip?sayfa=${newPage}`)
+    currentPage !== newPage && history.push(`/bayi/islemler/rapor?sayfa=${newPage}&status=${urlStatusParam}`)
   }
 
   const exportFile = () => {
@@ -43,12 +48,11 @@ const RaporOnaylanan = ({match, location}) => {
     XLSX.utils.book_append_sheet(wb, ws, "Başvurular");
     XLSX.writeFile(wb, "başvurular.xlsx")
   };
-
   useEffect(() => {
     currentPage !== page && setPage(currentPage)
     const fetchData = async () => {
       setLoading(true)
-      const res = await fetch(`/bayi/applications?status=${qsQuery["?status"]}`, {
+      const res = await fetch(`/applications/details/?status=${urlStatusParam}`, {
         method: 'GET',
         headers: {
           'content-type': 'application/json',
@@ -64,7 +68,7 @@ const RaporOnaylanan = ({match, location}) => {
     };
     fetchData();
     // eslint-disable-next-line
-  }, [qsQuery["?status"]])
+  }, [qsQuery["?status"], currentPage])
 
   return (
     <CRow className = "d-flex justify-content-center">
@@ -89,7 +93,7 @@ const RaporOnaylanan = ({match, location}) => {
                 tableFilter
                 hover
                 striped
-                itemsPerPage={30}
+                itemsPerPage={15}
                 activePage={page}
                 clickableRows
                 onRowClick={(item) => history.push(`/islem/${item.ID}`)}
@@ -122,4 +126,4 @@ const RaporOnaylanan = ({match, location}) => {
   )
 }
 
-export default RaporOnaylanan;
+export default Rapor;

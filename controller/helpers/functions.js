@@ -83,23 +83,12 @@ const verifyInputNotEmptyFunc = (reqObj) => {
     }
 }
 
-const switchServiceNameToTurkish = (service) => {
-    let q_service = ""
-    switch (service) {
-        case "Faturasiz":
-            q_service = "Faturasız"; break;
-        case "Faturali":
-            q_service = "Faturalı"; break;
-        case "taahut":
-            q_service = "Taahüt"; break;
-        case "iptal":
-            q_service = "İptal"; break;
-        case "tivibu":
-            q_service = "Tivibu"; break;
-        default:
-            q_service = service;
-    }
-    return q_service
+const switchServiceNameToTurkish = async (serviceEngEquivalent) => {
+    if (serviceEngEquivalent === "ALL")
+        return serviceEngEquivalent
+    const getServiceStatement = "SELECT name FROM services WHERE eng_equivalent = $1"
+    const query = await pool.query(getServiceStatement, [serviceEngEquivalent])
+    return query.rows[0].name
 }
 
 // a query constructor specific to DATE queries
@@ -112,11 +101,6 @@ const queryConstructorDate = (selectStatement, conditionArr) => {
             conditionText = conditionText + " AND " + conditionArr[i] + `$${i+1}`
     }
     return selectStatement + conditionText
-}
-
-const getDealerName = async (userID) => {
-    const query = await pool.query("SELECT username FROM login WHERE user_id = $1", [userID])
-    return query.rows[0].username
 }
 
 const verifyUserAndReturnInfo = async (userID) => {
@@ -200,9 +184,8 @@ module.exports = {
     customStatusError,
     verifyReqObjExpectedObjKeys,
     verifyInputNotEmptyFunc,
-    switchServiceNameToTurkish,
     queryConstructorDate,
-    getDealerName,
+    switchServiceNameToTurkish,
     verifyUserAndReturnInfo,
     replaceTURCharWithENG,
     verifyServiceNameFromInput,

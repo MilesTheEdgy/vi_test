@@ -30,13 +30,10 @@ app.use(express.static(path.join(__dirname+'/../../../views/resetpassword/entern
 // Checks to see if the user's token is still valid, if it is, respond with the user's username, and role 
 app.get("/validate-token", authenticateToken, async (req, res) => {
     try {
-        console.log('res.locals.userInfo ', res.locals.userInfo)
-        const dbUserTable = await pool.query("SELECT email, role, balance, assigned_area, active FROM login WHERE email = $1", [res.locals.userInfo.email]);
-        console.log('dbUserTable ', dbUserTable.rows[0])
+        const dbUserTable = await pool.query("SELECT email, role, balance, assigned_area, name, active FROM login WHERE email = $1", [res.locals.userInfo.email]);
         const { role, name, balance, assigned_area, active} = dbUserTable.rows[0];
         if (active === false)
-            return customStatusError("User with email "+email+" was deactivated", res, 401, "You have been deactivated")
-        console.log(role);
+            return customStatusError("User with email "+email+" was deactivated", res, 401, "You have been deactivated please contact administration")
         return res.status(200).json({
             userRole: role,
             name,
@@ -50,18 +47,16 @@ app.get("/validate-token", authenticateToken, async (req, res) => {
 
 app.post("/login", verifyCredentials, async(req, res) => {
     try {
-        const { username, role, userID, name, balance, assigned_area } = res.locals.userInfo
+        const { email, role, userID, name, balance, assigned_area } = res.locals.userInfo
         let token = generateAccessToken({
-            username, 
             role, 
             userID,
             name,
-            assigned_area,
-            balance
+            balance,
+            email
         })
         return res.status(200).json({
             token: token,
-            username,
             userRole: role,
             name,
             balance,

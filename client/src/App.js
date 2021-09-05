@@ -66,14 +66,12 @@ class App extends Component {
     if (res.status < 405 && res.status > 400) {
     return
     } else if (res.status === 200) {
-    console.log('ITS TRUE!!!!')
       //set login to true
     this.props.userLoggingin()
       //pushing user to /anasayfa
     this.props.history.push("/anasayfa")
       //awaiting data regarding user info
     let data = await res.json();
-    console.log("!!!!data!!!!:  ", data)
       //sending user data to redux store
     this.props.fillUserInfo(data)
     }

@@ -1,5 +1,5 @@
 const pool = require("../../database")
-const { switchServiceNameToTurkish, queryConstructorDate, getDealerName, customStatusError } = require("../../helpers/functions")
+const { queryConstructorDate, customStatusError, switchServiceNameToTurkish } = require("../../helpers/functions")
 
 // a query constructor specific to INTERVAL queries
 const queryConstructorInterval = (selectStatement, conditionArr) => {
@@ -128,10 +128,6 @@ const getDealerApplications = async (query, date = "ALL", userID, status = "ALL"
         return mapAppsAccordToServices(userID)
     if (service === "diger")
         return fetchDigerServices(userID)
-    // Get dealer's username according to his user ID
-    const getDealerName = await pool.query("SELECT username FROM login WHERE user_id = $1", [userID])
-    const dealerName = getDealerName.rows[0].username
-
     // SELECT statements
     const selectCount = "SELECT count(*) FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id"
     const selectDetails = "SELECT sales_applications.id, sales_applications.client_name, sales_applications.submit_time, sales_applications_details.selected_service, sales_applications_details.selected_offer, sales_applications_details.description, sales_applications.status, sales_applications_details.sales_rep_details, sales_applications_details.status_change_date, sales_applications_details.final_sales_rep_details, sales_applications.last_change_date, sales_applications_details.image_urls FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id"
@@ -141,20 +137,20 @@ const getDealerApplications = async (query, date = "ALL", userID, status = "ALL"
     const conditionSubmitter = "sales_applications.submitter = "
     const conditionStatus = "sales_applications.status = "
     const conditionService = "sales_applications_details.selected_service = "
-    const serviceTUR = switchServiceNameToTurkish(service)
+    const serviceTUR = await switchServiceNameToTurkish(service)
 
     // IF user is querying as an interval(day, month, year)...
     if (typeof date === "string" ||typeof date === "number") {
         const interval = date
         const conditionTime = convertDateInputToSQLInterval(interval)
-        const conditionArr = [interval, dealerName, status, serviceTUR]
+        const conditionArr = [interval, userID, status, serviceTUR]
         const conditionQueryArr = [conditionTime, conditionSubmitter, conditionStatus, conditionService]
         return fetchAppsAccordToInterval(query, interval, selectStatement, conditionArr, conditionQueryArr)
     } else { // ELSE if user is querying as an exact date with month and year format...
         const [month, year] = date
         const extractMonthCondition = "EXTRACT(MONTH FROM sales_applications.submit_time) = "
         const extracYearCondition = "EXTRACT(YEAR FROM sales_applications.submit_time) = "    
-        const conditionArr = [Number(month), Number(year), dealerName, status, serviceTUR]
+        const conditionArr = [Number(month), Number(year), userID, status, serviceTUR]
         const conditionQueryArr = [extractMonthCondition, extracYearCondition, conditionSubmitter, conditionStatus, conditionService]
         return fetchAppsAccordToDate(query, selectStatement, conditionArr, conditionQueryArr)
     }

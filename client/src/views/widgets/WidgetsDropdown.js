@@ -1,30 +1,19 @@
 import React, { useState, useEffect } from 'react'
-import { useSelector } from "react-redux"
 import {
   CWidgetDropdown,
   CRow,
   CCol
 } from '@coreui/react'
-// import ChartLineSimple from '../charts/ChartLineSimple'
-// import ChartBarSimple from '../charts/ChartBarSimple'
 
 const WidgetsDropdown = () => {
-  const userInfo = useSelector(state => state.reducer.loggedInUserInfo)
   const [todaySales, setTodaySales] = useState("0");
   const [problematicSales, setProblematicSales] = useState("0");
   const [thisMonthSales, setThisMonthSales] = useState("0");
   const [thisYearSales, setThisYearSales] = useState("0");
 
   useEffect(() => {
-    let urlStringRole = ""
-    if (userInfo.loggedInRole === "sales_assistant_chef")
-      urlStringRole = "sdc"
-    else
-      urlStringRole = "dealer"
-    const urlString = `/${urlStringRole}/applications/count`
-    console.log("urlString", urlString)
+    const urlString = `/applications/count`
     const fetchAppsCountData = async (urlString, setState) => {
-      console.log('fetchin')
       const res = await fetch(urlString, {
         headers: {
           'content-type': 'application/json',
@@ -33,7 +22,6 @@ const WidgetsDropdown = () => {
       });
       if (res.status === 200) {
         const data = await res.json();
-        console.log("success", data)
         setState(data.count)
       } else {
         const data = await res.json();

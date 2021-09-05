@@ -215,6 +215,11 @@ class YeniBasvuru extends React.Component {
             clientWantsRouter, clientDescription,
              clientName} = this.state;
         const image = this.state.clientAppFiles
+
+        if (!selectedService || !clientDescription || !clientDescription || !clientName)  {
+            this.setState({areAppFieldsMissing: true})
+            return console.log(this.state.areAppFieldsMissing)
+        }
         const formData = new FormData()
         formData.append("selectedService", selectedService)
         formData.append("selectedOffer", selectedOffer)
@@ -225,7 +230,6 @@ class YeniBasvuru extends React.Component {
             formData.append("image", image[i])            
         }
         try {
-          console.log("fetching")
           const res = await fetch("/applications", {
             method: "POST",
             headers: {
@@ -251,50 +255,8 @@ class YeniBasvuru extends React.Component {
         } catch (error) {
           console.log(error)
         }
-/////////////////////////////////////////////////
-        // const { selectedService, selectedOffer, 
-        //     clientWantsRouter, clientDescription,
-        //      clientName} = this.state;
-
-        // if (!selectedService || !clientDescription || !clientDescription || !clientName)  {
-        //     this.setState({areAppFieldsMissing: true})
-        //     console.log(this.state.areAppFieldsMissing)
-        //     return
-        // }
-        // this.setState({isApplicationSubmitting: true})
-
-        // let res = await fetch("/bayi/basvuru/yeni", {
-        // method: 'POST',
-        // headers: {
-        //     'Content-Type': 'application/json',
-        //     'authorization' :`Bearer ${document.cookie.slice(8)} `
-        //     },
-        // body: JSON.stringify({
-        //     selectedService: selectedService,
-        //     selectedOffer: selectedOffer,
-        //     clientWantsRouter: clientWantsRouter,
-        //     clientDescription: clientDescription,
-        //     clientName: clientName
-        //     }) 
-        // });
-        // if (res.status === 200 ) {
-        //     this.setState({
-        //         isSubmitSuccess: true,
-        //         toasterText: "Talebiniz başarıyla gönderilmiştir!"
-        //     })
-        // } else {
-        //     this.setState({
-        //         isSubmitSuccess: false,
-        //         toasterText: "Bir sorun oldu, lütfen daha sonra tekrar deneyin"
-        //     })
-        // }
-
-        // this.setState({isApplicationSubmitting: false, didApplicationFinishSubmit: true})
-        // this.resetInput();
-        // setTimeout(() => this.resetAppStats(), 4300)
-
     }
-
+    
     resetInput = () => {
         this.setState({
             selectedService : "",

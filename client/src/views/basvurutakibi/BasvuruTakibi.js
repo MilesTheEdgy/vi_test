@@ -32,7 +32,7 @@ const BasvuruTakibi = () => {
   useEffect(() => {
     currentPage !== page && setPage(currentPage)
     const getData = async () => {
-      const res = await fetch("/bayi/applications", {
+      const res = await fetch("/applications/details?interval=today", {
         method: 'GET',
         headers: {
           'content-type': 'application/json',
@@ -51,13 +51,13 @@ const BasvuruTakibi = () => {
 
   return (
     <CRow className = "d-flex justify-content-center">
-      <ApplicationViewModal show = {modal} userDetails = {modalData} onClose = {setModal} />
-      <CCol xl={10}>
       {
-        usersData ? 
+        usersData ? <ApplicationViewModal show = {modal} userDetails = {modalData} onClose = {setModal} /> : null
+      }
+      <CCol xl={10}> 
         <CCard>
           <CCardHeader>
-            Başvurularınız
+            Bugünkü başvurularınız
           </CCardHeader>
           <CCardBody>
             <CDataTable
@@ -93,10 +93,6 @@ const BasvuruTakibi = () => {
             />
           </CCardBody>
         </CCard>
-        :
-        <h1>loading</h1>
-      }
-
       </CCol>
     </CRow>
   )
