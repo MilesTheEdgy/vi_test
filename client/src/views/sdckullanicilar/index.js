@@ -1,5 +1,7 @@
 
 
+
+// ******** Was used to map diğer işlem's data, for now it's deprecated ******** //
 export const filterAndMapAppData = (allData) => {
     let digerIslemApproved = 0
     let digerIslemSent = 0

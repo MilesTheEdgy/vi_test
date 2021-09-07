@@ -24,7 +24,7 @@ const SdcIslemler = ({match, location}) => {
 
  useEffect(() => {
    const fetchAllData = async () => {
-     const res = await fetchData(urlParams["?islem"], urlParams.id, urlParams.month, urlParams.year);
+     const res = await fetchData(urlParams["?service"], urlParams.id, urlParams.month, urlParams.year);
      setData(res)
    }
    fetchAllData()
@@ -76,7 +76,7 @@ const SdcIslemler = ({match, location}) => {
                  variant="outline"
                  shape="square"
                  size="sm"
-                 onClick={() => history.push(`/sd/islem/${item.ID}`)}
+                 onClick={() => history.push(`/islem/${item.ID}`)}
                >
                  Detailar
                </CButton>

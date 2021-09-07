@@ -341,4 +341,4 @@ const YeniBasvuru = () => {
     )
 }
 
-export default React.memo(() => YeniBasvuru())
+export default React.memo(YeniBasvuru)

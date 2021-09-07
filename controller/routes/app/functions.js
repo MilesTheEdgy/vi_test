@@ -111,7 +111,7 @@ const fetchAppsAccordToInterval = async (query, interval, selectStatement, condi
     if (interval !== "ALL")
         verifiedConditionParamsArr.shift()
     const queryString = queryConstructorInterval(selectStatement, verifiedConditionQueryArr)
-    console.log("Query string: ", queryString, "\n Condition params: ",  verifiedConditionParamsArr)
+    // console.log("Query string: ", queryString, "\n Condition params: ",  verifiedConditionParamsArr)
     const dbQuery = await pool.query(queryString, verifiedConditionParamsArr)
     // if query is details, return the entire array of objects, else return only the object in the array.
     return query === "details" ? dbQuery.rows : dbQuery.rows[0]
@@ -170,9 +170,10 @@ const getDealerApplications = async (query, date = "ALL", userID, status = "ALL"
     } else { // ELSE if user is querying as an exact date with month and year format...
         const [month, year] = date
         const extractMonthCondition = "EXTRACT(MONTH FROM sales_applications.submit_time) = "
-        const extracYearCondition = "EXTRACT(YEAR FROM sales_applications.submit_time) = "    
+        const extracYearCondition = "EXTRACT(YEAR FROM sales_applications.submit_time) = "
 
-        const conditionArr = [Number(month), Number(year), userID, status, service]
+
+        const conditionArr = [month, Number(year), userID, status, service]
         const conditionQueryArr = [extractMonthCondition, extracYearCondition, conditionSubmitter, conditionStatus, conditionService]
         return fetchAppsAccordToDate(query, selectStatement, conditionArr, conditionQueryArr)
     }

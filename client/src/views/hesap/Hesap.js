@@ -95,7 +95,6 @@ const Hesap = () => {
               }
             })
         const data = await res.json()
-        console.log(data)
         setUserDetails(data[0])
         setUserName(data[0].name)
         dispatch({type: "FILL_USER_INFO", payload: data[0]})

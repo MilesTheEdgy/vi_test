@@ -86,8 +86,8 @@ const SdcKullanici = ({match}) => {
   useEffect(() => {
     const fetchData = async () => {
       const allData = await fetchSalesData(id, "MAP", "ALL", month, year)
-      const filteredData = filterAndMapAppData(allData)
-      setSalesData(filteredData)
+      console.log('allData ', allData)
+      setSalesData(allData)
       setSalesReportLoading(false)
     }
     setSalesReportLoading(true)
@@ -176,7 +176,6 @@ const SdcKullanici = ({match}) => {
                 <div className = "sdcKullainici-divider"></div>
                 {
                   salesdata.map((obj, i) => {
-                    console.log(obj)
                     return (
                       <div key = {i+10}>
                       <CFormGroup row>
@@ -188,7 +187,7 @@ const SdcKullanici = ({match}) => {
                         <CCol sm = "6" lg="2">
                           <CFormGroup>
                             <CLabel> Toplam</CLabel>
-                            <CInput placeholder= {Number(obj.approvedCount) + Number(obj.rejectedCount)} readOnly />
+                            <CInput placeholder= {Number(obj.approvedCount) + Number(obj.rejectedCount) + Number(obj.sentCount) + Number(obj.processingCount)} readOnly />
                           </CFormGroup>
                         </CCol>
                         <CCol sm = "6" lg="2">
@@ -218,7 +217,7 @@ const SdcKullanici = ({match}) => {
                         <CCol sm = "6" lg="2" >
                           <CFormGroup>
                             <CLabel col></CLabel>
-                            <CButton onClick = {() => history.push(`/sdc/islemler?islem=${obj.routeName}&id=${userLoginData.ID}&month=${month}&year=${year}`)} color = "success" ><i className="fas fa-arrow-right"></i></CButton>
+                            <CButton onClick = {() => history.push(`/sdc/islemler?service=${obj.service_id}&id=${userLoginData.ID}&month=${month}&year=${year}`)} color = "success" ><i className="fas fa-arrow-right"></i></CButton>
                           </CFormGroup>
                         </CCol>
                         <div className = "sdcKullainici-divider"></div>

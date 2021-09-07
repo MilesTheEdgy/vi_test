@@ -88,6 +88,7 @@ app.get("/applications/:query", authenticateToken, async (req, res) => {
     else
         userID = req.query.userID
         
+    console.log("service ", service)
     try {
         let selectQuery
         // If the REQUEST QUERY date variables are month and year

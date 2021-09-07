@@ -588,6 +588,16 @@ export const satisdestekchef_nav =  [
     name: 'Kullanıcılar',
     to: '/sdc/kullanicilar',
     icon: <i className="fas fa-home c-sidebar-nav-icon"></i>
+  },
+  {
+    _tag: 'CSidebarNavTitle',
+    _children: ['İşlemler']
+  },
+  {
+    _tag: 'CSidebarNavItem',
+    name: 'Hizmetler',
+    to: '/sdc/hizmetler',
+    icon: <i className="fas fa-home c-sidebar-nav-icon"></i>
   }
 ]
 
