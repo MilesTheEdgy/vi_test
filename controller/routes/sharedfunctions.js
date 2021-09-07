@@ -9,15 +9,9 @@ const getGoal = async (services = "ALL", userID = "ALL", month = "ALL", year = "
     // Statements...
     const goalSelectStatement = "SELECT * FROM goals"
     const serviceConditionStatement = "service ="
-    const userConditionStatement = "for_user ="
+    const userConditionStatement = "for_user_id ="
     const extractMonthStatement = "EXTRACT(MONTH FROM for_date) ="
     const extractYearStatement = "EXTRACT(YEAR FROM for_date) ="
-
-    // If username == "ALL", dont change it since it will be omitted below anyways, ELSE get username accord to it's ID
-    let username
-    if (userID === "ALL")
-        username = "ALL"
-    else username = await getDealerName(userID)
 
     // If service == "ALL", dont change it since it will be omitted below anyways, ELSE, to prevent unicode in URL query
     // params, switch the service name to turkish letters to match it in the database
@@ -26,8 +20,18 @@ const getGoal = async (services = "ALL", userID = "ALL", month = "ALL", year = "
         service = services
     else service = switchServiceNameToTurkish(services)
 
+    let monthParam, yearParam
+    if (month === "current" && year === "current") {
+        const getDateQuery = await pool.query("SELECT date_part('month', (SELECT current_timestamp)) AS month, date_part('year', (SELECT current_timestamp)) AS year")
+        monthParam = getDateQuery.rows[0].month
+        yearParam = getDateQuery.rows[0].year
+    } else {
+        monthParam = month
+        yearParam = year
+    }
+    
     // Original arrays of query parameters and statements
-    const queryParams = [service, username, month, year]
+    const queryParams = [service, userID, monthParam, yearParam]
     const queryConditionStatements = [serviceConditionStatement, userConditionStatement, extractMonthStatement, extractYearStatement]
 
     // Verified arrays of query parameters and statements

@@ -3,8 +3,6 @@
      userRole: "sales_assistant_chef"
   }
 
-I WILL ALSO NEED TO CHECK THE OTHER ROUTES, REFACTOR CODE IF NEEDS BE (for tur to eng conversion)
-
 SHARED:
     * GET applications sales (
         dealer OPTION(name, ALL, SD-AREA)                           DONE!

@@ -7,9 +7,11 @@ import {
   CDropdownToggle,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
+import { Link, useHistory } from 'react-router-dom';
 
 const TheHeaderDropdown = () => {
   const dispatch = useDispatch()
+  const history = useHistory()
   return (
     <CDropdown
       inNav
@@ -22,6 +24,10 @@ const TheHeaderDropdown = () => {
         </div>
       </CDropdownToggle>
       <CDropdownMenu className="pt-0" placement="bottom-end">
+        <CDropdownItem onClick = {() => history.push("/hesap")}>
+          <CIcon name="cil-user" className="mfe-2" />
+          Hesap ayarları
+        </CDropdownItem>
         <CDropdownItem onClick = {() => {
             document.cookie = 'vitoken=eggkdjsewad67hgzshr6r0987rah68r0z76rh0z5075df7zh';
             dispatch({type: "LOGOUT"})

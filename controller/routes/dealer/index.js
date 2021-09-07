@@ -15,7 +15,7 @@ const { verifyReqBodyObjValuesNotEmpty } = require("../../helpers/middleware");
 
 const imageStorage = multer.diskStorage({
     // Destination to store image     
-    destination: 'uploads', 
+    destination: 'controller/routes/dealer/temp/', 
       filename: (req, file, cb) => {
           cb(null, file.fieldname + '_yoyo_' + Date.now() 
              + path.extname(file.originalname))
@@ -46,9 +46,9 @@ const app = module.exports = express();
 
 app.post("/applications", authenticateToken, verifyReqBodyObjValuesNotEmpty, upload.array("image", 3), async(req, res) => {
     try {
-        if (userInfo.userRole !== "dealer")
-            return customStatusError("user does not have premission to submit", res, 401, "user does not have premission to submit")
         const userInfo = res.locals.userInfo
+        if (userInfo.role !== "dealer")
+            return customStatusError("user does not have premission to submit", res, 401, "user does not have premission to submit")
         const { files } = req
         console.log(files)
         console.log(req.body)
@@ -60,8 +60,9 @@ app.post("/applications", authenticateToken, verifyReqBodyObjValuesNotEmpty, upl
             const imageUniqID = `${userInfo.userID}-${uniqid.process()}`
             console.log("imageUniqID", imageUniqID);
             fs.renameSync(`${files[i].path}`, `${files[i].destination}/${imageUniqID+fileExtension}`);
+            console.log( `renamed to ${files[i].destination}/${imageUniqID+fileExtension}`)
         }
-        const imageFolderPath = path.join(__dirname + "/uploads")
+        const imageFolderPath = path.join(__dirname + "/temp")
         console.log('imageFolderPath', imageFolderPath)
         let dbImageURLS = []
         fs.readdir(imageFolderPath, (err, filePaths) => {
@@ -72,7 +73,8 @@ app.post("/applications", authenticateToken, verifyReqBodyObjValuesNotEmpty, upl
             console.log("filePaths", filePaths)
             for (let i = 0; i < filePaths.length; i++) {
                 console.log('in cloudinary upload loop number ', i)
-                cloudinary.uploader.upload(__dirname + "/uploads/" + filePaths[i], {
+                console.log('FILEPATH: ', __dirname + "/temp/" + filePaths[i])
+                cloudinary.uploader.upload(__dirname + "/temp/" + filePaths[i], {
                      public_id: `iys/dealer_submissions/${userInfo.userID}/${highestApplicationID}/${filePaths[i].split('.').slice(0, -1).join('.')}`
                     }, async (err, result) => {
                     if (err) {
@@ -82,9 +84,7 @@ app.post("/applications", authenticateToken, verifyReqBodyObjValuesNotEmpty, upl
                         console.log(result); 
                         dbImageURLS.push(result.secure_url)
                         console.log('deleting from storage...')
-                        //send log
-                        await pool.query("INSERT INTO adminlogs (action, by, date) VALUES ('sent application', $1, CURRENT_TIMESTAMP)", [userInfo.username])
-                        fs.unlink(__dirname + "/uploads/" + filePaths[i], async err => {
+                        fs.unlink(__dirname + "/temp/" + filePaths[i], async err => {
                         if (err)
                             return status500Error(err, res, "An error occurred while uploading your application")
                         console.log('deleted')
@@ -108,6 +108,16 @@ app.get("/balance", authenticateToken, async (req, res) => {
     const { userInfo } = res.locals
     try {
         const query = await pool.query("SELECT balance FROM login WHERE user_id = $1", [userInfo.userID])
+        return res.status(200).json(query.rows[0])
+    } catch (err) {
+        return status500Error(err, res, "server error could not fetch your balance")
+    }
+})
+
+app.get("/activator", authenticateToken, async (req, res) => {
+    const { userInfo } = res.locals
+    try {
+        const query = await pool.query("SELECT name FROM login WHERE assigned_area = (SELECT assigned_area FROM login WHERE user_id = $1)", [userInfo.userID])
         return res.status(200).json(query.rows[0])
     } catch (err) {
         return status500Error(err, res, "server error could not fetch your balance")

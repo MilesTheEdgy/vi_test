@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useReducer } from 'react'
 import {
   CButton,
   CCard,
@@ -25,479 +25,318 @@ import {
   CInputFile
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
-import "./yenibasvuru.css";
-import Loader from "../../components/loader/Loader"
+import Modal from "../../components/modals/Modal"
+import HocLoader from "../hocloader/HocLoader"
+import { initialState, reducer } from "."
 
-const MissingInfoModal = ({reset}) => {
-    const [modalShow, setModalShow] = useState(true)
-    return (
-        <div className = "loginerrmodal-body">
-            <CModal
-                show={modalShow} 
-                centered= {true}
-                color= "danger"
-                borderColor = "danger"
-                onClosed = {() => {
-                    setModalShow(false)
-                    reset()
-                    }}
-            >
-                <div className = "loginerrmodal-header">
-                    <CModalTitle className = "loginerrmodal-title">HATALI GİRİŞ</CModalTitle>
-                </div>
-                <CModalBody>
-                Başvurunuzda eksik bilgi bulunyor, Lütfen Bilgilerinizi tamamlayınız
-                </CModalBody>
-                <CModalFooter>
-                <CButton 
-                    color="secondary" 
-                    onClick={() => {
-                        setModalShow(false)
-                        reset()
-                        }}
-                >Kapat
-                </CButton>
-                </CModalFooter>
-            </CModal>
-        </div>
-    )
-}
-
-const SubmitApplicationResultText = ({isSuccess, toasterText}) => {
+const Toaster = ({toasterObj}) => {
     return (
         <CToaster position="top-right">
-            <CToast show={true} autohide={3000} fade={true} color={isSuccess ? "success" : "danger"} className = "applicationToaster">
-                <CToastBody>{toasterText}</CToastBody>
+            <CToast show={true} autohide={3000} fade={true} color={toasterObj.color} className = "applicationToaster">
+                <CToastBody>{toasterObj.body}</CToastBody>
             </CToast>
         </CToaster>
     )
 } 
 
-const YeniBaşvuruExtraCheckboxes = ({setClientWantsRouter}) => {
+const ApplicationImages = ({dispatch, loadImages, applicationImages}) => {
+    return (
+        <>
+        <CFormGroup row>
+            <CCol md="3">
+                <CLabel>Başvuru dosyaları</CLabel>
+            </CCol>
+            <CCol xs="12" md="9">
+                <CInputFile
+                    id="file-multiple-input"
+                    name="file-multiple-input"
+                    multiple
+                    custom
+                    onChange={(e) => dispatch({type: "LOAD_IMAGES", payload: e.target.files})}
+                />
+                <CLabel htmlFor="file-multiple-input" variant="custom-file">
+                    Dosyalarını seç
+                </CLabel>
+            </CCol>
+        </CFormGroup>
+        {
+            applicationImages.length !== 0 ?
+            <CFormGroup row>
+                <CCol md="4">
+                    <img alt = "" style = {{maxWidth: "200px", maxHeight: "200px"}} src = {applicationImages[0]} />
+                </CCol>
+                <CCol md="4">
+                    <img alt = "" style = {{maxWidth: "200px", maxHeight: "200px"}} src = {applicationImages[1]} />
+                </CCol>
+                <CCol md="4">
+                    <img alt = "" style = {{maxWidth: "200px", maxHeight: "200px"}} src = {applicationImages[2]} />
+                </CCol>
+            </CFormGroup>
+            :
+            <CFormGroup row>
+                <CCol md="4">
+                    <img alt="" style={{ maxWidth: "200px", maxHeight: "200px" }} src="https://res.cloudinary.com/papyum/image/upload/v1629721581/iys/placeholder_fb7gch.png" />
+                </CCol>
+                <CCol md="4">
+                    <img alt="" style={{ maxWidth: "200px", maxHeight: "200px" }} src="https://res.cloudinary.com/papyum/image/upload/v1629721581/iys/placeholder_fb7gch.png" />
+                </CCol>
+                <CCol md="4">
+                    <img alt="" style={{ maxWidth: "200px", maxHeight: "200px" }} src="https://res.cloudinary.com/papyum/image/upload/v1629721581/iys/placeholder_fb7gch.png" />
+                </CCol>
+            </CFormGroup>
+        }
+        </>
+    )
+}
+
+const Services = ({selectedService, dispatch}) => {
+    const [services, setServices] = useState([])
+    const fetchData = async () => {
+        const res = await fetch('/services', {
+            headers: {
+                'Content-Type': 'application/json',
+                'authorization': `Bearer ${document.cookie.slice(8)} `
+            }
+        })
+        if (res.status === 200) {
+            const fetchData = await res.json()
+            setServices(fetchData)
+        }
+    }
+
+    useEffect(() => {
+        fetchData()
+    }, [])
+
     return (
         <CFormGroup row>
             <CCol md="3">
-                <CLabel>Modem istiyor mu?</CLabel>
+                <CLabel htmlFor="select">Verilen Hizmet</CLabel>
             </CCol>
-            <CCol md="9" onChange = {setClientWantsRouter} >
-                <CFormGroup variant="checkbox">
-                    <CInputRadio className="form-check-input" id="radio1" name="radios" value="option1" />
-                    <CLabel variant="checkbox" htmlFor="radio1">Modem istiyor</CLabel>
-                </CFormGroup>
-                <CFormGroup variant="checkbox">
-                    <CInputRadio className="form-check-input" id="radio2" name="radios" value="option2" />
-                    <CLabel variant="checkbox" htmlFor="radio2">Modem istemiyor</CLabel>
-                </CFormGroup>
+            <CCol xs="12" md="9">
+                <CSelect value={selectedService} custom name="select" id="select" onChange={(e) => dispatch({type: "SET_SERVICE", payload: e.target.value})} >
+                    <option value = {0}></option>
+                    {
+                        services && services.map(service => {
+                            return <option key = {service.service_id} value = {service.service_id} >{service.name}</option>
+                        })
+                    }
+                </CSelect>
+                <CFormText>Sağlamak istediğiniz hizmet</CFormText>
             </CCol>
         </CFormGroup>
     )
 }
 
-const SelectedOfferComp = ({selectedService, offers, setOfferValueDSL}) => {
-    const [selectedOfferEmpty, setSelectedOffer] = useState(false)
-     
+const Offers = ({dispatch, isServiceSelected, selectedServiceID, selectedOffer, setSelectedOffer}) => {
+    const [offers, setOffers] = useState([])
+    const [fetching, setFetching] = useState(true)
+    const handleInputDisabled = () => {
+        if(isServiceSelected === false && fetching === false)
+            return true
+        else if (fetching === true)
+            return true
+        else
+            return false
+    }
+    const handleServicesWithNoOffers = () => {
+        if (isServiceSelected === true && offers.length === 0)
+            return <option value = {0}>Bu hizmete kampanya bulunmuyor</option>
+        else return <option> </option>
+    }
+    const fetchData = async () => {
+        setFetching(true)
+        const res = await fetch(`/service/${selectedServiceID}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'authorization': `Bearer ${document.cookie.slice(8)} `
+            }
+        })
+        if (res.status === 200) {
+            const fetchData = await res.json()
+            setOffers(fetchData)
+        } else if (res.status === 406)
+            setOffers([])
+        setFetching(false)
+
+    }
+
     useEffect(() => {
-        if (selectedService.match(/^(|Devir|İptal|Nakil)$/))
-            setSelectedOffer(true)
-        // if (selectedService === ""
-        //  || selectedService === "Devir" 
-        //  || selectedService === "İptal" 
-        //  || selectedService === "Nakil") 
-
-        else setSelectedOffer(false)
-
-        return () => {
-            setSelectedOffer(false)
-        }
-    }, [selectedService])
+        if (isServiceSelected)
+            fetchData()
+        else
+            setOffers([])
+    }, [isServiceSelected, selectedServiceID])
 
     return (
-        <CSelect custom name="select" id="select" disabled = {selectedOfferEmpty ? true : false} onChange = {setOfferValueDSL} >
-        {
-            offers.map((offer, index) => {
-                return <option key = {`${index+1}`} >{offer}</option>
-            })
-        }
-        </CSelect>
+        <CFormGroup row>
+        <CCol md="3">
+            <CLabel htmlFor="select" >Kampanya Seçimi</CLabel>
+        </CCol>
+        <CCol xs="12" md="9">
+            <CSelect disabled = {handleInputDisabled()} 
+                     onChange = {setSelectedOffer} value={selectedOffer} onChange={(e) => dispatch({type: "SET_OFFER", payload: e.target.value})} >
+                {handleServicesWithNoOffers()}
+                {
+                    offers && offers.map(offer => {
+                        return <option key = {offer.offer_id} value = {offer.offer_id} >{offer.name}</option>
+                    })
+                }
+            </CSelect>
+            <CFormText>Seçmek istediğiniz kampanya</CFormText>
+        </CCol>
+        </CFormGroup>
     )
 }
 
-class YeniBasvuru extends React.Component {
-
-    constructor() {
-        super();
-        this.state = {
-            selectedService : "",
-            selectedOffer: "",
-            clientWantsRouter: 0,
-            clientDescription: "",
-            clientName: "",
-            clientAppFiles: null,
-            clientAppFilesObjURL: null,
-
-            offers : [],
-            dslOffers : [
-                "", "Ahlan", "3 Ay Bedava", "Fiber Hız Sever", "4 Mevsim"
-            ],
-            taahütOffers: [
-                "", "İnternette Fırsat Kampanyası", "Efsane Taahüt Yenileme Kampanyası", "En Güzel Taahüt Yenileme Kampanyası"
-            ],
-            tivibuOffers: [
-                "", "3 Ay Bedava Tivibu", "Sinema Paketi", "Super Paket", "Giriş Paket"
-            ],
-            PSTNOffers: [
-                "", "Sınırsız Konuş", "250DK konuşma Paketi"
-            ],
-            isOfferValueDSL: false,
-            isApplicationSubmitting: false,
-            isSubmitSuccess: undefined,
-            toasterText: "",
-            didApplicationFinishSubmit: false,
-
-            areAppFieldsMissing: false
-        }
-    }
-
-    setClientWantsRouter = (e) => {
-        let value = e.target.value
-        if (value === "option1") this.setState({clientWantsRouter: 1})
-        else this.setState({clientWantsRouter: 0})
-    }
-
-    setOfferValueDSL = (e) => {
-        let value = e.target.value
-        this.setState({selectedOffer: value})
-        if (this.state.selectedService === "DSL" && value !== "")
-        this.setState({isOfferValueDSL: true})
-        else this.setState({isOfferValueDSL: false})
-    }
-
-    selectedServiceHandler = (e) => {
-        let value = e.target.value
-        const { dslOffers, taahütOffers, tivibuOffers, PSTNOffers } = this.state;
-        this.setState({selectedService: value}) 
-        switch (value) {
-            case "DSL":
-                this.setState({offers: dslOffers, isOfferValueDSL: false})
-                break;
-            case "Taahüt":
-                this.setState({offers: taahütOffers, isOfferValueDSL: false})
-                break;
-
-            case "Tivibu":
-                this.setState({offers: tivibuOffers, isOfferValueDSL: false})
-                break;
-
-            case "PSTN":
-                this.setState({offers: PSTNOffers, isOfferValueDSL: false})
-                break;
-
-            default:
-                this.setState({offers: [], isOfferValueDSL: false})
-                break;
-        };
-    }
-
-    onDescriptionChange = (e) => {
-        this.setState({clientDescription: e.target.value});
-    }
-
-    onCustomernameChange = (e) => {
-        this.setState({clientName: e.target.value});
-
-    }
-
-    onSubmitApplication = async() => {
-        this.setState({
-            isApplicationSubmitting: true
-        })
-        const { selectedService, selectedOffer, 
-            clientWantsRouter, clientDescription,
-             clientName} = this.state;
-        const image = this.state.clientAppFiles
-
-        if (!selectedService || !clientDescription || !clientDescription || !clientName)  {
-            this.setState({areAppFieldsMissing: true})
-            return console.log(this.state.areAppFieldsMissing)
-        }
-        const formData = new FormData()
-        formData.append("selectedService", selectedService)
-        formData.append("selectedOffer", selectedOffer)
-        formData.append("clientWantsRouter", clientWantsRouter)
-        formData.append("clientDescription", clientDescription)
-        formData.append("clientName", clientName)
-        for (let i = 0; i < image.length; i++) {
-            formData.append("image", image[i])            
-        }
-        try {
-          const res = await fetch("/applications", {
-            method: "POST",
+const Activator = () => {
+    const [activator, setActivator] = useState("")
+    const fetchData = async () => {
+        const res = await fetch('/activator', {
             headers: {
-            'authorization' :`Bearer ${document.cookie.slice(8)} `
-            },
-            body: formData
-          })
-          if (res.status === 200 ) {
-            this.setState({
-                isSubmitSuccess: true,
-                toasterText: "Talebiniz başarıyla gönderilmiştir!"
-            })
-        } else {
-            this.setState({
-                isSubmitSuccess: false,
-                toasterText: "Bir sorun oldu, lütfen daha sonra tekrar deneyin"
-            })
-        }
-        this.setState({isApplicationSubmitting: false, didApplicationFinishSubmit: true})
-        this.resetInput();
-        setTimeout(() => this.resetAppStats(), 4300)
-
-        } catch (error) {
-          console.log(error)
-        }
-    }
-    
-    resetInput = () => {
-        this.setState({
-            selectedService : "",
-            selectedOffer: "",
-            clientWantsRouter: 0,
-            clientDescription: "",
-            clientName: "",
-            offers : [],
-            isOfferValueDSL: false,
-            areAppFieldsMissing: false
-        })
-    }
-
-    resetAppStats = () => {
-        this.setState({
-            isApplicationSubmitting: false,
-            isSubmitSuccess: undefined,
-            didApplicationFinishSubmit: false
-        })
-    }
-
-    loadImage = (event) => {
-        if (event.target.files) {
-            console.log("event.target.files", event.target.files)
-            const images = event.target.files;
-            // display error toaster if images total is not 3
-            if (images.length !== 3) {
-                this.setState({didApplicationFinishSubmit: true})
-                this.setState({
-                    isSubmitSuccess: false,
-                    toasterText: "Lütfen 3 adet resim seçiniz"
-                })
-                return setTimeout(() => this.resetAppStats(), 4300)
+                'Content-Type': 'application/json',
+                'authorization': `Bearer ${document.cookie.slice(8)} `
             }
-            let objURLS = []
-            // loop through the images and store image object as temp url in objURLS array
-            for (let i = 0; i < images.length; i++) {
-                // display error toaster if image is not pdf or jpg
-                if (images[i].type.indexOf("image") !== 0) {
-                    this.setState({didApplicationFinishSubmit: true})
-                    this.setState({
-                        isSubmitSuccess: false,
-                        toasterText: "Lütfen seçtiğiniz dosya resim (JPG, PNG) olduğundan emin olun"
-                    })
-                    return setTimeout(() => this.resetAppStats(), 4300)
-                }
-                const objURL = URL.createObjectURL(images[i])
-                objURLS.push(objURL)
-            }
-            this.setState({
-                clientAppFiles: images,
-                clientAppFilesObjURL: objURLS
-            })
+        })
+        if (res.status === 200) {
+            const fetchData = await res.json()
+            setActivator(fetchData.name)
         }
     }
 
-    onImageUpload = async () => {
-        const { selectedService, selectedOffer, 
-            clientWantsRouter, clientDescription,
-             clientName} = this.state;
-        const image = this.state.clientAppFiles
-        const formData = new FormData()
-        formData.append("selectedService", "selectedService")
-        formData.append("selectedOffer", "selectedOffer")
-        formData.append("clientWantsRouter", "clientWantsRouter")
-        formData.append("clientDescription", "clientDescription")
-        formData.append("clientName", "clientName")
-        for (let i = 0; i < image.length; i++) {
-            formData.append("image", image[i])            
-        }
-        try {
-          console.log("fetching")
-          const res = await fetch("/bayi/basvuru/yeni", {
-            method: "POST",
-            headers: {
-            'authorization' :`Bearer ${document.cookie.slice(8)} `
-            },
-            body: formData
-          })
-          const data = await res.json()
-          console.log("data from fetch", data)
-        } catch (error) {
-          console.log(error)
-        }
-      }
- 
-    render() {
-        const {selectedService, offers, isOfferValueDSL, isApplicationSubmitting, isSubmitSuccess, didApplicationFinishSubmit, clientDescription, clientName, areAppFieldsMissing, toasterText } = this.state;
-        return (
-            <CRow className = "d-flex justify-content-center">
-                <CCol xs="12" md="8">
-                {
-                    isApplicationSubmitting && <Loader/>
-                }
-                {
-                    didApplicationFinishSubmit && <SubmitApplicationResultText isSuccess = {isSubmitSuccess} toasterText = {toasterText} />
-                }
-                {
-                    areAppFieldsMissing ? <MissingInfoModal reset = {this.resetInput} /> : null
-                }
-                <CCard>
-                    <CCardHeader className = "basvuruFormHeader">
-                    Yeni Başvuru Sayfası
-                    </CCardHeader>
-                    <CCardBody>
-                    <CForm action="" method="post" encType="multipart/form-data" className="form-horizontal">
-                        <CFormGroup row>
-                            <CCol md="3">
-                                <CLabel htmlFor="disabled-input">Aktivasyon</CLabel>
-                            </CCol>
-                            <CCol xs="12" md="9">
-                                <CInput id="disabled-input" name="disabled-input" placeholder="Abdullah Kara" disabled />
-                            </CCol>
-                        </CFormGroup>
-                        <CFormGroup row>
-                            <CCol md="3">
-                                <CLabel htmlFor="disabled-input">Satış Sorumlusu</CLabel>
-                            </CCol>
-                            <CCol xs="12" md="9">
-                                <CInput id="disabled-input" name="disabled-input" placeholder="Erdem Mutlu" disabled />
-                            </CCol>
-                        </CFormGroup>
-                        <CFormGroup row>
-                            <CCol md="3">
-                                <CLabel htmlFor="disabled-input">Bayi</CLabel>
-                            </CCol>
-                            <CCol xs="12" md="9">
-                                <CInput id="disabled-input" name="disabled-input" placeholder="EGE İLETİŞİM" disabled />
-                            </CCol>
-                        </CFormGroup>
-                        <CFormGroup row>
-                        <CCol md="3">
-                            <CLabel htmlFor="select">Verilen Hizmet</CLabel>
-                        </CCol>
-                        <CCol xs="12" md="9">
-                            <CSelect value = {selectedService} custom name="select" id="select" onChange = {this.selectedServiceHandler} >
-                                <option></option>
-                                <option>DSL</option>
-                                <option>Taahüt</option>
-                                <option>Tivibu</option>
-                                <option>PSTN</option>
-                                <option>İptal</option>
-                                <option>Nakil</option>
-                                <option>Devir</option>
-                            </CSelect>
-                        </CCol>
-                        </CFormGroup>
-                        <CFormGroup row>
-                        <CCol md="3">
-                            <CLabel htmlFor="select" >Kampanya Seçimi</CLabel>
-                        </CCol>
-                        <CCol xs="12" md="9">
-                            <SelectedOfferComp selectedService = {selectedService} offers = {offers} setOfferValueDSL = {this.setOfferValueDSL} />
-                        </CCol>
-                        </CFormGroup>
-                        {
-                            isOfferValueDSL ?
-                                <YeniBaşvuruExtraCheckboxes setClientWantsRouter = {this.setClientWantsRouter}/>
-                            :
-                                null
-                        }
-                        <CFormGroup row>
-                        <CCol md="3">
-                            <CLabel htmlFor="textarea-input">Açıklama</CLabel>
-                        </CCol>
-                        <CCol xs="12" md="9">
-                            <CTextarea 
-                            name="textarea-input" 
-                            id="textarea-input" 
-                            rows="9"
-                            placeholder="İşlemle alakalı ekstra detaylarınız"
-                            value = {clientDescription}
-                            onChange = {this.onDescriptionChange}
-                            />
-                        </CCol>
-                        </CFormGroup>
-                        <CFormGroup row>
-                        <CCol md="3">
-                            <CLabel htmlFor="text-input">Müşteri</CLabel>
-                        </CCol>
-                        <CCol xs="12" md="9">
-                            <CInput value = {clientName} id="text-input" name="text-input" placeholder="" onChange = {this.onCustomernameChange}/>
-                            <CFormText>müşterinin isim soyisimi</CFormText>
-                        </CCol>
-                        </CFormGroup>
-                        <CFormGroup row>
-                            <CCol md="3">
-                                <CLabel>Başvuru dosyaları</CLabel>
-                            </CCol>
-                            <CCol xs="12" md="9">
-                                <CInputFile 
-                                id="file-multiple-input"
-                                name="file-multiple-input"
-                                multiple
-                                custom
-                                onChange = {this.loadImage}
-                                />
-                                <CLabel htmlFor="file-multiple-input" variant="custom-file">
-                                Dosyalarını seç
-                                </CLabel>
-                            </CCol>
-                        </CFormGroup>
-                        {
-                        this.state.clientAppFiles === null ?
-                        <CFormGroup row>
-                            <CCol md="4">
-                                <img alt = "" style = {{maxWidth: "200px", maxHeight: "200px"}} src = "https://res.cloudinary.com/papyum/image/upload/v1629721581/iys/placeholder_fb7gch.png" />
-                            </CCol>
-                            <CCol md="4">
-                                <img alt = "" style = {{maxWidth: "200px", maxHeight: "200px"}} src = "https://res.cloudinary.com/papyum/image/upload/v1629721581/iys/placeholder_fb7gch.png" />
-                            </CCol>
-                            <CCol md="4">
-                                <img alt = "" style = {{maxWidth: "200px", maxHeight: "200px"}} src = "https://res.cloudinary.com/papyum/image/upload/v1629721581/iys/placeholder_fb7gch.png" />
-                            </CCol>
-                        </CFormGroup>
-                        :
-                        <CFormGroup row>
-                            <CCol md="4">
-                                <img alt = "" style = {{maxWidth: "200px", maxHeight: "200px"}} src = {this.state.clientAppFilesObjURL[0]} />
-                            </CCol>
-                            <CCol md="4">
-                                <img alt = "" style = {{maxWidth: "200px", maxHeight: "200px"}} src = {this.state.clientAppFilesObjURL[1]} />
-                            </CCol>
-                            <CCol md="4">
-                                <img alt = "" style = {{maxWidth: "200px", maxHeight: "200px"}} src = {this.state.clientAppFilesObjURL[2]} />
-                            </CCol>
-                        </CFormGroup>
-                        }
-                    </CForm>
-                    </CCardBody>
-                    <CCardFooter>
-                    <CButton type="submit" size="sm" color="primary" onClick = {this.onSubmitApplication} ><CIcon name="cil-scrubber"/> Gönder</CButton>
-                    <CButton type="reset" size="sm" color="danger" onClick = {this.resetInput}  ><CIcon name="cil-ban"/> Resetle</CButton>
-                    </CCardFooter>
-                </CCard>
-                
-                </CCol>
-            </CRow>
-        )
-    }
+    useEffect(() => {
+        fetchData()
+    }, [])
 
+    return (
+        <CFormGroup row>
+            <CCol md="3">
+                <CLabel htmlFor="disabled-input">Aktivasyon</CLabel>
+            </CCol>
+            <CCol xs="12" md="9">
+                <CInput id="disabled-input" name="disabled-input" placeholder={activator} disabled />
+                <CFormText>Sorumlu aktivasyon kişi</CFormText>
+            </CCol>
+        </CFormGroup>
+    )
 }
 
-export default YeniBasvuru
+const YeniBasvuru = () => {
+
+    const [state, dispatch] = useReducer(reducer, initialState)
+    // Forms's controlled input fields' values
+    const { selectedService, selectedOffer, clientDescription, clientName, applicationImages } = state
+
+    // Form's other values that control the flow of the form itself
+    const { isServiceSelected, isOfferSelected, isDescriptionInputted, isClientNameInputted, applicationImagesObjUrls, areImagesInputted, toasters, modalObj, modalTextObj } = state
+
+    const [inputFieldsNotEmpty, setInputFieldsNotEmpty] = useState(true)
+    const [modalOn, setModalOn] = useState(false)
+    const [loading, setLoading] = useState(false)
+
+    const resetInput =() => {
+
+    }
+
+    const onSubmit = async () => {
+        setLoading(true)
+        const formData = new FormData()
+
+        formData.append("selectedService", selectedService)
+        formData.append("selectedOffer", selectedOffer)
+        formData.append("clientDescription", clientDescription)
+        formData.append("clientName", clientName)
+        for (let i = 0; i < applicationImages.length; i++) {
+            formData.append("image", applicationImages[i])
+        }
+        const res = await fetch("/applications", {
+            method: "POST",
+            headers: {
+                'authorization' :`Bearer ${document.cookie.slice(8)} `
+            },
+            body: formData
+        })
+        if (res.status === 200) {
+            dispatch({type: "SET_MODAL_TEXT_SUCCESS"})
+            setModalOn(true)
+        } else {
+            dispatch({type: "SET_MODAL_TEXT_FAILURE"})
+            setModalOn(true)
+        }
+        setLoading(false)
+    }
+
+    useEffect(() => {
+        const verifyFields = () => {
+            const inputFields = [isServiceSelected, isOfferSelected, isDescriptionInputted, isClientNameInputted, areImagesInputted]
+            for (let i = 0; i < inputFields.length; i++) {
+                if (inputFields[i] === false) 
+                    return true
+                
+            }
+            return false
+        }
+        setInputFieldsNotEmpty(verifyFields())
+    }, [isServiceSelected, isOfferSelected, isDescriptionInputted, isClientNameInputted, areImagesInputted])
+
+    return (
+        <CRow className="d-flex justify-content-center">
+        {/* I'm mapping the toasters from toasters array, each element is an object, object has: element, textObj, and 
+            for every element in the array I'm calling the element's "element", which is a function that returns a react
+            element, and giving it "textObj" as props, and passing index as second argument. 
+        */}
+        {toasters && toasters.map((toaster, i) => ( toaster.element(toaster.textObj, i)))}
+        <Modal modalOn = {modalOn} setModal = {setModalOn} color = {modalTextObj.color} header = {modalTextObj.header} body = {modalTextObj.body} />
+            <CCol xs="12" md="8">
+                <HocLoader relative isLoading = {loading}>
+                <CCard>
+                    <CCardHeader className="basvuruFormHeader">
+                        Yeni Başvuru Sayfası
+                    </CCardHeader>
+                    <CCardBody>
+                            <Activator />
+
+                            <Services dispatch = {dispatch} selectedService = {selectedService} />
+                            
+                            <Offers dispatch = {dispatch} isServiceSelected = {isServiceSelected} selectedServiceID = {selectedService} />
+
+                            <CFormGroup row>
+                                <CCol md="3">
+                                    <CLabel htmlFor="textarea-input">Açıklama</CLabel>
+                                </CCol>
+                                <CCol xs="12" md="9">
+                                    <CTextarea
+                                        name="textarea-input"
+                                        id="textarea-input"
+                                        rows="9"
+                                        placeholder="İşlemle alakalı ekstra detaylarınızı buraya yazın"
+                                        value={clientDescription}
+                                        onChange={(e) => dispatch({type: "SET_CLIENT_DESCRIPTION", payload: e.target.value})}
+                                    />
+                                    <CFormText>İşlemle alakalı açıklamanız</CFormText>
+                                </CCol>
+                            </CFormGroup>
+
+                            <CFormGroup row>
+                                <CCol md="3">
+                                    <CLabel htmlFor="text-input">Müşteri</CLabel>
+                                </CCol>
+                                <CCol xs="12" md="9">
+                                    <CInput value={clientName} id="text-input" name="text-input" placeholder="" onChange={(e) => dispatch({type: "SET_CLIENT_NAME", payload: e.target.value})} />
+                                    <CFormText>müşterinin isim soyisimi</CFormText>
+                                </CCol>
+                            </CFormGroup>
+                            <ApplicationImages dispatch = {dispatch} applicationImages = {applicationImagesObjUrls} />
+                    </CCardBody>
+                    <CCardFooter>
+                        <CButton type="submit" size="sm" color="primary" onClick={onSubmit} disabled = {inputFieldsNotEmpty} ><CIcon name="cil-scrubber" /> Gönder</CButton>
+                        <CButton type="reset" size="sm" color="danger" onClick={resetInput}  ><CIcon name="cil-ban" /> Resetle</CButton>
+                    </CCardFooter>
+                </CCard>
+                </HocLoader>
+            </CCol>
+        </CRow>
+    )
+}
+
+export default React.memo(() => YeniBasvuru())

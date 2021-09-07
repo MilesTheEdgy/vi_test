@@ -48,3 +48,13 @@ export const getBadge = (status)=>{
        default: return 'primary'
     }
   }
+
+export const mapRoleToTurkish = (status)=>{
+  switch (status) {
+      case 'dealer': return 'Bayi'
+      case 'sales_assistant': return 'Satış Destek'
+      case 'sales_assistant_chef': return 'Satış Destek Şefi'
+      case 'admin': return 'Admin'
+      default: return ''
+  }
+}

@@ -38,7 +38,7 @@ app.get("/service/:serviceID", async (req, res) => {
         const offersQuery = await pool.query("SELECT * FROM offers WHERE service_id = $1", [serviceID])
         if (offersQuery.rowCount === 0) {
             const errorStr = "offers under requested service ID " + serviceID + " does not exist in database"
-            return customStatusError(errorStr, res, 401, "offers under your requested service ID does not exist")
+            return customStatusError(errorStr, res, 406, "offers under your requested service ID does not exist")
         }
         return res.status(200).json(offersQuery.rows)
     } catch (error) {
@@ -66,7 +66,7 @@ app.get("/application/:applicationID", authenticateToken, async(req, res) => {
             query = await pool.query(queryStatement, [applicationID])
         // else, return the application ONLY if the request submitter is the same as the application submitter
         else {
-            query = await pool.query(queryStatement + submitterConditionalStatement, [applicationID])
+            query = await pool.query(queryStatement + submitterConditionalStatement, [applicationID, res.locals.userInfo.userID])
             // if the submitter who requested the application through application ID returns
             // empty (probably because reqSubmitterRole is not the same as application submitter) return error
             if (query.rows.length === 0)
@@ -102,7 +102,7 @@ app.get("/applications/:query", authenticateToken, async (req, res) => {
 app.get("/user", authenticateToken, async (req, res) => {
     try {
         const { userID } = res.locals.userInfo
-        const selectStatement = "SELECT username, role, balance, register_date, email, name FROM login WHERE user_id = $1"
+        const selectStatement = "SELECT role, balance, register_date, email, name FROM login WHERE user_id = $1"
         const query = await pool.query(selectStatement, [userID])
         return res.status(200).json(query.rows)
     } catch (err) {
@@ -179,15 +179,15 @@ app.get("/users", authenticateToken, async (req, res) => {
 // regarding the respective query.
 app.get("/goal", authenticateToken, async (req, res) => {
     try {
-        const { service, userID, month, date } = req.query
+        const { service, userID, month, year } = req.query
         let submitterID
         // If the submitter's role is a dealer, assign submitter ID to his own ID
-        if (res.locals.userInfo.userRole === "dealer")
+        if (res.locals.userInfo.role === "dealer")
             submitterID = res.locals.userInfo.userID
         // else assign submitterID to whatever the requester sent in req.query
         else
             submitterID = userID
-        const result = await getGoal(service, submitterID, month, date)
+        const result = await getGoal(service, submitterID, month, year)
         return res.json(result)
     } catch (err) {
         return status500Error(err, res, "server error, could not fetch your goal")
@@ -270,35 +270,68 @@ app.get("/transaction/:appID", async (req, res) => {
 })
 
 // This route is responsible for fetching the requester's transaction reports, it returns the sum of all earnings made in the
-// queried month, it takes date as a mandatory url parameter.
-app.get("/report/transactions/:date", authenticateToken, async (req, res) => {
+// queried month, it takes date and report_id as parameters to the query, if date, returns that month's user transactions, else
+// if reportID, returns that transaction_report_id's transactions, else return all user's transactions
+app.get("/report/transactions", authenticateToken, async (req, res) => {
     const { userInfo } = res.locals
+    const { date, reportID } = req.query
 
-    const { date } = req.params
+    const queryStatement = "SELECT * FROM transaction_reports WHERE user_id = $1"
+    const queryStatementDate = "SELECT * FROM transaction_reports WHERE user_id = $1 AND EXTRACT(month from date) = (SELECT date_part('month', $2 ::timestamp)) AND EXTRACT(year from date) = (SELECT date_part('year', $2 ::timestamp))"
+    const queryStatementAppTransacForReport = "SELECT sales_applications_details.client_name, sales_applications_details.selected_service, transactions.amount, transactions.app_id, transactions.transaction_id, transactions.balance_before, transactions.balance_after, to_char(transactions.date, 'YYYY-MM-DD') AS date, transactions.report_id FROM sales_applications_details INNER JOIN transactions ON sales_applications_details.transaction_id = transactions.transaction_id WHERE transactions.report_id = $1 AND transactions.user_id = $2"
+    let query
+
     try {
-        const queryStatement = "SELECT * FROM transactions WHERE EXTRACT(month from date) = (SELECT date_part('month', $1 ::timestamp)) AND EXTRACT(year from date) = (SELECT date_part('year', $1 ::timestamp)) AND user_id = $2"
-        const query = await pool.query(queryStatement, [date, userInfo.userID])
+        if (date)
+            query = await pool.query(queryStatementDate, [userInfo.userID, date])
+        else if (reportID)
+            query = await pool.query(queryStatementAppTransacForReport, [reportID, userInfo.userID])
+        else
+            query = await pool.query(queryStatement, [userInfo.userID])
         return res.json(query.rows)
     } catch (error) {
         return status500Error(error, res, "Could not fetch transaction report")        
     }
+})
 
+app.get("/report/transactions/count", authenticateToken, async (req, res) => {
+    const { userInfo } = res.locals
+    const { date } = req.query
+    const queryStatement = "SELECT COUNT(report_id) FROM transaction_reports WHERE user_id = $1"
+    const queryStatementDate = "SELECT COUNT(report_id) FROM transaction_reports WHERE user_id = $1 AND EXTRACT(month from date) = (SELECT date_part('month', $2 ::timestamp)) AND EXTRACT(year from date) = (SELECT date_part('year', $2 ::timestamp))"
+    let query
+    try {
+        if (date)
+            query = await pool.query(queryStatementDate, [userInfo.userID, date])
+        else
+            query = await pool.query(queryStatement, [userInfo.userID])
+        if (query.rows[0].count)
+            return res.json(query.rows[0])
+        else
+            return res.json("0")
+    } catch (error) {
+        return status500Error(error, res, "Could not fetch transaction report")        
+    }
 })
 
 // This route is responsible for fetching the requester's requested user's transactions' reports.
 // it takes { userID, date } as mandatory url parameters 
-app.get("/report/transactions/:userID/:date", authenticateToken, async (req, res) => {
+app.get("/report/transactions/:userID", authenticateToken, async (req, res) => {
     const { userInfo } = res.locals
 
     if (userInfo.userRole !== "sales_assistant_chef" && userInfo.userRole !== "sales_assistant")
         return customStatusError("user role: '"+userInfo.userRole+"' is not authenticated", res , 401, "You're not authenticated to make this request")
-    const { date, userID } = req.params
+    const { userID } = req.params
+    const { date } = req.query
     try {
-        const queryStatement = "SELECT * FROM transactions WHERE EXTRACT(month from date) = (SELECT date_part('month', $1 ::timestamp)) AND EXTRACT(year from date) = (SELECT date_part('year', $1 ::timestamp)) AND user_id = $2"
-        const query = await pool.query(queryStatement, [date, userID])
+        if (date)
+            queryStatement = "SELECT * FROM transaction_reports WHERE user_id = $1 AND EXTRACT(month from date) = (SELECT date_part('month', $2 ::timestamp)) AND EXTRACT(year from date) = (SELECT date_part('year', $2 ::timestamp))"
+        else
+            queryStatement = "SELECT * FROM transaction_reports WHERE user_id = $1"
+        const query = await pool.query(queryStatement, [userID, date])
         return res.json(query.rows)
     } catch (error) {
-        return status500Error(error, res, "Could not fetch that user's transaction report")        
+        return status500Error(error, res, "Could not fetch transaction report")        
     }
 })
 

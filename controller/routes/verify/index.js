@@ -35,7 +35,7 @@ app.get("/validate-token", authenticateToken, async (req, res) => {
         if (active === false)
             return customStatusError("User with email "+email+" was deactivated", res, 401, "You have been deactivated please contact administration")
         return res.status(200).json({
-            userRole: role,
+            role,
             name,
             balance,
             assigned_area

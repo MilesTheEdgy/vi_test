@@ -13,47 +13,12 @@ import {
   CInputGroup,
   CInputGroupPrepend,
   CInputGroupText,
-  CRow,
-  CModal,
-  CModalBody,
-  CModalFooter,
-  CModalTitle
+  CRow
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import "./login.css"
-
-const LoginErrModal = () => {
-  const [showModal, closeModal] = useState(true)
-  const dispatch = useDispatch()
-  return (
-    <div className = "loginerrmodal-body">
-      <CModal
-        show={showModal} 
-        centered= {true}
-        color= "danger"
-        borderColor = "danger"
-        onClosed = {() => {
-          dispatch({type: "LOGIN-ERROR-CLOSE"})
-          closeModal(false)
-        }}
-      >
-        <div className = "loginerrmodal-header">
-          <CModalTitle className = "loginerrmodal-title">HATALI GİRİŞ</CModalTitle>
-        </div>
-        <CModalBody>
-          Lütfen bilgilerinizi kontrol ederek tekrar deneyin
-        </CModalBody>
-        <CModalFooter>
-          <CButton 
-            color="secondary" 
-            onClick={() => closeModal(false)}
-          >Kapat
-          </CButton>
-        </CModalFooter>
-      </CModal>
-    </div>
-  )
-}
+import Modal from '../../components/modals/Modal';
+import HocLoader from '../../views/hocloader/HocLoader';
 
 class Login extends React.Component {
 
@@ -61,7 +26,13 @@ class Login extends React.Component {
     super()
     this.state = {
       email: "",
-      password: ""
+      password: "",
+      modalColor: "", 
+      modalOn: false, 
+      modalBody: "", 
+      modalHeader: "", 
+      modalColor: "",
+      loading: false
     }
   };
 
@@ -73,10 +44,24 @@ class Login extends React.Component {
     this.setState({password: e.target.value});
   };
 
+  setModal = (e) => {
+    this.setState({ modalOn: !this.state.modalOn })
+  }
 
   onSubmit = async () => {
-    // document.cookie = 'token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    this.setState({loading: true})
     this.props.logoutUser()
+    //verify email
+    const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    const isEmailValid = re.test(String(this.state.email).toLowerCase());
+    if (!isEmailValid)
+      return this.setState({
+        modalOn: true,
+        modalHeader: "Hatalı email",
+        modalBody: "Lütfen geçerli bir email adresi giriniz",
+        modalColor: "warning"
+      })
+    // verify email end
     let res = await fetch("/login", {
       method: 'POST',
       headers: {
@@ -88,39 +73,35 @@ class Login extends React.Component {
         password: this.state.password
       })
     })
+    this.setState({loading: false})
     if (res.status === 200) {
       let data = await res.json()
-      // console.log("token from login: ", data.token)
       document.cookie = `vitoken=${data.token}`
-      let userData = {
-        email: data.email,
-        userRole: data.userRole,
-        name: data.name
-      }
       this.props.userLoggingin()
-      this.props.fillUserInfo(userData)
-      // this.props.history.push("/anasayfa")
+      this.props.fillUserInfo(data)
 
     } else {
-      this.props.userLoggininErr()
+      this.setState({
+        modalOn: true,
+        modalHeader: "Hatalı giriş",
+        modalBody: "Lütfen bilgilerinizi kontrol ederek tekrar deneyin",
+        modalColor: "danger"
+      })
     }
-    // if (res.status === 200) {
-    //   this.props.userLoggininErr()
-    // }
+  }
 
+  componentWillUnmount = () => {
+    this.setState(this.state)
   }
 
   render() {
+    const { loading, modalColor, modalOn, modalBody, modalHeader } = this.state
     return (
+      <HocLoader absolute = {true} isLoading = {loading}>
       <div className="c-app c-default-layout flex-row align-items-center">
         <CContainer>
+          <Modal modalOn = {modalOn} color = {modalColor} header = {modalHeader} body = {modalBody} setModal = {this.setModal} />
           <CRow className="justify-content-center">
-          {
-            this.props.loginErr ?
-            <LoginErrModal/>
-            :
-            <> </>
-          }
             <CCol md="8">
               <CCardGroup>
                 <CCard className="p-4">
@@ -171,6 +152,7 @@ class Login extends React.Component {
           </CRow>
         </CContainer>
       </div>
+      </HocLoader>
     )  
   }
 }

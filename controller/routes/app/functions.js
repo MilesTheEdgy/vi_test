@@ -15,7 +15,6 @@ const queryConstructorInterval = (selectStatement, conditionArr) => {
 
 // Converts the INTERVAL input sent through the REQUEST INTERVAL QUERY PARAMS to an sql statement, and returns an sql statement
 const convertDateInputToSQLInterval = (interval) => {
-    console.log('VALUE OF INTERVAL ', interval)
     let conditionTime = "submit_time > now() - interval"
     switch (interval) {
         case "today":

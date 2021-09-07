@@ -2,7 +2,8 @@ const pool = require("../../database")
 const { 
     status500Error,
     verifyServiceNameFromInput, 
-    verifyOfferFromInput
+    verifyOfferFromInput,
+    customStatusError
 } = require("../../helpers/functions")
 
 // verifies the client_wants_router input coming from send application
@@ -84,7 +85,7 @@ const verifyApplicationInput = async (reqBody) => {
 
 const sendApplication = async (userInfo, reqBody, photoURLS, res) => {    
     // verify all the input coming from request object
-    const verfiyAppInput = await verifyApplicationInput(obj)
+    const verfiyAppInput = await verifyApplicationInput(reqBody)
     if (verfiyAppInput.ok === false)
         return customStatusError(verfiyAppInput.error, res, verfiyAppInput.statusCode, verfiyAppInput.resString)
     

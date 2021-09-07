@@ -2,29 +2,29 @@ import { CCard, CCardBody, CCardHeader, CCol, CRow, CFormGroup, CLabel, CInput, 
 import { setHeaderColor, renderMiddleTextArea, forRoleSetFormLabel, renderFooterTextArea } from '.'
 import { useSelector } from "react-redux"
 import "./AppDataForm.css"
-import { useHistory } from 'react-router'
+// import { useHistory } from 'react-router'
 import React from 'react'
 
 const AppDataForm = ({isEditable, userDetails, setSdDetay}) => {
     const userRole = useSelector(state => state.reducer.loggedInUserInfo.loggedInRole)
     const forRoleSetFields = forRoleSetFormLabel(userRole)
     // const [clientAppImageURLS, setClientAppImageURLS] = React.useState([])
-    const history = useHistory()
+    // const history = useHistory()
     // React.useEffect(() => {
     //   if (userDetails.imageURLS)
     //     setClientAppImageURLS(userDetails.imageURLS)
     // }, [])
     return(
     <CRow className = "justify-content-center align-items-center">
-        <CCol xs="12" sm="8">
+        <CCol xs="12" sm="12">
           <CCard>
             <CCardHeader className = "basvuru-detay-header" style = {{backgroundColor: setHeaderColor(userDetails)}}>
               <h4>Başvuru Detay</h4>
-              <CCol sm = "2" className = "basvuru-detay-header-buttonCol">
+              {/* <CCol sm = "2" className = "basvuru-detay-header-buttonCol">
                 <CButton active block color="secondary" aria-pressed="true" onClick = {() => history.goBack()}>
                     Geri
                  </CButton>
-              </CCol>
+              </CCol> */}
             </CCardHeader>
             <CCardBody className = "basvuru-detay" >
               <CFormGroup row className="my-0">

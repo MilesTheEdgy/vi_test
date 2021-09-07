@@ -2,7 +2,7 @@ import React from "react";
 import { CModal, CModalHeader, CModalTitle, CModalFooter, CModalBody, CButton } from "@coreui/react"
 
 function Modal(props) {
-    if (props.dispatch) {
+    if (props.dispatch)
         return (
             <CModal 
             show={props.on} 
@@ -21,7 +21,7 @@ function Modal(props) {
                 </CModalFooter>
             </CModal>
         )
-    } else {
+    else
         return (
             <CModal 
             show={props.modalOn}
@@ -40,7 +40,6 @@ function Modal(props) {
                 </CModalFooter>
             </CModal>
         )
-    }
 }
 
 export default Modal

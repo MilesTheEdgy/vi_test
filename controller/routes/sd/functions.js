@@ -55,10 +55,15 @@ const updateApplicationPhase2 = async (client, statusChange, salesRepDetails, ap
             const balanceAfter = Number(balanceBefore) + Number(offerValue)
 
             // insert the tranasction record
-            await client.query("INSERT INTO transactions VALUES($1, $2, $3, $4, $5)",
+            const insertTransactionAndReturnID = await client.query("INSERT INTO transactions VALUES($1, $2, $3, $4, $5) RETURNING transaction_id",
              [submitter, appID, balanceBefore, offerValue, balanceAfter])
+            // update user's balance
             await client.query("UPDATE login SET balance = balance + $1 WHERE user_id = $2", [offerValue, submitter])
-
+            
+            // update the transaction_id column for the respective application
+            const transactionID = insertTransactionAndReturnID.rows[0].transaction_id
+            await client.query("UPDATE sales_applications_details SET transaction_id = $1 WHERE id = $2", [transactionID, appID])
+            
             // this code block checks if a goal exists for the respective service, respective user and the respective date. If it exists, it checks whether
             // it's fullfilled or not (the goal barrem reached), if true, it updates success to true then performs the increment. if false, it performs the
             // increment regardless

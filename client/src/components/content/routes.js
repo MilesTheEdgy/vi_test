@@ -15,6 +15,9 @@ const SdcIslemler = lazy(() => import('../../views/sdckullanicilar/SdcIslemler')
 const SdcIslem = lazy(() => import('../../views/sdckullanicilar/SdcIslem'))
 const SdcHedefEkle = lazy(() => import("../../views/sdc/hedefekle/HedefEkle"))
 const BasvuruID = lazy(() => import('../../views/basvuruid/BasvuruID'))
+const Hesap = lazy(() => import("../../views/hesap/Hesap"))
+const KazancRapor = lazy(() => import("../../views/rapor/KazancRapor"))
+const KazancRaporDetay = lazy(() => import("../../views/rapor/KazancRaporDetay"))
 
 const routes = [
   { path: '/', exact: true, name: 'Home' },
@@ -31,7 +34,10 @@ const routes = [
   { path: '/sdc/islemler', exact: true, name: 'SDC İşlemler', component: SdcIslemler},
   { path: '/sdc/hedefekle', exact: true, name: 'SDC Hedef Ekle', component: SdcHedefEkle},
   { path: '/sd/islem/:id', exact: true, name: 'SDC İşlem', component: SdcIslem},
-  { path: '/islem/:id', exact: true, name: 'İşlem ID', component: BasvuruID}
+  { path: '/islem/:id', exact: true, name: 'İşlem ID', component: BasvuruID},
+  { path: "/hesap", exact: true, name: 'Hesap Detayları', component: Hesap},
+  { path: "/bayi/rapor/kazanc", exact: true, name: 'Bayi kazanç raporları', component: KazancRapor},
+  { path: "/bayi/rapor/kazanc/detay/:id", exact: true, name: 'Bayi kazanç raporlar detayı', component: KazancRaporDetay}
 ];
 
 export default routes;

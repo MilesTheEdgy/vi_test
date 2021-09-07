@@ -16,6 +16,22 @@ import XLSX from "xlsx";
 import { getBadge, mapDataToTurkish } from '../../components'
 import { switchRaporHeader } from "."
 
+// it returns a query string to allow for dynamic fetching from server
+const returnRaporQueryString = (queryObj) => {
+  let url = ""
+  for (const key in queryObj) {
+      if (key === "sayfa" || key === "?sayfa" || key === "q" || key === "?q")
+        continue
+      else
+        url = url+key+"="+queryObj[key]+"&"
+  }
+  let removeLastAndChar = url.slice(0, -1)
+  if (removeLastAndChar.charAt(0) === "?")
+    return removeLastAndChar.substr(1)
+
+  return removeLastAndChar
+}
+
 const Rapor = ({match, location}) => {
   const history = useHistory()
   const queryPage = useLocation().search.match(/sayfa=([0-9]+)/, '')
@@ -24,14 +40,14 @@ const Rapor = ({match, location}) => {
   const [loading, setLoading] = useState(true)
   const [usersData, setUsersData] = useState(undefined)
   const qsQuery = qs.parse(location.search)
+  const qsQueryString = returnRaporQueryString(qsQuery)
   let urlStatusParam = ""
   if (qsQuery.status)
     urlStatusParam  = qsQuery.status
   else
     urlStatusParam = qsQuery["?status"]
-
   const pageChange = newPage => {
-    currentPage !== newPage && history.push(`/bayi/islemler/rapor?sayfa=${newPage}&status=${urlStatusParam}`)
+    currentPage !== newPage && history.push(`/bayi/islemler/rapor?sayfa=${newPage}&${qsQueryString}`)
   }
 
   const exportFile = () => {
@@ -52,7 +68,8 @@ const Rapor = ({match, location}) => {
     currentPage !== page && setPage(currentPage)
     const fetchData = async () => {
       setLoading(true)
-      const res = await fetch(`/applications/details/?status=${urlStatusParam}`, {
+      const url = `/applications/details/?${qsQueryString}`
+      const res = await fetch(url, {
         method: 'GET',
         headers: {
           'content-type': 'application/json',
@@ -73,8 +90,6 @@ const Rapor = ({match, location}) => {
   return (
     <CRow className = "d-flex justify-content-center">
       <CCol xl={10}>
-      {
-        usersData ? 
         <CCard>
           <CCardHeader>
             Raporunuz
@@ -117,10 +132,6 @@ const Rapor = ({match, location}) => {
             />
           </CCardBody>
         </CCard>
-        :
-        <h1>loading</h1>
-      }
-
       </CCol>
     </CRow>
   )

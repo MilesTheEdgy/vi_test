@@ -8,10 +8,9 @@ const initialState = {
   loggedInUserInfo: {
     loggedInName: "",
     loggedInRole: "",
-    loggedInEmail: ""
+    loggedInEmail: "",
+    loggedInBalance: ""
   },
-  loginErr: false,
-  ///////////////////////
 
   appsData: [],
   sdc: {
@@ -24,14 +23,6 @@ const defaultUserInfo = {
   loggedInRole: "",
   loggedInUserFullName: ""
 }
-
-// const BAYI = "BAYI";
-// const SATIS_DESTEK = "SATIS_DESTEK";
-// const SATIS_DESTEK_SEF = "SATIS_DESTEK_SEF";
-// const MUDUR = "MUDUR";
-// const SATIS_TEMSILCI = "SATIS_TEMSILCI";
-// const MUHASEBE = "MUHASEBE";
-// const AKSESUARCI = "AKSESUARCI";
 
 const sidebarState = (state = initialState, { type, ...rest }) => {
   switch (type) {
@@ -58,21 +49,16 @@ const reducer = (state = initialState, action) => {
         loginErr: true
       };
 
-    case "LOGIN-ERROR-CLOSE":
-      return {
-        ...state,
-        loginErr: false
-      };
-
     case "FILL_USER_INFO":
-      const { name, userRole, email } = action.payload;
+      const { name, role, email, balance } = action.payload;
       return {
         ...state,
         loggedInUserInfo: {
           ...state.loggedInUserInfo,
           loggedInName: name,
-          loggedInRole: userRole,
-          loggedInEmail: email
+          loggedInRole: role,
+          loggedInEmail: email,
+          loggedInBalance: balance
         }
       }
     

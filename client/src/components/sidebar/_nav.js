@@ -599,68 +599,6 @@ export const bayi_nav =  [
     to: '/anasayfa',
     icon: <i className="fas fa-home c-sidebar-nav-icon"></i>
   },
-  // {
-  //   _tag: 'CSidebarNavDropdown',
-  //   name: 'Bayiye Özel',
-  //   route: '/bayiye',
-  //   icon: <i className="fas fa-user-tag c-sidebar-nav-icon"></i>,
-  //   _children: [
-  //     {
-  //       _tag: 'CSidebarNavItem',
-  //       name: 'Kasa Yap',
-  //       to: '/bayiye/kasa-yap',
-  //     },
-  //     {
-  //       _tag: 'CSidebarNavItem',
-  //       name: 'Önceki Kasalara Bak',
-  //       to: '/bayiye/oncekikasa',
-  //     }
-  //   ],
-  // },
-  // {
-  //   _tag: 'CSidebarNavDropdown',
-  //   name: 'Yeni Duyurular',
-  //   route: '/duyuru',
-  //   icon: <i className="fas fa-bell c-sidebar-nav-icon"></i>,
-  //   _children: [
-  //     {
-  //       _tag: 'CSidebarNavItem',
-  //       name: "Tüm Kategorideki Duyurular",
-  //       to: '/duyurular',
-  //     },
-  //     {
-  //       _tag: 'CSidebarNavItem',
-  //       name: 'Tarife Duyurular',
-  //       to: '/duyuru/tarife',
-  //     },
-  //     {
-  //       _tag: 'CSidebarNavItem',
-  //       name: 'Cihaz Duyurular',
-  //       to: '/duyuru/cihaz',
-  //     },
-  //     {
-  //       _tag: 'CSidebarNavItem',
-  //       name: 'Bayi Kampanya Duyurular',
-  //       to: '/duyuru/bayi',
-  //     },
-  //     {
-  //       _tag: 'CSidebarNavItem',
-  //       name: 'Sistem Duyurular',
-  //       to: '/duyuru/sistem',
-  //     },
-  //     {
-  //       _tag: 'CSidebarNavItem',
-  //       name: 'Evrak Duyurular',
-  //       to: '/duyuru/evrak',
-  //     },
-  //     {
-  //       _tag: 'CSidebarNavItem',
-  //       name: 'Tarife Duyurular',
-  //       to: '/duyuru/tarife',
-  //     },
-  //   ],
-  // },
-
   {
     _tag: 'CSidebarNavTitle',
     _children: ['İşlemler Ve Evraklar']

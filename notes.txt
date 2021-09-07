@@ -11,19 +11,14 @@ Would having a single dotenv.config statement, alongside process.env statements,
 FEATURES TO ADD:
     PASS RESET REACT BUILD:
             * After user submits a successfull reset, have the pop up modal redirect to login
-    LOGIN:
-            * have the option to sign in with your usename or email
     ANASAYFA:
             * have the widgets be clickable, on Click, render the respective table
             * Show more info regarding sales
+            * Have user be able to see his goals, and how much progress he made towards them.
     PROFILE:
             * Add profile route, will have information regarding user's username, dealername, creation date, password. Have user be able to
             Change dealer name and password
             * Same for other roles too
-    NOTIFICATIONS:
-            * Add notification on each appliaction change. For dealer, on application process, approve, reject. For SDC, on application
-            submit
-            * For dealer, Add notification on goal added.
     SIDEBAR:
             * Get rid of the nested items. Have all items display without nesting.
     SDC:
@@ -37,4 +32,10 @@ FEATURES TO ADD:
             * Add a filter input, that requests the applications count according to an interval/date criteria
         SdcIslemler:
             * Add an ID column
-    
+
+
+FEATURES TO ADD LATER:
+    NOTIFICATIONS:
+            * Add notification on each appliaction change. For dealer, on application process, approve, reject. For SDC, on application
+            submit
+            * For dealer, Add notification on goal added.

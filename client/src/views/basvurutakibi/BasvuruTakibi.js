@@ -54,7 +54,7 @@ const BasvuruTakibi = () => {
       {
         usersData ? <ApplicationViewModal show = {modal} userDetails = {modalData} onClose = {setModal} /> : null
       }
-      <CCol xl={10}> 
+      <CCol xl={12}> 
         <CCard>
           <CCardHeader>
             Bugünkü başvurularınız
