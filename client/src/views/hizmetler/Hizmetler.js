@@ -20,7 +20,7 @@ function mapOffersData(offers) {
         return {
             kampanya_ismi: obj.name,
             kampanya_açıklaması: obj.description,
-            değeri: `${obj.value} TL` ,
+            değeri: `${obj.value}` ,
             aktif: obj.active === true ? "Evet" : "Hayır"
         }
     })
@@ -97,7 +97,7 @@ const Hizmetler = () => {
             for every element in the array I'm calling the element's "element", which is a function that returns a react
             element, and giving it "textObj" as props, and passing index as second argument. */}
         {toasters && toasters.map((toaster, i) => ( toaster.element(toaster.textObj, i)))}
-        <EditingModal show = {editingModalOn} onClose = {setEditingModalOn} offer = {selectedOffer} />
+        {editingModalOn && <EditingModal show = {editingModalOn} onClose = {setEditingModalOn} offer = {selectedOffer} />}
             <CCol xs="12" md="12">
                 <CCard>
                     <CCardHeader className="basvuruFormHeader">
@@ -129,7 +129,7 @@ const Hizmetler = () => {
                             'değeri':
                                 (item)=>(
                                 <td>
-                                    <p style = {{color: "green"}} >{item.değeri}</p>
+                                    <p style = {{color: "green"}} >{item.değeri} TL</p>
                                 </td>
                                 ),
                                 'show_details':

@@ -14,23 +14,89 @@ import {
   } from '@coreui/react'
 import { useEffect, useState } from 'react'
 
-export const EditingModal = ({offer, show, onClose}) => {
-    const [newName, setNewName] = useState("")
-    const [newValue, setNewValue] = useState(0)
-    const [newDescription, setNewDescription] = useState("")
+const handleNameUpdate = async (newName, offerID, serviceID ) => {
+    const res = await fetch(`/offer/name?offerID=${offerID}&forServiceID=${serviceID}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'authorization': `Bearer ${document.cookie.slice(8)} `
+          },
+          body: JSON.stringify({
+            newOfferName: newName
+          })
+    })
+}
+const handleDescriptionUpdate = async (newDescription, offerID, serviceID) => {
+    const res = await fetch(`/offer/description?offerID=${offerID}&forServiceID=${serviceID}`, {
+        method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'authorization': `Bearer ${document.cookie.slice(8)} `
+          },
+          body: JSON.stringify({
+            newOfferDescription: newDescription
+          })
+    })
+}
+const handleValueUpdate = async (newValue, offerID, serviceID) => {
+    const res = await fetch(`/offer/value?offerID=${offerID}&forServiceID=${serviceID}`, {
+        method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'authorization': `Bearer ${document.cookie.slice(8)} `
+          },
+          body: JSON.stringify({
+            newOfferValue: newValue
+          })
+    })
+}
+
+export const EditingModal = ({offer, show, onClose, offerChange}) => {
+    const [newName, setNewName] = useState(offer.kampanya_ismi)
+    const [newValue, setNewValue] = useState(offer.değeri)
+    const [newDescription, setNewDescription] = useState(offer.kampanya_açıklaması)
     const [buttonDisabled, setButtonDisabled] = useState(true)
+    
+    const successObj = {
+        color: "success",
+        body: "Değişikleriniz başarıyla tamamlanmıştır!"
+    }
+
+    const errorObj = {
+        color: "danger",
+        body: "Bir hata oldu, lütfen daha sonra tekrar deneyin"
+    }
+
+    async function handleSubmit() {
+
+    }
+
     function verifyInputFields() {
+        console.log(newName, offer.kampanya_ismi)
+        console.log(newDescription, offer.kampanya_açıklaması)
+        console.log(newValue, Number(offer.değeri));
+        let changesArr = [false, false, false]
         if (newName !== offer.kampanya_ismi)
-            console.log('true')
-        else if (newDescription !== offer.kampanya_açıklaması)
-            console.log('true')
-        else if (newValue !== offer.değeri)
-            console.log('true')
+            changesArr[0] = true
         else
-            console.log('false')
+            changesArr[0] = false
+
+        if (newDescription !== offer.kampanya_açıklaması)
+            changesArr[1] = true
+        else
+            changesArr[1] = false
+
+        if (newValue !== Number(offer.değeri))
+            changesArr[2] = true
+        else
+            changesArr[2] = false
+
+        console.log("changesArr ", changesArr)
+        return changesArr
     }
     useEffect(() => {
-        setButtonDisabled(verifyInputFields())
+        // setButtonDisabled(verifyInputFields())
+        verifyInputFields()
         //eslint-disable-next-line
     }, [newName, newValue, newDescription])
     return (
@@ -56,7 +122,7 @@ export const EditingModal = ({offer, show, onClose}) => {
                         <CCol xs="2">
                             <CFormGroup>
                                 <CLabel>Değeri</CLabel>
-                                <CInput defaultValue= {offer?.değeri} onChange = {(e) => setNewValue(Number(e.target.value))} />
+                                <CInput defaultValue= {offer?.değeri} onChange = {(e) => setNewValue(Number(e.target.value))} type = "number" />
                             </CFormGroup>
                         </CCol>
                     </CFormGroup>
@@ -72,7 +138,7 @@ export const EditingModal = ({offer, show, onClose}) => {
                 </CRow>
             </CModalBody>
             <CModalFooter>
-                <CButton color = "success" disabled = {buttonDisabled} >Değiştir</CButton>
+                <CButton color = "success" disabled = {buttonDisabled} onClick = {handleSubmit} >Değiştir</CButton>
                 <CButton color="secondary" onClick={() => onClose(!show)}>Kapat</CButton>
             </CModalFooter>
         </CModal>
