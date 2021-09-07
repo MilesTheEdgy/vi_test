@@ -21,10 +21,12 @@ function mapOffersData(offers) {
             kampanya_ismi: obj.name,
             kampanya_açıklaması: obj.description,
             değeri: `${obj.value}` ,
-            aktif: obj.active === true ? "Evet" : "Hayır"
+            aktif: obj.active === true ? "Evet" : "Hayır",
+            offer_id: obj.offer_id,
+            service_id: obj.service_id
         }
     })
-} 
+}
 
 const fields = [
     { key: 'kampanya_ismi', _style: { width: '20%'} },
@@ -41,7 +43,6 @@ const fields = [
   ]
 
 const Hizmetler = () => {
-    const toasters = []
     const [servicesLoading, setServicesLoading] = useState(false)
     const [servicesData, setServicesData] = useState([])
     const [selectedService, setSelectedService] = useState(0)
@@ -50,7 +51,14 @@ const Hizmetler = () => {
     const [offersData, setOffersData] = useState([])
     const [selectedOffer, setSelectedOffer] = useState({})
 
+    const [toasters, addToaster] = useState([])
+
     const [editingModalOn, setEditingModalOn] = useState(false)
+
+    function reSetSelectedOffer(offerID) {
+        const selectedOffer = offersData.find(obj => obj.offer_id === offerID)
+        setSelectedOffer(selectedOffer)
+    }
 
     useEffect(() => {
         const fetchServices = async () => {
@@ -71,24 +79,28 @@ const Hizmetler = () => {
         fetchServices()
     }, [])
 
-    useEffect(() => {
-        const fetchOffers = async () => {
-            setOffersLoading(true)
-            const res = await fetch(`/service/${selectedService}`, {
-                headers: {
-                  'content-type': 'application/json',
-                  'authorization' :`Bearer ${document.cookie.slice(8)} `
-                }
-            })
-            if (res.status === 200) {
-                const data = await res.json()
-                console.log(data)
-                const mappedData = mapOffersData(data)
-                setOffersData(mappedData)
+    const fetchOffers = async () => {
+        setOffersLoading(true)
+        const res = await fetch(`/service/${selectedService}`, {
+            headers: {
+              'content-type': 'application/json',
+              'authorization' :`Bearer ${document.cookie.slice(8)} `
             }
-            setOffersLoading(false)
+        })
+        let data
+        if (res.status === 200) {
+            const fetchedData = await res.json()
+            console.log(fetchedData)
+            const mappedData = mapOffersData(fetchedData)
+            setOffersData(mappedData)
+            data = mappedData
         }
+        setOffersLoading(false)
+        return data
+    }
+    useEffect(() => {
         fetchOffers()
+        //eslint-disable-next-line
     }, [selectedService])
 
     return (
@@ -97,7 +109,10 @@ const Hizmetler = () => {
             for every element in the array I'm calling the element's "element", which is a function that returns a react
             element, and giving it "textObj" as props, and passing index as second argument. */}
         {toasters && toasters.map((toaster, i) => ( toaster.element(toaster.textObj, i)))}
-        {editingModalOn && <EditingModal show = {editingModalOn} onClose = {setEditingModalOn} offer = {selectedOffer} />}
+        {editingModalOn && 
+        <EditingModal show = {editingModalOn} onClose = {setEditingModalOn} 
+            offer = {selectedOffer} toasters = {toasters} triggerToaster = {addToaster} refetch = {fetchOffers} reselect = {reSetSelectedOffer} />
+        }
             <CCol xs="12" md="12">
                 <CCard>
                     <CCardHeader className="basvuruFormHeader">

@@ -371,7 +371,7 @@ app.post("/offer", authenticateToken, verifyReqBodyObjValuesNotEmpty, async (req
 })
 
 app.put("/offer/name", authenticateToken, verifyReqBodyObjValuesNotEmpty, async (req, res) => {
- const userInfo = res.locals
+ const { userInfo } = res.locals
   // expected values from URL query
   const { offerID, forServiceID } = req.query
   // expected values from object

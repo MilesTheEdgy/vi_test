@@ -14,48 +14,17 @@ import {
   } from '@coreui/react'
 import { useEffect, useState } from 'react'
 
-const handleNameUpdate = async (newName, offerID, serviceID ) => {
-    const res = await fetch(`/offer/name?offerID=${offerID}&forServiceID=${serviceID}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'authorization': `Bearer ${document.cookie.slice(8)} `
-          },
-          body: JSON.stringify({
-            newOfferName: newName
-          })
-    })
-}
-const handleDescriptionUpdate = async (newDescription, offerID, serviceID) => {
-    const res = await fetch(`/offer/description?offerID=${offerID}&forServiceID=${serviceID}`, {
-        method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'authorization': `Bearer ${document.cookie.slice(8)} `
-          },
-          body: JSON.stringify({
-            newOfferDescription: newDescription
-          })
-    })
-}
-const handleValueUpdate = async (newValue, offerID, serviceID) => {
-    const res = await fetch(`/offer/value?offerID=${offerID}&forServiceID=${serviceID}`, {
-        method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'authorization': `Bearer ${document.cookie.slice(8)} `
-          },
-          body: JSON.stringify({
-            newOfferValue: newValue
-          })
-    })
-}
+import Toaster from "../../components/toaster/Toaster2"
+import HocLoader from '../hocloader/HocLoader'
 
-export const EditingModal = ({offer, show, onClose, offerChange}) => {
+export const EditingModal = ({offer, show, onClose, toasters, triggerToaster, refetch, reselect}) => {
+    console.log("OFFER ", offer)
+    const [offerDetails, setOfferDetails] = useState(offer)
     const [newName, setNewName] = useState(offer.kampanya_ismi)
     const [newValue, setNewValue] = useState(offer.değeri)
     const [newDescription, setNewDescription] = useState(offer.kampanya_açıklaması)
     const [buttonDisabled, setButtonDisabled] = useState(true)
+    const [loading, setLoading] = useState(false)
     
     const successObj = {
         color: "success",
@@ -67,14 +36,7 @@ export const EditingModal = ({offer, show, onClose, offerChange}) => {
         body: "Bir hata oldu, lütfen daha sonra tekrar deneyin"
     }
 
-    async function handleSubmit() {
-
-    }
-
     function verifyInputFields() {
-        console.log(newName, offer.kampanya_ismi)
-        console.log(newDescription, offer.kampanya_açıklaması)
-        console.log(newValue, Number(offer.değeri));
         let changesArr = [false, false, false]
         if (newName !== offer.kampanya_ismi)
             changesArr[0] = true
@@ -86,17 +48,108 @@ export const EditingModal = ({offer, show, onClose, offerChange}) => {
         else
             changesArr[1] = false
 
-        if (newValue !== Number(offer.değeri))
+        if (Number(newValue) !== Number(offer.değeri))
             changesArr[2] = true
         else
             changesArr[2] = false
 
-        console.log("changesArr ", changesArr)
         return changesArr
     }
+
+    function reSetSelectedOffer(offerID, offersData) {
+        const selectedOffer = offersData.find(obj => obj.offer_id === offerID)
+        setOfferDetails(selectedOffer)
+    }
+
+    async function handleSubmit() {
+        const handleNameUpdate = async () => {
+            console.log('Putting NAME')
+            const res = await fetch(`/offer/name?offerID=${offer.offer_id}&forServiceID=${offer.service_id}`, {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'authorization': `Bearer ${document.cookie.slice(8)} `
+                  },
+                  body: JSON.stringify({
+                    newOfferName : newName
+                  })
+            })
+            if (res.status === 200)
+                return true
+            else
+                return false
+        }
+        const handleDescriptionUpdate = async () => {
+            console.log('Putting DESCRIPTION')
+            const res = await fetch(`/offer/description?offerID=${offer.offer_id}&forServiceID=${offer.service_id}`, {
+                method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'authorization': `Bearer ${document.cookie.slice(8)} `
+                  },
+                  body: JSON.stringify({
+                    newOfferDescription: newDescription
+                  })
+                  
+            })
+            if (res.status === 200)
+                return true
+            else
+                return false
+        }
+        const handleValueUpdate = async () => {
+            console.log('Putting VALUE')
+            const res = await fetch(`/offer/value?offerID=${offer.offer_id}&forServiceID=${offer.service_id}`, {
+                method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'authorization': `Bearer ${document.cookie.slice(8)} `
+                  },
+                  body: JSON.stringify({
+                    newOfferValue: newValue
+                  })
+            })
+            if (res.status === 200)
+                return true
+            else
+                return false
+        }
+        
+        const verifyFields = verifyInputFields()
+        const handleChangeFunctions = [handleNameUpdate, handleDescriptionUpdate, handleValueUpdate]
+        setLoading(true)        
+        for (let i = 0; i < verifyFields.length; i++) {
+            if (verifyFields[i]) {
+                const res = await handleChangeFunctions[i]()
+                if (res)
+                    continue
+                else {
+                    setLoading(false)
+                    refetch().then((data) => {
+                        const selectedOffer = reSetSelectedOffer(offer.offer_id, data)
+                        setOfferDetails(selectedOffer)
+                        
+                    })
+                    return triggerToaster([...toasters, {element: Toaster, textObj: errorObj}])
+                }
+            }
+        }
+        setLoading(false)
+        refetch().then((data) => {
+            const selectedOffer = reSetSelectedOffer(offer.offer_id, data)
+            setOfferDetails(selectedOffer)
+            
+        })        
+        return triggerToaster([...toasters, {element: Toaster, textObj: successObj}])
+    }
+
     useEffect(() => {
-        // setButtonDisabled(verifyInputFields())
-        verifyInputFields()
+        const verifyFields = verifyInputFields()
+        for (let i = 0; i < verifyFields.length; i++) {
+            if (verifyFields[i])
+                return setButtonDisabled(false)
+        }
+        return setButtonDisabled(true)
         //eslint-disable-next-line
     }, [newName, newValue, newDescription])
     return (
@@ -106,6 +159,7 @@ export const EditingModal = ({offer, show, onClose, offerChange}) => {
         onClose={() => onClose(!show)}
         centered
         >
+            <HocLoader relative isLoading = {loading}>
             <CModalHeader closeButton>
                 <CModalTitle> Kampanya detayı </CModalTitle>
             </CModalHeader>
@@ -116,13 +170,13 @@ export const EditingModal = ({offer, show, onClose, offerChange}) => {
                         <CCol xs="10">
                             <CFormGroup>
                                 <CLabel>Kampanya ismi</CLabel>
-                                <CInput defaultValue={offer?.kampanya_ismi} onChange = {(e) => setNewName(e.target.value)} />
+                                <CInput defaultValue={offerDetails?.kampanya_ismi} onChange = {(e) => setNewName(e.target.value)} />
                             </CFormGroup>
                         </CCol>
                         <CCol xs="2">
                             <CFormGroup>
                                 <CLabel>Değeri</CLabel>
-                                <CInput defaultValue= {offer?.değeri} onChange = {(e) => setNewValue(Number(e.target.value))} type = "number" />
+                                <CInput defaultValue= {offerDetails?.değeri} onChange = {(e) => setNewValue(Number(e.target.value))} type = "number" />
                             </CFormGroup>
                         </CCol>
                     </CFormGroup>
@@ -131,7 +185,7 @@ export const EditingModal = ({offer, show, onClose, offerChange}) => {
                         <CTextarea
                         onChange = {(e) => setNewDescription(e.target.value)}
                         rows="6"
-                        defaultValue = {offer?.kampanya_açıklaması}
+                        defaultValue = {offerDetails?.kampanya_açıklaması}
                         />
                     </CFormGroup>
                 </CCol>
@@ -141,6 +195,7 @@ export const EditingModal = ({offer, show, onClose, offerChange}) => {
                 <CButton color = "success" disabled = {buttonDisabled} onClick = {handleSubmit} >Değiştir</CButton>
                 <CButton color="secondary" onClick={() => onClose(!show)}>Kapat</CButton>
             </CModalFooter>
+            </HocLoader>
         </CModal>
     )
 }
