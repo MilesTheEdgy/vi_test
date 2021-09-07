@@ -6,10 +6,11 @@ const cloudinary = require("cloudinary").v2
 const pool = require("../../database");
 const uniqid = require('uniqid');
 const { authenticateToken } = require("../../helpers/middleware")
-const { sendApplication } = require("./functions");
+const { sendApplication, verifyApplicationInput } = require("./functions");
 const { 
     status500Error, 
-    customStatusError
+    customStatusError,
+    verifyReqObjExpectedObjKeys
 } = require("../../helpers/functions");
 const { verifyReqBodyObjValuesNotEmpty } = require("../../helpers/middleware");
 
@@ -24,7 +25,7 @@ const imageStorage = multer.diskStorage({
 const upload = multer({
     storage: imageStorage,
     limits: {
-    fileSize: 1000000 // 1000000 Bytes = 1 MB
+    fileSize: 1500000 // 1000000 Bytes = 1 MB
     },
     fileFilter(req, file, cb) {
     // console.log("multer -- req: ", req)
@@ -46,15 +47,23 @@ const app = module.exports = express();
 
 app.post("/applications", authenticateToken, verifyReqBodyObjValuesNotEmpty, upload.array("image", 3), async(req, res) => {
     try {
+        verifyReqObjExpectedObjKeys(["selectedService", "selectedOffer", "clientDescription", "clientName"])
+        // verify all the input coming from request object
+        const verfiyAppInput = await verifyApplicationInput(req.body)
+        if (verfiyAppInput.ok === false)
+            return customStatusError(verfiyAppInput.error, res, verfiyAppInput.statusCode, verfiyAppInput.resString)
+        
         const userInfo = res.locals.userInfo
         if (userInfo.role !== "dealer")
             return customStatusError("user does not have premission to submit", res, 401, "user does not have premission to submit")
         const { files } = req
         console.log(files)
         console.log(req.body)
+        // Get the current highest application ID, to insert it into the file name when it's uploaded to cloudinary
         const highestApplicationIDQuery = await pool.query("SELECT MAX(id) FROM sales_applications;")
         const highestApplicationID = highestApplicationIDQuery.rows[0].max
         for (let i = 0; i < files.length; i++) {
+
             const fileExtension = path.extname(files[i].originalname).toLowerCase() 
             console.log("fileExtension", fileExtension)
             const imageUniqID = `${userInfo.userID}-${uniqid.process()}`

@@ -108,7 +108,7 @@ const RaporDetay = ({match, location}) => {
 
   return (
     <CRow className = "d-flex justify-content-center">
-      <CCol xl={10}>
+      <CCol xl={12} lg = {10}>
         <CCard>
           <CCardHeader>
             Kazanç

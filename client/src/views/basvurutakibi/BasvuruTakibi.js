@@ -41,6 +41,7 @@ const BasvuruTakibi = () => {
       })
       if (res.status === 200) {
         const fetchData = await res.json()
+        console.log("fetchData ", fetchData)
         const resData = mapDataToTurkish(fetchData)
         setUsersData(resData)
       }
@@ -61,10 +62,11 @@ const BasvuruTakibi = () => {
           </CCardHeader>
           <CCardBody>
             <CDataTable
+                tableFilter
                 items={usersData}
                 fields={[
                 { key: 'İsim', _classes: 'font-weight-bold' },
-                'Tarih', 'Tip', 'Statü'
+                'Tarih', 'Hizmet', 'Statü'
                 ]}
                 loading = {loading}
                 hover

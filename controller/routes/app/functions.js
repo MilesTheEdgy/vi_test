@@ -6,9 +6,11 @@ const queryConstructorInterval = (selectStatement, conditionArr) => {
     let conditionText = ""
     for (let i = 0; i < conditionArr.length; i++) {
         if (i === 0)
-            conditionText = ` WHERE ${conditionArr[i]}`
+            conditionText = ` WHERE ${conditionArr[i].statement}`
+        else if (conditionArr[i].nestedSelect === true)
+            conditionText = conditionText + " AND " + conditionArr[i].statement + "$" + i + " )"
         else
-            conditionText = conditionText + " AND " + conditionArr[i] + `$${i}`
+            conditionText = conditionText + " AND " + conditionArr[i].statement + "$" + i
     }
     return selectStatement + conditionText
 }
@@ -96,7 +98,7 @@ const fetchAppsAccordToInterval = async (query, interval, selectStatement, condi
     if (interval !== "ALL")
         verifiedConditionParamsArr.shift()
     const queryString = queryConstructorInterval(selectStatement, verifiedConditionQueryArr)
-    // console.log(queryString, verifiedConditionParamsArr)
+    console.log("Query string: ", queryString, "\n Condition params: ",  verifiedConditionParamsArr)
     const dbQuery = await pool.query(queryString, verifiedConditionParamsArr)
     // if query is details, return the entire array of objects, else return only the object in the array.
     return query === "details" ? dbQuery.rows : dbQuery.rows[0]
@@ -129,27 +131,35 @@ const getDealerApplications = async (query, date = "ALL", userID, status = "ALL"
         return fetchDigerServices(userID)
     // SELECT statements
     const selectCount = "SELECT count(*) FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id"
-    const selectDetails = "SELECT sales_applications.id, sales_applications.client_name, sales_applications.submit_time, sales_applications_details.selected_service, sales_applications_details.selected_offer, sales_applications_details.description, sales_applications.status, sales_applications_details.sales_rep_details, sales_applications_details.status_change_date, sales_applications_details.final_sales_rep_details, sales_applications.last_change_date, sales_applications_details.image_urls FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id"
+    const selectDetails = "SELECT sales_applications.id, sales_applications.client_name, sales_applications.submit_time, sales_applications_details.selected_service AS service_id, services.name AS service_name, sales_applications_details.selected_offer AS offer_id, offers.name AS offer_name, sales_applications_details.description, sales_applications.status, sales_applications_details.sales_rep_details, sales_applications_details.status_change_date, sales_applications_details.final_sales_rep_details, sales_applications.last_change_date, sales_applications_details.image_urls FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id INNER JOIN services ON services.service_id = sales_applications_details.selected_service INNER JOIN offers ON offers.offer_id = sales_applications_details.selected_offer"
     const selectStatement = query === "details" ? selectDetails : selectCount
 
     //CONDITION statements
     const conditionSubmitter = "sales_applications.submitter = "
     const conditionStatus = "sales_applications.status = "
     const conditionService = "sales_applications_details.selected_service = "
-    const serviceTUR = await switchServiceNameToTurkish(service)
 
     // IF user is querying as an interval(day, month, year)...
     if (typeof date === "string" ||typeof date === "number") {
         const interval = date
         const conditionTime = convertDateInputToSQLInterval(interval)
-        const conditionArr = [interval, userID, status, serviceTUR]
-        const conditionQueryArr = [conditionTime, conditionSubmitter, conditionStatus, conditionService]
+
+        // I created this object so that, when I loop in the queryConstructor function, I can add dollar signs parameters on statements
+        // that contain a nested select eg: (SELECT something FROM othertable WHERE ID = (SELECT something FROM othertable2))
+        const intervalConditionObj = {statement: conditionTime, nestedSelect: false}
+        const userIDConditionObj = {statement: conditionSubmitter, nestedSelect: false}
+        const statusConditionObj = {statement: conditionStatus, nestedSelect: false}
+        const serviceConditionObj = {statement: conditionService, nestedSelect: false}
+
+        const conditionArr = [interval, userID, status, service]
+        const conditionQueryArr = [intervalConditionObj, userIDConditionObj, statusConditionObj, serviceConditionObj]
         return fetchAppsAccordToInterval(query, interval, selectStatement, conditionArr, conditionQueryArr)
     } else { // ELSE if user is querying as an exact date with month and year format...
         const [month, year] = date
         const extractMonthCondition = "EXTRACT(MONTH FROM sales_applications.submit_time) = "
         const extracYearCondition = "EXTRACT(YEAR FROM sales_applications.submit_time) = "    
-        const conditionArr = [Number(month), Number(year), userID, status, serviceTUR]
+
+        const conditionArr = [Number(month), Number(year), userID, status, service]
         const conditionQueryArr = [extractMonthCondition, extracYearCondition, conditionSubmitter, conditionStatus, conditionService]
         return fetchAppsAccordToDate(query, selectStatement, conditionArr, conditionQueryArr)
     }

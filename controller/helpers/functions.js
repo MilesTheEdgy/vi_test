@@ -133,50 +133,110 @@ const replaceTURCharWithENG = (string) => {
     return newStr.toLowerCase()
 }
 
-const verifyServiceNameFromInput = async (service = undefined, serviceEng = undefined, ID = undefined) => {
+// *** DEPRECATED FUNCTION *** //
+// const verifyServiceNameFromInput = async (service = undefined, serviceEng = undefined, ID = undefined) => {
+//     let errorStr = ""
+//     let query
+//     if (service) {
+//         errorStr = "service name '" + service + "' does not exist in database"
+//         query = await pool.query("SELECT name FROM services WHERE name = $1", [service])
+//     }
+//     else if (ID) {
+//         errorStr = "service ID '" + ID + " does not exist in database"
+//         query = await pool.query("SELECT service_id FROM services WHERE service_id = $1", [ID])
+//     }
+//     else {
+//         errorStr = "service name's english equivalent '" + serviceEng + " does not exist in database"
+//         query = await pool.query("SELECT eng_equivalent FROM services WHERE eng_equivalent = $1", [serviceEng])
+//     }
+//     if (query.rowCount === 0)
+//         return {
+//             ok: false,
+//             error: errorStr,
+//             statusCode: 406,
+//             resString: "Service input does not exist in database"
+//         }
+//     return {ok: true}
+// }
+
+const verifyServiceIDFromInput = async (ID = undefined) => {
     let errorStr = ""
-    let query
-    if (service) {
-        errorStr = "service name '" + service + "' does not exist in database"
-        query = await pool.query("SELECT name FROM services WHERE name = $1", [service])
-    }
-    else if (ID) {
+    let query = undefined
+    if (ID !== undefined && typeof Number(ID) === "number") {
+        // prepare an error string in case of failure
         errorStr = "service ID '" + ID + " does not exist in database"
+        // run the query
         query = await pool.query("SELECT service_id FROM services WHERE service_id = $1", [ID])
+        if (query.rowCount === 0)
+            return {
+                ok: false,
+                error: errorStr,
+                statusCode: 406,
+                resString: "Service ID does not exist in database"
+            }
+        return {ok: true}
     }
     else {
-        errorStr = "service name's english equivalent '" + serviceEng + " does not exist in database"
-        query = await pool.query("SELECT eng_equivalent FROM services WHERE eng_equivalent = $1", [serviceEng])
-    }
-    if (query.rowCount === 0)
+        errorStr = "Expected type number for service ID instead got '" + ID + "'"
         return {
             ok: false,
             error: errorStr,
             statusCode: 406,
-            resString: "Service input does not exist in database"
+            resString: "Unexpected input for service field"
+        
         }
-    return {ok: true}
+    }
 }
 
-const verifyOfferFromInput = async (offer = undefined, ID = undefined) => {
+// *** DEPRECATED FUNCTION *** //
+// const verifyOfferFromInput = async (offer = undefined, ID = undefined) => {
+//     let errorStr = ""
+//     let query
+//     if (offer) {
+//         errorStr = "offer name '" + offer + " does not exist in database"
+//         query = await pool.query("SELECT name FROM offers WHERE name = $1", [offer])
+//     }
+//     else {
+//         errorStr = "offer ID '" + ID + " does not exist in database"
+//         query = await pool.query("SELECT offer_id FROM services WHERE offer_id = $1", [ID])
+//     }
+//     if (query.rowCount === 0)
+//         return {
+//             ok: false,
+//             error: errorStr,
+//             statusCode: 406,
+//             resString: "Offer input does not exist in database"
+//         }
+//     return {ok: true}
+// }
+
+const verfiyOfferIDFromInput = async (ID = undefined) => {
     let errorStr = ""
-    let query
-    if (offer) {
-        errorStr = "offer name '" + offer + " does not exist in database"
-        query = await pool.query("SELECT name FROM offers WHERE name = $1", [offer])
+    let query = undefined
+    if (ID !== undefined && typeof Number(ID) === "number") {
+        // prepare an error string in case of failure
+        errorStr = "offer ID '" + ID + " does not exist in database"
+        // run the query
+        query = await pool.query("SELECT offer_id FROM offers WHERE offer_id = $1", [ID])
+        if (query.rowCount === 0)
+            return {
+                ok: false,
+                error: errorStr,
+                statusCode: 406,
+                resString: "Offer ID does not exist in database"
+            }
+        return {ok: true}
     }
     else {
-        errorStr = "offer ID '" + ID + " does not exist in database"
-        query = await pool.query("SELECT offer_id FROM services WHERE offer_id = $1", [ID])
-    }
-    if (query.rowCount === 0)
+        errorStr = "Expected type 'number' for offer ID instead got '" + ID
         return {
             ok: false,
             error: errorStr,
             statusCode: 406,
-            resString: "Offer input does not exist in database"
+            resString: "Unexpected input for offer field"
+        
         }
-    return {ok: true}
+    }
 }
 
 module.exports = {
@@ -188,6 +248,6 @@ module.exports = {
     switchServiceNameToTurkish,
     verifyUserAndReturnInfo,
     replaceTURCharWithENG,
-    verifyServiceNameFromInput,
-    verifyOfferFromInput
+    verifyServiceIDFromInput,
+    verfiyOfferIDFromInput
 }

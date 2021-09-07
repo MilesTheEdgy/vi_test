@@ -99,7 +99,7 @@ export default function ApplicationViewModal(props) {
                     <CCol xs="2"> 
                       <CFormGroup>
                         <CLabel>Hizmet</CLabel>
-                        <CInput placeholder={userDetails?.Tip} readOnly />
+                        <CInput placeholder={userDetails?.Hizmet} readOnly />
                       </CFormGroup>
                     </CCol>
                     <CCol xs="7">

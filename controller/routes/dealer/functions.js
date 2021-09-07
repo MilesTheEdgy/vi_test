@@ -1,28 +1,29 @@
 const pool = require("../../database")
 const { 
     status500Error,
-    verifyServiceNameFromInput, 
-    verifyOfferFromInput,
+    verifyServiceIDFromInput, 
+    verfiyOfferIDFromInput,
     customStatusError
 } = require("../../helpers/functions")
 
+// *** DEPRECATED FUNCTION *** //
 // verifies the client_wants_router input coming from send application
-const verifyClientWantsRouterInput = (input) => {
-    const errorObj = {
-        ok: false,
-        error: "Type of '" + input + "' does not equal 1 or 0",
-        statusCode: 406,
-        resString: "Your clientWantsRouter input is unacceptable"
-    }
-    if (typeof input === "number")
-        if (input === 0 || input === 1)
-            return {ok : true}
-    else if (typeof input === "string")
-        if (input === "0" || input === "1")
-            return {ok: true}
-    return errorObj
+// const verifyClientWantsRouterInput = (input) => {
+//     const errorObj = {
+//         ok: false,
+//         error: "Type of '" + input + "' does not equal 1 or 0",
+//         statusCode: 406,
+//         resString: "Your clientWantsRouter input is unacceptable"
+//     }
+//     if (typeof input === "number")
+//         if (input === 0 || input === 1)
+//             return {ok : true}
+//     else if (typeof input === "string")
+//         if (input === "0" || input === "1")
+//             return {ok: true}
+//     return errorObj
     
-}
+// }
 
 // verifies the fields coming from send_application (such as client name and client description)
 const verifyEmptyFields = (inputArr) => {
@@ -44,7 +45,7 @@ const verifyEmptyFields = (inputArr) => {
 }
 
 // this function get's the respective sales_activator from database according to the dealer's user_id
-const getSaleActivator = async (dealerID) => {
+const getSaleActivator = async (dealerID, res) => {
     const queryStatment = "SELECT name FROM login WHERE role = 'sales_assistant' AND assigned_area = (SELECT assigned_area FROM login WHERE user_id = $1)"
     try {
         const query = await pool.query(queryStatment, [dealerID])
@@ -56,14 +57,13 @@ const getSaleActivator = async (dealerID) => {
 
 // this function is responsible for verifying the application request body input coming from sender.
 const verifyApplicationInput = async (reqBody) => {
-    const { selectedService, selectedOffer, clientWantsRouter, clientDescription, clientName } = reqBody
+    const { selectedService, selectedOffer, clientDescription, clientName } = reqBody
     try {
         // each function in this array returns an object with key:value ok: true if verification passes, or ok: false and other key
         // values that detail the error that occurred 
         const verifyArray = [
-            await verifyServiceNameFromInput(selectedService),
-            await verifyOfferFromInput(selectedOffer),
-            verifyClientWantsRouterInput(clientWantsRouter),
+            await verifyServiceIDFromInput(selectedService),
+            await verfiyOfferIDFromInput(selectedOffer),
             verifyEmptyFields([clientDescription, clientName])
         ]
         // since each function returns the same 'ok' key, I loop over the array to check if a false value exists in it
@@ -84,26 +84,21 @@ const verifyApplicationInput = async (reqBody) => {
 }
 
 const sendApplication = async (userInfo, reqBody, photoURLS, res) => {    
-    // verify all the input coming from request object
-    const verfiyAppInput = await verifyApplicationInput(reqBody)
-    if (verfiyAppInput.ok === false)
-        return customStatusError(verfiyAppInput.error, res, verfiyAppInput.statusCode, verfiyAppInput.resString)
-    
-    const { name, userID } = userInfo;
-    const { selectedService, selectedOffer, clientWantsRouter, clientDescription, clientName } = reqBody
+    const { userID } = userInfo;
+    const { selectedService, selectedOffer, clientDescription, clientName } = reqBody
 
     const client = await pool.connect()
     try {
         //begin the query transaction
         await client.query('BEGIN')
         // Get the sale activator for the respective application sender(dealer)
-        const saleActivator = await getSaleActivator()
+        const saleActivator = await getSaleActivator(userID, res)
         // insert into sales_applications and return id
         const query = await client.query("INSERT INTO sales_applications(submitter, submit_time, activator, client_name, status) VALUES($1, $2, $3, $4, $5) RETURNING id"
-            , [name, 'NOW()', saleActivator, clientName, 'sent'])
+            , [userID, 'NOW()', saleActivator, clientName, 'sent'])
         // insert into sales_applications_details
-        await client.query("INSERT INTO sales_applications_details(client_name, selected_service, selected_offer, description, client_wants_router, id, image_urls) VALUES($1, $2, $3, $4, $5, $6, $7)"
-            , [clientName, selectedService, selectedOffer, clientDescription, clientWantsRouter, query.rows[0].id, photoURLS])
+        await client.query("INSERT INTO sales_applications_details(client_name, selected_service, selected_offer, description, id, image_urls) VALUES($1, $2, $3, $4, $5, $6)"
+            , [clientName, selectedService, selectedOffer, clientDescription, query.rows[0].id, photoURLS])
         // commit all the queries
         await client.query('COMMIT')
         //end the query transaction
@@ -120,5 +115,6 @@ const sendApplication = async (userInfo, reqBody, photoURLS, res) => {
 }
 
 module.exports = {
-    sendApplication
+    sendApplication,
+    verifyApplicationInput
 }

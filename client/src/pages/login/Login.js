@@ -80,11 +80,25 @@ class Login extends React.Component {
       this.props.userLoggingin()
       this.props.fillUserInfo(data)
 
-    } else {
+    } else if (res.status === 403) {
       this.setState({
         modalOn: true,
         modalHeader: "Hatalı giriş",
         modalBody: "Lütfen bilgilerinizi kontrol ederek tekrar deneyin",
+        modalColor: "warning"
+      })
+    } else if (res.status === 406) {
+      this.setState({
+        modalOn: true,
+        modalHeader: "Giriş yapılmaz",
+        modalBody: "Hesabınız deaktiv edilmiştir, lütfen yöneticilere başvuru yapınız",
+        modalColor: "danger"
+      })
+    } else {
+      this.setState({
+        modalOn: true,
+        modalHeader: "SUNUCU HATASI",
+        modalBody: "Sunucu tarafından bir hata olmuştur, lütfen tekrar deneyin",
         modalColor: "danger"
       })
     }

@@ -235,7 +235,7 @@ const YeniBasvuru = () => {
     const [loading, setLoading] = useState(false)
 
     const resetInput =() => {
-
+        dispatch({type: "RESET_INPUT"})
     }
 
     const onSubmit = async () => {
@@ -257,8 +257,9 @@ const YeniBasvuru = () => {
             body: formData
         })
         if (res.status === 200) {
-            dispatch({type: "SET_MODAL_TEXT_SUCCESS"})
             setModalOn(true)
+            resetInput()
+            dispatch({type: "SET_MODAL_TEXT_SUCCESS"})
         } else {
             dispatch({type: "SET_MODAL_TEXT_FAILURE"})
             setModalOn(true)
@@ -270,8 +271,9 @@ const YeniBasvuru = () => {
         const verifyFields = () => {
             const inputFields = [isServiceSelected, isOfferSelected, isDescriptionInputted, isClientNameInputted, areImagesInputted]
             for (let i = 0; i < inputFields.length; i++) {
-                if (inputFields[i] === false) 
+                if (inputFields[i] === false) {
                     return true
+                }
                 
             }
             return false

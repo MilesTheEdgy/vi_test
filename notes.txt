@@ -5,8 +5,9 @@ TOKEN VALUES {
             name
 }
 
-Would having a single dotenv.config statement, alongside process.env statements, suffice?
-
+SERVER:
+    PUT /applications:
+        Verify the application's request body input BEFORE uploading to cloudinary
 
 FEATURES TO ADD:
     PASS RESET REACT BUILD:

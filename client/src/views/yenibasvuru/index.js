@@ -179,6 +179,9 @@ export const reducer = (state = initialState, action) => {
                 ...state,
                 modalTextObj: errorText
             }
+        
+        case "RESET_INPUT":
+            return initialState
         default:
             return state
     }
