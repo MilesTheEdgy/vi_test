@@ -13,14 +13,16 @@ import {
 import "./style.css"
 import ToggleSwitch from '../../components/toggleswitch/ToggleSwitch'
 import HocLoader from '../hocloader/HocLoader'
+import Modal from "../../components/modals/Modal"
 import { compare, mapUsersData } from '.'
 
 const fields = [
   { key: 'ID', _style: { width: '20%'} },
   { key: 'Kullanıcı', _style: { width: '20%'} },
   { key: 'Röl', _style: { width: '20%'} },
-  { key: "Kayıt_tarihi", _style: {width: '20%'}},
-  { key: 'Aktif', _style: { width:'20%'}},
+  { key: "Bakiye", _style: {width: '15%'}},
+  { key: "Kayıt_tarihi", _style: {width: '15%'}},
+  { key: 'Aktif', _style: { width:'10%'}},
   {
     key: 'show_details',
     label: '',
@@ -37,25 +39,22 @@ const SdcKullanicilar = () => {
   const [page, setPage] = useState(currentPage)
   const [usersData, setUsersData] = useState([])
   const [loading, setLoading] = useState(true)
+  const [modalOn, setModaOn] = useState(false)
 
   const pageChange = newPage => {
     currentPage !== newPage && history.push(`/sdc/kullanicilar?sayfa=${newPage}`)
   }
 
   const toggleUserActive = (setState, itemID, state) => {
-    // console.log("original state", state)
     const stateCopy = [...state]
-    // console.log("copied state ", stateCopy)
     const i = stateCopy.findIndex(obj => obj.ID === itemID)
-    // console.log("itemID ", itemID, " state", stateCopy )
-    // console.log("found index is: ", i)
     stateCopy[i].Aktif = !stateCopy[i].Aktif
-    // console.log("new 'state' ", stateCopy)
     setState(stateCopy)
   }
 
   const fetchData = async () => {
-    const res = await fetch("/sdc/users", {
+    setLoading(true)
+    const res = await fetch("/users", {
       method: 'GET',
       headers: {
         'content-type': 'application/json',
@@ -74,14 +73,18 @@ const SdcKullanicilar = () => {
 
   const updateUserActiveState = async (userID) => {
     setLoading(true)
-    const res = await fetch(`/sdc/user/${userID}`, {
+    const res = await fetch(`/user/active/${userID}`, {
       method: 'PUT',
       headers: {
         'content-type': 'application/json',
         'authorization' :`Bearer ${document.cookie.slice(8)} `
       }
     })
+    setLoading(false)
     if (res.status === 200) {
+      fetchData()
+    } else {
+      setModaOn(true)
       fetchData()
     }
   }
@@ -94,6 +97,7 @@ const SdcKullanicilar = () => {
 
   return (
     <HocLoader isLoading = {false} absolute = {true}>
+      <Modal modalOn = {modalOn} setModal = {setModaOn} color = "danger" header = "Hata" body = "Sunucu hatasından dolayı güncelleme sağlanmamıştır, lütfen tekrar deneyin" />
       <CRow className = "d-flex justify-content-center">
         <CCol xl={12}>
           <CCard>
@@ -111,37 +115,54 @@ const SdcKullanicilar = () => {
                   itemsPerPage={30}
                   activePage={page}
                   clickableRows
-                  // onRowClick={(user) => history.push(`/sdc/kullanici/${user.ID}`)}
                   scopedSlots = {{
                     "Aktif":
+                      (item, index) => {
+                        if (item.Röl === "Satış Destek Şefi" || item.Röl === "Admin")
+                          return (
+                          <td>
+                            <ToggleSwitch
+                              id={`userActive${item.ID}`}
+                              checked={item.Aktif}
+                              disabled
+                            />
+                          </td>
+                          )
+                        else return (
+                          <td>
+                            <ToggleSwitch
+                              id={`userActive${item.ID}`}
+                              checked={item.Aktif}
+                              onChange={() => {
+                                toggleUserActive(setUsersData, item.ID, usersData)
+                                updateUserActiveState(item.ID)
+                                }}
+                            />
+                          </td>
+                        )
+                      },
+                    "Bakiye":
                       (item, index) => (
                         <td>
-                          <ToggleSwitch
-                            id={`userActive${item.ID}`}
-                            checked={item.Aktif}
-                            onChange={() => {
-                              toggleUserActive(setUsersData, item.ID, usersData)
-                              updateUserActiveState(item.ID)
-                              }}
-                          />
+                          <p style = {{color: "green"}}>{item.Bakiye} {item.Bakiye === "Yok" ? "" : "TL"}</p>
                         </td>
                       ),
-                      'show_details':
-                        (item, index)=>{
-                          return (
-                            <td className="py-2">
-                              <CButton
-                                color="primary"
-                                variant="outline"
-                                shape="square"
-                                size="sm"
-                                onClick={() => history.push(`/sdc/kullanici/${item.ID}`)}
-                              >
-                                Detailar
-                              </CButton>
-                            </td>
-                            )
-                        }
+                    'show_details':
+                      (item, index)=>{
+                        return (
+                          <td className="py-2">
+                            <CButton
+                              color="primary"
+                              variant="outline"
+                              shape="square"
+                              size="sm"
+                              onClick={() => history.push(`/sdc/kullanici/${item.ID}`)}
+                            >
+                              Detailar
+                            </CButton>
+                          </td>
+                          )
+                      }
                   }}
               />
               <CPagination

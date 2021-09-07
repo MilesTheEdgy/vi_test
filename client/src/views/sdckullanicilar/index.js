@@ -79,8 +79,6 @@ export const filterAndMapAppData = (allData) => {
 
 export const mapUsersData = (fetchData) => {
   return fetchData.map(obj => {
-    let rawDate = new Date(obj.register_date)
-    let date = rawDate.toISOString().slice(0, 10)
     let role = ""
     switch (obj.role) {
       case "admin":
@@ -100,9 +98,10 @@ export const mapUsersData = (fetchData) => {
     }
     return {
         ID: obj.user_id,
-        Kullanıcı: obj.username,
+        Kullanıcı: obj.name,
         Röl: role,
-        Kayıt_tarihi: date,
+        Bakiye: obj.balance ? Number(obj.balance).toFixed(2) : "Yok",
+        Kayıt_tarihi: obj.register_date,
         Aktif: obj.active
       }
   })

@@ -45,29 +45,42 @@ const convertDateInputToSQLInterval = (interval) => {
 // This function runs through a special condition, it maps through all the services, and it returns an array of objects
 // each object has a unique key property which is the 'service', and a status count for each service. EG:
 //  {
-//     "service": "Taahüt"
+//     "service": "Taahüt",
+//     "service_id": 15
 //     "approvedCount": "0",
 //     "rejectedCount": "1",
 //     "processingCount": "3",
 //     "sentCount": "0",
 //   }
-const mapAppsAccordToServices = async (userID) => {
-    const FOR_SDC_GET_APPLICATION_CRITERIA_COUNT = "SELECT COUNT(sales_applications.submitter) FROM sales_applications WHERE sales_applications.status = $1 AND sales_applications.id IN (SELECT id FROM sales_applications_details WHERE selected_service = $2) AND sales_applications.submitter = (SELECT username FROM login WHERE user_id = $3)"
-    const services = await pool.query("SELECT (name) FROM services WHERE active = true")
+const mapAppsAccordToServices = async (userID, date) => {
+    const [month, year] = date
+    const FOR_SDC_GET_APPLICATION_CRITERIA_COUNT = "SELECT COUNT(sales_applications.submitter) FROM sales_applications WHERE sales_applications.status = $1 AND sales_applications.id IN (SELECT id FROM sales_applications_details WHERE selected_service = $2) AND sales_applications.submitter = $3 AND EXTRACT(YEAR FROM sales_applications.submit_time) = $4"
+    // month condition statement
+    const extractMonthCondition = " AND EXTRACT(MONTH FROM sales_applications.submit_time) = $5"
+    const services = await pool.query("SELECT service_id, name FROM services WHERE active = true")
     const statusArray = ["approved", "rejected", "processing", "sent"]
+    // define the final query statement
+    let queryStatement = FOR_SDC_GET_APPLICATION_CRITERIA_COUNT
+    // insert the month query parameter into a temporary array
+    let monthQueryParam = []
+    // if month's value is equal to 'ALL', omit adding the month condition statement and the month query parameter, else add them.
+    if (month !== "ALL") {
+        queryStatement = queryStatement + extractMonthCondition
+        monthQueryParam.push(month)
+    }
     let result = []
     // mapping over the services array received from query
     for (let i = 0; i < services.rows.length; i++) {
         // mapping over the application status array 
         for (let j = 0; j < statusArray.length; j++) {
             //querying the database based on each status in the array through the for loop
-            let query = await pool.query(FOR_SDC_GET_APPLICATION_CRITERIA_COUNT,
-            [statusArray[j], services.rows[i].name, userID])
+            let query = await pool.query(queryStatement, [statusArray[j], services.rows[i].service_id, userID, year, ...monthQueryParam])
+
             // storing the result in the object that follows the i index using dynamic keys, example: ${approved}Count: 20
             result[i] = {...result[i], [`${statusArray[j]}Count`]: query.rows[0].count}
         }
-        //after status database queries loop is finished, add the service name to the same object
-        result[i] = {...result[i], service: services.rows[i].name}
+        //after status database queries loop is finished, add the service name and ID to the same object
+        result[i] = {...result[i], service: services.rows[i].name, service_id: services.rows[i].service_id}
         //repeat
     }
     return result
@@ -126,7 +139,7 @@ const fetchAppsAccordToDate = async (query, selectStatement, conditionArr, condi
 const getDealerApplications = async (query, date = "ALL", userID, status = "ALL", service = "ALL") => {
     // Functions that return an early results according to a special condition
     if (service === "MAP")
-        return mapAppsAccordToServices(userID)
+        return mapAppsAccordToServices(userID, date)
     if (service === "diger")
         return fetchDigerServices(userID)
     // SELECT statements
@@ -178,7 +191,7 @@ const getServices = async () => {
 
 const getSdUsers = async (name, res) => {
     try {
-        getUsersQueryStatement = "SELECT name, register_date, active, role, balance FROM login WHERE assigned_area = (SELECT assigned_area FROM login WHERE name = $1)"
+        getUsersQueryStatement = "SELECT name, TO_CHAR(register_date,'YYYY-MM-DD') AS register_date, active, role, balance FROM login WHERE assigned_area = (SELECT assigned_area FROM login WHERE name = $1)"
         const getUsersAccordToResponibleArea = await pool.query(getUsersQueryStatement, [name])
         return res.status(200).json(getUsersAccordToResponibleArea.rows)
     } catch (err) {
@@ -188,7 +201,7 @@ const getSdUsers = async (name, res) => {
 
 const getSdcUsers = async (res) => {
     try {
-        getUsersQueryStatement = "SELECT name, user_id register_date, active, role, balance FROM login"
+        getUsersQueryStatement = "SELECT name, user_id, TO_CHAR(register_date,'YYYY-MM-DD') AS register_date, active, role, balance FROM login"
         const getUserQuery = await pool.query(getUsersQueryStatement)
         return res.status(200).json(getUserQuery.rows)
     } catch (err) {
@@ -198,7 +211,7 @@ const getSdcUsers = async (res) => {
 
 const getSdUser = async (requesterID, userID, res) => {
     try {
-        getUsersQueryStatement = "SELECT name, register_date, active, role, assigned_area, balance FROM login WHERE assigned_area = (SELECT assigned_area FROM login WHERE user_id = $1) AND user_id = $2"
+        getUsersQueryStatement = "SELECT name, TO_CHAR(register_date,'YYYY-MM-DD') AS register_date, active, role, assigned_area, balance FROM login WHERE assigned_area = (SELECT assigned_area FROM login WHERE user_id = $1) AND user_id = $2"
         const getUsersAccordToResponibleArea = await pool.query(getUsersQueryStatement, [requesterID, userID])
         if (getUsersAccordToResponibleArea.rows.length === 0) {
             const errorStr = "SD queried ID '" + userID + "' but no such id exist or SD does not have permission"
@@ -212,7 +225,7 @@ const getSdUser = async (requesterID, userID, res) => {
 
 const getSdcUser = async (userID, res) => {
     try {
-        getUsersQueryStatement = "SELECT name, user_id, register_date, active, role, assigned_area, balance FROM login WHERE user_id = $1"
+        getUsersQueryStatement = "SELECT name, user_id, TO_CHAR(register_date,'YYYY-MM-DD') AS register_date, active, role, assigned_area, balance FROM login WHERE user_id = $1"
         const getUserQuery = await pool.query(getUsersQueryStatement, [userID])
         if (getUserQuery.rows.length === 0) {
             const errorStr = "SDC queried ID '" + userID + "' but no such id exist"

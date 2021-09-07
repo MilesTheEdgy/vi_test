@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react'
-import { CCard, CCardBody, CCardHeader, CCol, CRow, CFormGroup, CLabel, CInput, CButton } from '@coreui/react'
+import { CCard, CCardBody, CCardHeader, CCol, CRow, CFormGroup, CLabel, CInput, CButton, CSelect } from '@coreui/react'
+import { useSelector, useDispatch } from "react-redux"
 import { useHistory } from 'react-router-dom'
 import HocLoader from '../hocloader/HocLoader'
 import "./style.css"
 import { filterAndMapAppData, mapUsersData } from '.'
 
 const fetchUserLoginDate = async (id) => {
-  const res = await fetch(`/sdc/user/${id}`, {
+  const res = await fetch(`/user/${id}`, {
     method: 'GET',
     headers: {
       'content-type': 'application/json',
@@ -15,15 +16,13 @@ const fetchUserLoginDate = async (id) => {
   })
   if (res.status === 200) {
     const data = await res.json()
-    // console.log("data from fetchuserlogin", data)
     return data
   }
 }
 
-const fetchSalesData = async (id, service, status) => {
-  console.log(id, service, status)
+const fetchSalesData = async (id, service, status, month, year) => {
   try {
-    const res = await fetch(`/sdc/user/${id}/count/?service=${service}&status=${status}`, {
+    const res = await fetch(`/applications/count/?service=${service}&status=${status}&userID=${id}&month=${month}&year=${year}`, {
       method: 'GET',
       headers: {
         'content-type': 'application/json',
@@ -39,33 +38,25 @@ const fetchSalesData = async (id, service, status) => {
   }
 }
 
-const onImageChange =  async (event) => {
-  if (event.target.files && event.target.files[0]) {
-    console.log("event.target.files", event.target.files)
-
-    let img = event.target.files[0];
-    console.log("img before using createobjecturl", img)
-    console.log("img before using createobjecturl", URL.createObjectURL(img))
-
-    const formData = new FormData()
-    formData.append("myFile", img, img.name)
-    const plainFormData = Object.fromEntries(formData.entries());
-    const formDataJsonString = JSON.stringify(plainFormData);
-    const res = await fetch("/upload", {
-      method: "POST",
-      headers: {
-        'authorization' :`Bearer ${document.cookie.slice(8)} `
-        },
-      body: formDataJsonString
-    })
-    if (res.status === 200) {
-      const data = await res.json()
-      console.log("data from fetch", data)
-    } else {
-      console.log("err")
-    }
+const mapYears = () => {
+  let dateArr = []
+  for (let i = new Date().getFullYear(); i >= 2000; i--) {
+    dateArr.push(i)
   }
-};
+  return dateArr
+}
+
+const mapMonths = () => {
+  const firstMonth = 1
+  let dateArr = ["HEPSI"]
+  for (let i = 12; i >= firstMonth; i--) {
+    dateArr.push(i)
+  }
+  return dateArr
+}
+
+const years = mapYears()
+const months = mapMonths()
 
 const SdcKullanici = ({match}) => {
   const { id } = match.params
@@ -73,27 +64,40 @@ const SdcKullanici = ({match}) => {
   const [userLoginDataLoading, setUserLoginDataLoading] = useState(true)
   const [userLoginData, setUserLoginData] = useState({id: 0, username:"", role:""})
   const [salesdata, setSalesData] = useState([])
+  const [salesReportLoading, setSalesReportLoading] = useState(false)
+
+  const month = useSelector(state => state.reducer.sdc.actions.selectedMonth)
+  const year = useSelector(state => state.reducer.sdc.actions.selectedYear)
+  const dispatch = useDispatch()
+
   useEffect(() => {
     const fetchAllData = async () => {
       try {
         const userDataFetch = await fetchUserLoginDate(id)
-        const mappedUserData = mapUsersData([userDataFetch])
+        const mappedUserData = mapUsersData(userDataFetch)
         setUserLoginData(mappedUserData[0])
         setUserLoginDataLoading(false)
-        const allData = await fetchSalesData(id, "MAP", "ALL")
-        console.log(allData)
-        const filteredData = filterAndMapAppData(allData)
-        setSalesData(filteredData)
       } catch (error) {
         console.log(error)
       }
     }
     fetchAllData()
   }, [id])
+  useEffect(() => {
+    const fetchData = async () => {
+      const allData = await fetchSalesData(id, "MAP", "ALL", month, year)
+      const filteredData = filterAndMapAppData(allData)
+      setSalesData(filteredData)
+      setSalesReportLoading(false)
+    }
+    setSalesReportLoading(true)
+    fetchData()
+  }, [id, month, year])
   if (userLoginData !== undefined)
   return (
       <CRow className = "justify-content-center align-items-center">
         <CCol xs="12" sm="8">
+      <HocLoader isLoading = {salesReportLoading} absolute >
             <CCard>
               <CCardHeader>
                 <CRow>
@@ -136,12 +140,43 @@ const SdcKullanici = ({match}) => {
                     </CCol>
                   </CFormGroup>
                 </HocLoader>
-                <CFormGroup className="my-0 p-2">
-                  <h5>İşlem Raporu</h5>
+                <div className = "sdcKullainici-divider" style = {{marginBottom: "20px"}}></div>
+                <CFormGroup className="my-0 p-2" row className = "justify-content-center align-items-center" >
+                  <CCol lg = "6">
+                    <h5>İşlem Raporu</h5>
+                  </CCol>
+                  <CCol>
+                    <h5> Tarih aralığı seçiniz</h5>
+                  </CCol>
+                  <CCol>
+                    <CRow>
+                      <CCol>
+                        <CLabel>Ay</CLabel>
+                        <CSelect onChange = {(e) => dispatch({type: "SDC_ACTION_SET_MONTH", payload: e.target.value})} >
+                          {
+                            months && months.map(month => (
+                              <option value = {month === "HEPSI" ? 0 : month} key = {month}> {month} </option>
+                            ))
+                          }
+                        </CSelect>
+                      </CCol>
+                      <CCol>
+                        <CLabel>Sene</CLabel>
+                        <CSelect onChange = {(e) => dispatch({type: "SDC_ACTION_SET_YEAR", payload: e.target.value})} >
+                          {
+                            years && years.map(year => (
+                              <option value = {year} key = {year}> {year} </option>
+                            ))
+                          }
+                        </CSelect>
+                      </CCol>
+                    </CRow>
+                  </CCol>
                 </CFormGroup>
-
+                <div className = "sdcKullainici-divider"></div>
                 {
                   salesdata.map((obj, i) => {
+                    console.log(obj)
                     return (
                       <div key = {i+10}>
                       <CFormGroup row>
@@ -149,7 +184,7 @@ const SdcKullanici = ({match}) => {
                           <CLabel><strong>{obj.service}</strong></CLabel>
                         </CCol>
                       </CFormGroup>
-                      <CFormGroup row className="justify-content-center"> 
+                      <CFormGroup row className="justify-content-center">
                         <CCol sm = "6" lg="2">
                           <CFormGroup>
                             <CLabel> Toplam</CLabel>
@@ -183,11 +218,11 @@ const SdcKullanici = ({match}) => {
                         <CCol sm = "6" lg="2" >
                           <CFormGroup>
                             <CLabel col></CLabel>
-                            <CButton onClick = {() => history.push(`/sdc/islemler?islem=${obj.routeName}&id=${userLoginData.ID}`)} color = "success" ><i className="fas fa-arrow-right"></i></CButton>
+                            <CButton onClick = {() => history.push(`/sdc/islemler?islem=${obj.routeName}&id=${userLoginData.ID}&month=${month}&year=${year}`)} color = "success" ><i className="fas fa-arrow-right"></i></CButton>
                           </CFormGroup>
                         </CCol>
                         <div className = "sdcKullainici-divider"></div>
-                        
+
                       </CFormGroup>
                       </div>
                     )
@@ -195,10 +230,11 @@ const SdcKullanici = ({match}) => {
                 }
               </CCardBody>
             </CCard>
+        </HocLoader>
         </CCol>
       </CRow>
-  ) 
-    else 
+  )
+    else
     return(
     <CRow className = "justify-content-center align-items-center">
       <CCol xs="12" sm="8">
@@ -213,7 +249,7 @@ const SdcKullanici = ({match}) => {
                   history.push("/sdc/kullanicilar")
                 }}>Geri</CButton>
               </CCol>
-            </CRow> 
+            </CRow>
           </CCardHeader>
           <CCardBody style = {{textAlign: "center"}} >
             <h1>Böyle bir kullanıcı yok</h1>

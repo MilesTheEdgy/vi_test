@@ -51,11 +51,9 @@ app.get("/service/:serviceID", async (req, res) => {
 // If the request submitter is the same dealer who submitted the application, return 
 // respective application, if not, return 403.
 // If the request submitter is SD or SDC, return application
-
-// ROUTE CHANGE FROM /applications/:applicationID TO /application/:applicationID
 app.get("/application/:applicationID", authenticateToken, async(req, res) => {
     try {
-        const queryStatement = "SELECT sales_applications.id, sales_applications.client_name, sales_applications.submit_time, sales_applications_details.selected_service, sales_applications_details.selected_offer, sales_applications_details.description, sales_applications.status, sales_applications_details.sales_rep_details, sales_applications_details.status_change_date, sales_applications_details.final_sales_rep_details, sales_applications.last_change_date, sales_applications_details.image_urls FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id WHERE sales_applications.id = $1"
+        const queryStatement = "SELECT sales_applications.id, sales_applications.client_name, sales_applications.submit_time, sales_applications_details.selected_service AS service_id, services.name AS service_name, sales_applications_details.selected_offer AS offer_id, offers.name AS offer_name, sales_applications_details.description, sales_applications.status, sales_applications_details.sales_rep_details, sales_applications_details.status_change_date, sales_applications_details.final_sales_rep_details, sales_applications.last_change_date, sales_applications_details.image_urls FROM sales_applications INNER JOIN sales_applications_details ON sales_applications.id=sales_applications_details.id INNER JOIN services ON services.service_id = sales_applications_details.selected_service INNER JOIN offers ON offers.offer_id = sales_applications_details.selected_offer WHERE sales_applications.id = $1"
         const submitterConditionalStatement = " AND submitter = $2"
         const customErr = "at application/:applicationID, database query returned an empty array"
         const reqSubmitterRole = res.locals.userInfo.role
@@ -80,11 +78,16 @@ app.get("/application/:applicationID", authenticateToken, async(req, res) => {
 })
 
 
-app.get("/applications/:query", async (req, res) => {
-    // const { userID } = res.locals.userInfo
-    const userID = "1fa5915jwksg069fe"
+app.get("/applications/:query", authenticateToken, async (req, res) => {
     const { query } = req.params
     const { status, interval, service, month, year } = req.query
+
+    let userID
+    if (res.locals.userInfo.role !== "sales_assistant_chef" && res.locals.userInfo.role !== "sales_assistant")
+        userID = res.locals.userInfo.userID
+    else
+        userID = req.query.userID
+        
     try {
         let selectQuery
         // If the REQUEST QUERY date variables are month and year
@@ -145,17 +148,17 @@ app.patch("/user/name", authenticateToken, verifyReqBodyObjValuesNotEmpty, async
 app.get("/user/:requestedUserID", authenticateToken, async (req, res) => {
     // FOR TESTING PURPOSES DELETE BELOW OBJECT LATER
     // const userInfo = {
-    //     userRole: "sales_assistant_chef",
+    //     role: "sales_assistant_chef",
     //     name: "Adnan Oktar",
     //     userID: "1fa591a4cksg064ub"
     // }
     const { userInfo } = res.locals
     const requesterID = userInfo.userID
     const { requestedUserID } = req.params
-    const { userRole } = userInfo
-    if (userRole === "sales_assistant")
+    const { role } = userInfo
+    if (role === "sales_assistant")
         await getSdUser(requesterID, requestedUserID, res)
-    else if (userRole === "sales_assistant_chef")
+    else if (role === "sales_assistant_chef")
         await getSdcUser(requestedUserID, res)
     else
         return customStatusError("user ID'" + requesterID + "' attempted to access /users but did not have 'sales_assistant' role", res, 403, "You do not have permission to access this route")
@@ -166,10 +169,10 @@ app.get("/user/:requestedUserID", authenticateToken, async (req, res) => {
 // this request. Or if the submitter is SDC, returns all users
 app.get("/users", authenticateToken, async (req, res) => {
     const { userInfo } = res.locals
-    const { userRole, name } = userInfo
-    if (userRole === "sales_assistant")
+    const { role, name } = userInfo
+    if (role === "sales_assistant")
         await getSdUsers(name, res)
-    else if (userRole === "sales_assistant_chef")
+    else if (role === "sales_assistant_chef")
         await getSdcUsers(res)
     else
         return customStatusError("user '" + name + "' attempted to access /users but did not have 'sales_assistant' role", res, 403, "You do not have permission to access this route")
@@ -224,9 +227,9 @@ app.get("/transactions", authenticateToken, async (req, res) => {
 app.get("/transactions/:userID", authenticateToken, async (req, res) => {
     const { userInfo } = res.locals
 
-    const { userRole } = userInfo
-    if (userRole === "sales_assistant")
-        return customStatusError("userRole is " + userRole, res, 401, "You are not authorized to make this query")
+    const { role } = userInfo
+    if (role === "sales_assistant")
+        return customStatusError("role is " + role, res, 401, "You are not authorized to make this query")
     const { userID } = req.params
     const { date } = req.query
     try {
@@ -253,14 +256,14 @@ app.get("/transaction/:appID", async (req, res) => {
     const { userInfo } = res.locals
 
     const { appID } = req.params
-    const { userRole } = userInfo
+    const { role } = userInfo
     try {
-        if (userRole === "dealer") {
+        if (role === "dealer") {
             const { userID } = userInfo
             const queryStatement = "SELECT * FROM transactions WHERE user_id = $1 AND app_id = $2"
             const query = await pool.query(queryStatement, [userID, appID])
             return res.json(query.rows)
-        } else if (userRole === "sales_assistant" || userRole === "sales_assistant_chef") {
+        } else if (role === "sales_assistant" || role === "sales_assistant_chef") {
             const queryStatement = "SELECT * FROM transactions WHERE app_id = $1"
             const query = await pool.query(queryStatement, [appID])
             return res.json(query.rows)
@@ -320,8 +323,8 @@ app.get("/report/transactions/count", authenticateToken, async (req, res) => {
 app.get("/report/transactions/:userID", authenticateToken, async (req, res) => {
     const { userInfo } = res.locals
 
-    if (userInfo.userRole !== "sales_assistant_chef" && userInfo.userRole !== "sales_assistant")
-        return customStatusError("user role: '"+userInfo.userRole+"' is not authenticated", res , 401, "You're not authenticated to make this request")
+    if (userInfo.role !== "sales_assistant_chef" && userInfo.role !== "sales_assistant")
+        return customStatusError("user role: '"+userInfo.role+"' is not authenticated", res , 401, "You're not authenticated to make this request")
     const { userID } = req.params
     const { date } = req.query
     try {

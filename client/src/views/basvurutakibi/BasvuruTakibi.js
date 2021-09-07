@@ -41,7 +41,6 @@ const BasvuruTakibi = () => {
       })
       if (res.status === 200) {
         const fetchData = await res.json()
-        console.log("fetchData ", fetchData)
         const resData = mapDataToTurkish(fetchData)
         setUsersData(resData)
       }

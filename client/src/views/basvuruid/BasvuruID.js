@@ -23,7 +23,6 @@ const BasvuruID = ({match, applicationID}) => {
       })
       if (res.status === 200) {
         const fetchData = await res.json()
-        console.log("fetchData ", fetchData)
         const mappedData = mapDataToTurkish(fetchData)
         setData(mappedData[0])
       }

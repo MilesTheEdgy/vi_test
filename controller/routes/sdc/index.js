@@ -16,7 +16,7 @@ const app = module.exports = express();
 app.put("/user/active/:userID", authenticateToken, async (req, res) => {
   const userInfo = res.locals.userInfo
   // VERIFICATION BEGIN
-  if (userInfo.userRole !== "sales_assistant_chef")
+  if (userInfo.role !== "sales_assistant_chef")
     return customStatusError("unauthorized access, no sales_assistant_chef role /user/active/:userID at"+__dirname, res, 401, "Unauthorized route")
   const { userID } = req.params
   try {
@@ -44,7 +44,7 @@ app.put("/user/active/:userID", authenticateToken, async (req, res) => {
 app.put("/user/assign/area", authenticateToken, async (req, res) => {
   const { userInfo } = res.locals
   // VERIFICATION BEGIN
-  if (userInfo.userRole !== "sales_assistant_chef")
+  if (userInfo.role !== "sales_assistant_chef")
     return customStatusError("unauthorized access, no sales_assistant_chef role /user/assign/area at"+__dirname, res, 401, "Unauthorized route")
   const errorEmptyObjValue = "empty input in request object at " + __dirname
   const isReqObjVerified = verifyReqObjExpectedObjKeys(["userID", "toArea"], req.query)
@@ -83,7 +83,7 @@ app.put("/user/assign/role", authenticateToken, async (req, res) => {
   const { userInfo } = res.locals 
   const selectableRoles = ["dealer", "sales_assistant"]
   // VERIFICATION BEGINS
-  if (userInfo.userRole !== "sales_assistant_chef")
+  if (userInfo.role !== "sales_assistant_chef")
     return customStatusError("unauthorized access, no sales_assistant_chef role /user/assign/role at"+__dirname, res, 401, "Unauthorized route")
   const { userID, toRole } = req.query
   // check if toRole request query input exist as element in selectableRoles array
@@ -120,7 +120,7 @@ app.post("/goal", authenticateToken, verifyReqBodyObjValuesNotEmpty, verifyReqBo
   if (isReqObjVerified.ok === false)
     return customStatusError(isReqObjVerified.error, res, isReqObjVerified.statusCode, isReqObjVerified.resString)
   const { userID, date, service, goal } = req.body
-  if (userInfo.userRole !== "sales_assistant_chef")
+  if (userInfo.role !== "sales_assistant_chef")
     return customStatusError("unauthorized access, no sales_assistant_chef role /goal at"+__dirname, res, 401, "Unauthorized route")
   try {
     const requestedUserInfo = await verifyUserAndReturnInfo(userID)
@@ -176,7 +176,7 @@ app.post("/service", authenticateToken, verifyReqBodyObjValuesNotEmpty, async (r
   if (isReqObjVerified.ok === false)
     return customStatusError(isReqObjVerified.error, res, isReqObjVerified.statusCode, isReqObjVerified.resString)
   const { newServiceName, newServiceDescription, isProfitable } = req.body
-  if (userInfo.userRole !== "sales_assistant_chef")
+  if (userInfo.role !== "sales_assistant_chef")
     return customStatusError("unauthorized access, no sales_assistant_chef role /service at"+__dirname, res, 401, "Unauthorized route")
   try {
     // get services and store them in array to check if user's submitted service is not duplicate (The name column in db
@@ -212,7 +212,7 @@ app.put("/service/name", authenticateToken, verifyReqBodyObjNoWhiteSpace, async 
   const isInputEmpty = verifyInputNotEmptyFunc(res.body)
   if (isInputEmpty.ok === false)
     return customStatusError(isInputEmpty.error, res, isInputEmpty.statusCode, isInputEmpty.resString)
-  if (userInfo.userRole !== "sales_assistant_chef")
+  if (userInfo.role !== "sales_assistant_chef")
     return customStatusError("unauthorized access, no sales_assistant_chef role /service/name at"+__dirname, res, 401, "Unauthorized route")
   try {
     // get services and store them in array
@@ -250,7 +250,7 @@ app.put("/service/description", async (req, res) => {
   const isInputNotEmpty = verifyInputNotEmptyFunc(res.body)
   if (isInputNotEmpty.ok === false)
     return customStatusError(isInputNotEmpty.error, res, isInputNotEmpty.statusCode, isInputNotEmpty.resString)
-  if (userInfo.userRole !== "sales_assistant_chef")
+  if (userInfo.role !== "sales_assistant_chef")
     return customStatusError("unauthorized access, no sales_assistant_chef role /service/description at"+__dirname, res, 401, "Unauthorized route")
   try {
     // get services and store them in array
@@ -280,7 +280,7 @@ app.put("/service/active", authenticateToken, async (req, res) => {
   const userInfo = res.locals
 
   // VERIFICATION BEGINS
-  if (userInfo.userRole !== "sales_assistant_chef")
+  if (userInfo.role !== "sales_assistant_chef")
     return customStatusError("unauthorized access, no sales_assistant_chef role /service/active at"+__dirname, res, 401, "Unauthorized route")
   const isReqQueryValid = verifyReqObjExpectedObjKeys(['service'], req.query)
   if (isReqQueryValid.ok === false)
@@ -312,7 +312,7 @@ app.put("/service/profitable", verifyReqBodyObjValuesNotEmpty, authenticateToken
   const userInfo = res.locals
   
   // VERIFICATION BEGINS
-  if (userInfo.userRole !== "sales_assistant_chef")
+  if (userInfo.role !== "sales_assistant_chef")
     return customStatusError("unauthorized access, no sales_assistant_chef role /service/active at"+__dirname, res, 401, "Unauthorized route")
   const isReqQueryValid = verifyReqObjExpectedObjKeys(['service'], req.query)
   if (isReqQueryValid.ok === false)
@@ -344,7 +344,7 @@ app.post("/offer", authenticateToken, verifyReqBodyObjValuesNotEmpty, async (req
   if (isReqObjVerified.ok === false)
     return customStatusError(isReqObjVerified.error, res, isReqObjVerified.statusCode, isReqObjVerified.resString)
   const { newOfferName, newOfferDescription, newOfferValue, forServiceID } = req.body
-  if (userInfo.userRole !== "sales_assistant_chef")
+  if (userInfo.role !== "sales_assistant_chef")
     return customStatusError("unauthorized access, no sales_assistant_chef role /service at"+__dirname, res, 401, "Unauthorized route")
   try {
     // Verify if service exists
@@ -379,7 +379,7 @@ app.put("/offer/name", authenticateToken, verifyReqBodyObjValuesNotEmpty, async 
 
   // VERIFICATION BEGINS
   // IF the user is not a sales assistant chef, return unauthorized
-  if (userInfo.userRole !== "sales_assistant_chef")
+  if (userInfo.role !== "sales_assistant_chef")
     return customStatusError("unauthorized access, no sales_assistant_chef role /offer/name at"+__dirname, res, 401, "Unauthorized route")
   // verify newOfferName object key exists in request body
   const isReqBodyValid = verifyReqObjExpectedObjKeys(["newOfferName"], req.body, res)
@@ -425,7 +425,7 @@ app.put("/offer/description", authenticateToken, verifyReqBodyObjValuesNotEmpty,
  
    // VERIFICATION BEGINS
    // IF the user is not a sales assistant chef, return unauthorized
-   if (userInfo.userRole !== "sales_assistant_chef")
+   if (userInfo.role !== "sales_assistant_chef")
      return customStatusError("unauthorized access, no sales_assistant_chef role /offer/description at"+__dirname, res, 401, "Unauthorized route")
    // verify newOfferDescription object key exists in request body
    const isReqBodyValid = verifyReqObjExpectedObjKeys(["newOfferDescription"], req.body, res)
@@ -471,7 +471,7 @@ app.put("/offer/description", authenticateToken, verifyReqBodyObjValuesNotEmpty,
  
    // VERIFICATION BEGINS
    // IF the user is not a sales assistant chef, return unauthorized
-   if (userInfo.userRole !== "sales_assistant_chef")
+   if (userInfo.role !== "sales_assistant_chef")
      return customStatusError("unauthorized access, no sales_assistant_chef role /offer/value at"+__dirname, res, 401, "Unauthorized route")
    // verify newOfferValue object key exists in request body
    const isReqBodyValid = verifyReqObjExpectedObjKeys(["newOfferValue"], req.body, res)
@@ -514,7 +514,7 @@ app.put("/offer/description", authenticateToken, verifyReqBodyObjValuesNotEmpty,
   const userInfo = res.locals
 
   // VERIFICATION BEGINS
-  if (userInfo.userRole !== "sales_assistant_chef")
+  if (userInfo.role !== "sales_assistant_chef")
     return customStatusError("unauthorized access, no sales_assistant_chef role /offer/active at"+__dirname, res, 401, "Unauthorized route")
   try {
     const isReqQueryValid = verifyReqObjExpectedObjKeys(["offerID"], req.query, res)

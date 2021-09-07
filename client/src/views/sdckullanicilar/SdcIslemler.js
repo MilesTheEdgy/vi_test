@@ -4,9 +4,9 @@ import { useHistory } from 'react-router-dom'
 import { mapDataToTurkish, getBadge } from "../../components/index";
 import qs from "qs"
 
-const fetchData = async(service, id) => {
-  const res = await fetch(`/sdc/user/${id}/details?service=${service}`, {
-    method: 'GET',
+const fetchData = async(service, id, month, year) => {
+  // const res = await fetch(`/sdc/user/${id}/details?service=${service}`, {
+  const res = await fetch(`/applications/details?service=${service}&userID=${id}&month=${month}&year=${year}`, {
     headers: {
       'content-type': 'application/json',
       'authorization' :`Bearer ${document.cookie.slice(8)} `
@@ -19,12 +19,12 @@ const fetchData = async(service, id) => {
 
 const SdcIslemler = ({match, location}) => {
   const history = useHistory()
-  const temp = qs.parse(location.search)
+  const urlParams = qs.parse(location.search)
   const [data, setData] = useState([])
 
  useEffect(() => {
    const fetchAllData = async () => {
-     const res = await fetchData(temp["?islem"], temp.id);
+     const res = await fetchData(urlParams["?islem"], urlParams.id, urlParams.month, urlParams.year);
      setData(res)
    }
    fetchAllData()

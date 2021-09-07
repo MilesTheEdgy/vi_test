@@ -10,23 +10,9 @@
 // calling the "element" key as a function, and giving it "textObj" key as props and arguments. PRETTY NEAT! 
 
 
-/////////// ************
+/////////// ***********
 
-import {
-    CToaster,
-    CToast,
-    CToastBody,
-} from '@coreui/react';
-
-const Toaster = ({color, body}, i) => {
-    return (
-        <CToaster position="top-right" key = {i}>
-            <CToast show={true} autohide={3000} fade={true} color={color} className = "applicationToaster">
-                <CToastBody>{body}</CToastBody>
-            </CToast>
-        </CToaster>
-    )
-}
+import Toaster from "../../components/toaster/Toaster2"
 
 const successText = {
     color: "success",

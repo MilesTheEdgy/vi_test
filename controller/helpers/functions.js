@@ -104,7 +104,7 @@ const queryConstructorDate = (selectStatement, conditionArr) => {
 }
 
 const verifyUserAndReturnInfo = async (userID) => {
-    const query = await pool.query("SELECT username, hash, role, active, register_date, user_id, email, name, assigned_area FROM login WHERE user_id = $1", [userID])
+    const query = await pool.query("SELECT name, hash, role, active, register_date, user_id, email, name, assigned_area FROM login WHERE user_id = $1", [userID])
     if (query.rows.length === 0)
         return {}
     return query.rows[0]

@@ -9,6 +9,11 @@ SERVER:
     PUT /applications:
         Verify the application's request body input BEFORE uploading to cloudinary
 
+FRONTEND:
+    BasvuruTakibi && BasvuruID:
+        Those two components render children that show the details of a specific application, they use two similar
+        children components to do the job (ApplicationViewModal, AppDataForm). Ideally, they could be merged into one component.
+
 FEATURES TO ADD:
     PASS RESET REACT BUILD:
             * After user submits a successfull reset, have the pop up modal redirect to login

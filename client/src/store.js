@@ -14,7 +14,11 @@ const initialState = {
 
   appsData: [],
   sdc: {
-    users: []
+    users: [],
+    actions: {
+      selectedMonth: "ALL",
+      selectedYear: new Date().getFullYear()
+    }
   }
 }
 
@@ -85,6 +89,36 @@ const reducer = (state = initialState, action) => {
         users: action.payload
       }
     }
+
+    case "SDC_ACTION_SET_MONTH":
+      const month = action.payload
+      let validateMonth = month
+      if (Number(month) === 0)
+        validateMonth = "ALL"
+      return {
+        ...state,
+        sdc: {
+          ...state.sdc,
+          actions: {
+            ...state.sdc.actions,
+            selectedMonth: validateMonth
+          }
+        }
+      }
+
+    case "SDC_ACTION_SET_YEAR":
+      const year = action.payload
+      return {
+        ...state,
+        sdc: {
+          ...state.sdc,
+          actions: {
+            ...state.sdc.actions,
+            selectedYear: year
+          }
+        }
+      }
+
     default:
       return state;
   }
