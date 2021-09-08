@@ -17,38 +17,37 @@ import { useEffect, useState } from 'react'
 import Toaster from "../../components/toaster/Toaster2"
 import HocLoader from '../hocloader/HocLoader'
 
-export const EditingModal = ({offer, show, onClose, toasters, triggerToaster, refetch, reselect}) => {
-    console.log("OFFER ", offer)
+const successObj = {
+    color: "success",
+    body: "Değişikleriniz başarıyla tamamlanmıştır!"
+}
+
+const errorObj = {
+    color: "danger",
+    body: "Bir hata oldu, lütfen daha sonra tekrar deneyin"
+}
+
+export const EditingModal = ({offer, show, onClose, toasters, triggerToaster, refetch}) => {
     const [offerDetails, setOfferDetails] = useState(offer)
     const [newName, setNewName] = useState(offer.kampanya_ismi)
     const [newValue, setNewValue] = useState(offer.değeri)
     const [newDescription, setNewDescription] = useState(offer.kampanya_açıklaması)
     const [buttonDisabled, setButtonDisabled] = useState(true)
     const [loading, setLoading] = useState(false)
-    
-    const successObj = {
-        color: "success",
-        body: "Değişikleriniz başarıyla tamamlanmıştır!"
-    }
-
-    const errorObj = {
-        color: "danger",
-        body: "Bir hata oldu, lütfen daha sonra tekrar deneyin"
-    }
 
     function verifyInputFields() {
         let changesArr = [false, false, false]
-        if (newName !== offer.kampanya_ismi)
+        if (newName !== offerDetails.kampanya_ismi)
             changesArr[0] = true
         else
             changesArr[0] = false
 
-        if (newDescription !== offer.kampanya_açıklaması)
+        if (newDescription !== offerDetails.kampanya_açıklaması)
             changesArr[1] = true
         else
             changesArr[1] = false
 
-        if (Number(newValue) !== Number(offer.değeri))
+        if (Number(newValue) !== Number(offerDetails.değeri))
             changesArr[2] = true
         else
             changesArr[2] = false
@@ -58,12 +57,11 @@ export const EditingModal = ({offer, show, onClose, toasters, triggerToaster, re
 
     function reSetSelectedOffer(offerID, offersData) {
         const selectedOffer = offersData.find(obj => obj.offer_id === offerID)
-        setOfferDetails(selectedOffer)
+        return selectedOffer
     }
 
     async function handleSubmit() {
         const handleNameUpdate = async () => {
-            console.log('Putting NAME')
             const res = await fetch(`/offer/name?offerID=${offer.offer_id}&forServiceID=${offer.service_id}`, {
                   method: 'PUT',
                   headers: {
@@ -80,7 +78,6 @@ export const EditingModal = ({offer, show, onClose, toasters, triggerToaster, re
                 return false
         }
         const handleDescriptionUpdate = async () => {
-            console.log('Putting DESCRIPTION')
             const res = await fetch(`/offer/description?offerID=${offer.offer_id}&forServiceID=${offer.service_id}`, {
                 method: 'PUT',
                   headers: {
@@ -98,7 +95,6 @@ export const EditingModal = ({offer, show, onClose, toasters, triggerToaster, re
                 return false
         }
         const handleValueUpdate = async () => {
-            console.log('Putting VALUE')
             const res = await fetch(`/offer/value?offerID=${offer.offer_id}&forServiceID=${offer.service_id}`, {
                 method: 'PUT',
                   headers: {
@@ -151,7 +147,7 @@ export const EditingModal = ({offer, show, onClose, toasters, triggerToaster, re
         }
         return setButtonDisabled(true)
         //eslint-disable-next-line
-    }, [newName, newValue, newDescription])
+    }, [newName, newValue, newDescription, offerDetails])
     return (
         <CModal 
         size = "lg"
@@ -167,13 +163,13 @@ export const EditingModal = ({offer, show, onClose, toasters, triggerToaster, re
                 <CRow className = "justify-content-center align-items-center">
                 <CCol xs="12" sm="11">
                     <CFormGroup row className="my-0">
-                        <CCol xs="10">
+                        <CCol xs = "12" lg="10">
                             <CFormGroup>
                                 <CLabel>Kampanya ismi</CLabel>
                                 <CInput defaultValue={offerDetails?.kampanya_ismi} onChange = {(e) => setNewName(e.target.value)} />
                             </CFormGroup>
                         </CCol>
-                        <CCol xs="2">
+                        <CCol xs = "12" lg="2">
                             <CFormGroup>
                                 <CLabel>Değeri</CLabel>
                                 <CInput defaultValue= {offerDetails?.değeri} onChange = {(e) => setNewValue(Number(e.target.value))} type = "number" />
@@ -199,3 +195,49 @@ export const EditingModal = ({offer, show, onClose, toasters, triggerToaster, re
         </CModal>
     )
 }
+
+
+export const ConfirmDeleteModal = ({ modalOn, setModal, serviceID, toasters, triggerToaster, refetch }) => {
+    console.log('MODAL ON')
+    const [loading, setLoading] = useState(false)
+    const confirmDelete = async () => {
+        setLoading(true)
+        const res = await fetch(`/service?serviceID=${serviceID}`, {
+              method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json',
+                'authorization': `Bearer ${document.cookie.slice(8)} `
+              }
+        })
+        if (res.status === 200) {
+            triggerToaster([...toasters, {element: Toaster, textObj: successObj}])
+        } else {
+            triggerToaster([...toasters, {element: Toaster, textObj: errorObj}])
+        }
+        refetch()
+        setModal(false)
+        setLoading(false)
+    }
+    return (
+        <CModal 
+        show={modalOn}
+        onClose={() => setModal(!modalOn)}
+        color="warning"
+        centered
+        >   
+            <HocLoader relative isLoading = {loading} >
+                <CModalHeader closeButton>
+                    <CModalTitle> Dikkat </CModalTitle>
+                </CModalHeader>
+                <CModalBody>
+                    <h5 style = {{textAlign: "center"}}>Bu hizmeti silmek istediğinizden emin misiniz?</h5>
+                </CModalBody>
+                <CModalFooter>
+                    <CButton color="danger" onClick={confirmDelete}>Onayla</CButton>
+                    <CButton color="secondary" onClick={() => setModal(!modalOn)}>Kapat</CButton>
+                </CModalFooter>
+            </HocLoader>
+        </CModal>
+    )
+}
+

@@ -241,7 +241,7 @@ app.put("/service/description", async (req, res) => {
   const { service } = req.query
   const serviceEngName = service
   const { newServiceDescription } = req.body
-  const userInfo = res.locals
+  const { userInfo } = res.locals
 
   // VERIFICATION BEGINS
   const isReqObjVerified = verifyReqObjExpectedObjKeys(["newServiceDescription"], req.body, res)
@@ -274,42 +274,86 @@ app.put("/service/description", async (req, res) => {
   }
 })
 
-app.put("/service/active", authenticateToken, async (req, res) => {
-  const { service } = req.query
-  const serviceEngName = service
-  const userInfo = res.locals
+//// ***** the below route is inactive for now, I implemented an alternative which deletes the entire service instead of setting it as inactive
+
+// app.put("/service/active", authenticateToken, async (req, res) => {
+//   const { service } = req.query
+//   const serviceEngName = service
+//   const { userInfo } = res.locals
+
+//   // VERIFICATION BEGINS
+//   if (userInfo.role !== "sales_assistant_chef")
+//     return customStatusError("unauthorized access, no sales_assistant_chef role /service/active at"+__dirname, res, 401, "Unauthorized route")
+//   const isReqQueryValid = verifyReqObjExpectedObjKeys(['service'], req.query)
+//   if (isReqQueryValid.ok === false)
+//     return customStatusError(isReqQueryValid.error, res, isReqQueryValid.statusCode, isReqQueryValid.resString)
+//   const isInputNotEmpty = verifyInputNotEmptyFunc(req.query)
+//   if (isInputNotEmpty.ok === false)
+//     return customStatusError(isInputNotEmpty.error, res, isInputNotEmpty.statusCode, isInputNotEmpty.resString)
+//   try {
+//     // get services and store them in array
+//     const servicesStatement = "SELECT * FROM services WHERE eng_equivalent = $1"
+//     const servicesQuery = await pool.query(servicesStatement, [serviceEngName])
+//     // check if 'service' value exists in DB, else return 406
+//     if (servicesQuery.rowCount === 0) {
+//       const errorStrUnexpectedInput = "requester's requested service '" + serviceEngName + "' does not exist "
+//       return customStatusError(errorStrUnexpectedInput, res, 406, "your requested service does not exist")
+//     }
+//     // VERIFICATION ENDS
+//     const queryString = "UPDATE services SET active = NOT active, active_last_change_date = CURRENT_TIMESTAMP WHERE eng_equivalent = $1"
+//     await pool.query(queryString, [serviceEngName])
+//     res.status(200).json("Your service's active state was toggled successfully")
+//   } catch (err) {
+//     return status500Error(err, res, "server error while PUTTING service active")
+//   }
+// })
+
+app.delete("/service", authenticateToken, async (req, res) => {
+  const { serviceID } = req.query
+  const { userInfo } = res.locals
 
   // VERIFICATION BEGINS
   if (userInfo.role !== "sales_assistant_chef")
     return customStatusError("unauthorized access, no sales_assistant_chef role /service/active at"+__dirname, res, 401, "Unauthorized route")
-  const isReqQueryValid = verifyReqObjExpectedObjKeys(['service'], req.query)
+  const isReqQueryValid = verifyReqObjExpectedObjKeys(['serviceID'], req.query)
   if (isReqQueryValid.ok === false)
     return customStatusError(isReqQueryValid.error, res, isReqQueryValid.statusCode, isReqQueryValid.resString)
   const isInputNotEmpty = verifyInputNotEmptyFunc(req.query)
   if (isInputNotEmpty.ok === false)
     return customStatusError(isInputNotEmpty.error, res, isInputNotEmpty.statusCode, isInputNotEmpty.resString)
+  const client = await pool.connect()
   try {
+    await client.query("BEGIN")
     // get services and store them in array
-    const servicesStatement = "SELECT * FROM services WHERE eng_equivalent = $1"
-    const servicesQuery = await pool.query(servicesStatement, [serviceEngName])
-    // check if 'service' value exists in DB, else return 406
+    const servicesStatement = "SELECT * FROM services WHERE service_id = $1"
+    const servicesQuery = await pool.query(servicesStatement, [serviceID])
+    // check if 'serviceID' value exists in DB, else return 406
     if (servicesQuery.rowCount === 0) {
-      const errorStrUnexpectedInput = "requester's requested service '" + serviceEngName + "' does not exist "
-      return customStatusError(errorStrUnexpectedInput, res, 406, "your requested service does not exist")
+      const errorStrUnexpectedInput = "requester's requested service ID '" + serviceID + "' does not exist "
+      return customStatusError(errorStrUnexpectedInput, res, 406, "your requested service ID does not exist")
     }
     // VERIFICATION ENDS
-    const queryString = "UPDATE services SET active = NOT active, active_last_change_date = CURRENT_TIMESTAMP WHERE eng_equivalent = $1"
-    await pool.query(queryString, [serviceEngName])
+
+
+    const deleteServicesQuery = "DELETE FROM services WHERE service_id = $1"
+    await client.query(deleteServicesQuery, [serviceID])
+    const deleteOffersQuery = "DELETE FROM offers WHERE service_id = $1"
+    await client.query(deleteOffersQuery, [serviceID])
+
+    await client.query("COMMIT")
+    client.release()
     res.status(200).json("Your service's active state was toggled successfully")
-  } catch (err) {
+} catch (err) {
+    await client.query("ROLLBACK")
+    client.release
     return status500Error(err, res, "server error while PUTTING service active")
-  }
+}
 })
 
 app.put("/service/profitable", verifyReqBodyObjValuesNotEmpty, authenticateToken, async (req, res) => {
   const { service } = req.query
   const serviceEngName = service
-  const userInfo = res.locals
+  const { userInfo } = res.locals
   
   // VERIFICATION BEGINS
   if (userInfo.role !== "sales_assistant_chef")
@@ -417,7 +461,7 @@ app.put("/offer/name", authenticateToken, verifyReqBodyObjValuesNotEmpty, async 
 })
 
 app.put("/offer/description", authenticateToken, verifyReqBodyObjValuesNotEmpty, async (req, res) => {
-   const userInfo = res.locals
+  const { userInfo } = res.locals
    // expected values from URL query
    const { offerID, forServiceID } = req.query
    // expected values from object
@@ -463,7 +507,7 @@ app.put("/offer/description", authenticateToken, verifyReqBodyObjValuesNotEmpty,
  })
 
  app.put("/offer/value", authenticateToken, verifyReqBodyObjValuesNotEmpty, async (req, res) => {
-  const userInfo = res.locals
+  const { userInfo } = res.locals
    // expected values from URL query
    const { offerID, forServiceID } = req.query
    // expected values from object
@@ -511,7 +555,7 @@ app.put("/offer/description", authenticateToken, verifyReqBodyObjValuesNotEmpty,
 
  app.put("/offer/active", authenticateToken, async (req, res) => {
   const { offerID } = req.query
-  const userInfo = res.locals
+  const { userInfo } = res.locals
 
   // VERIFICATION BEGINS
   if (userInfo.role !== "sales_assistant_chef")

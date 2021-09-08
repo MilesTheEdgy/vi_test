@@ -11,9 +11,8 @@ import {
   CDataTable,
   CButton
 } from '@coreui/react';
-import Modal from "../../components/modals/Modal"
 import HocLoader from "../hocloader/HocLoader"
-import { EditingModal } from '.';
+import { EditingModal, ConfirmDeleteModal } from '.';
 
 function mapOffersData(offers) {
     return offers.map(obj => {
@@ -45,38 +44,33 @@ const fields = [
 const Hizmetler = () => {
     const [servicesLoading, setServicesLoading] = useState(false)
     const [servicesData, setServicesData] = useState([])
-    const [selectedService, setSelectedService] = useState(0)
-
+    const [selectedService, setSelectedService] = useState("0")
     const [offersLoading, setOffersLoading] = useState(false)
     const [offersData, setOffersData] = useState([])
     const [selectedOffer, setSelectedOffer] = useState({})
 
     const [toasters, addToaster] = useState([])
 
+    const [confirmDeleteServiceModal, setConfirmDeleteServiceModal] = useState(false)
     const [editingModalOn, setEditingModalOn] = useState(false)
 
-    function reSetSelectedOffer(offerID) {
-        const selectedOffer = offersData.find(obj => obj.offer_id === offerID)
-        setSelectedOffer(selectedOffer)
-    }
-
-    useEffect(() => {
-        const fetchServices = async () => {
-            setServicesLoading(true)
-            const res = await fetch("/services", {
-                headers: {
-                  'content-type': 'application/json',
-                  'authorization' :`Bearer ${document.cookie.slice(8)} `
-                }
-            })
-            if (res.status === 200) {
-                const data = await res.json()
-                console.log('data ', data)
-                setServicesData(data)
+    const fetchServices = async () => {
+        setServicesLoading(true)
+        const res = await fetch("/services", {
+            headers: {
+              'content-type': 'application/json',
+              'authorization' :`Bearer ${document.cookie.slice(8)} `
             }
-            setServicesLoading(false)
+        })
+        if (res.status === 200) {
+            const data = await res.json()
+            setServicesData(data)
         }
+        setServicesLoading(false)
+    }
+    useEffect(() => {
         fetchServices()
+        //eslint-disable-next-line
     }, [])
 
     const fetchOffers = async () => {
@@ -90,10 +84,11 @@ const Hizmetler = () => {
         let data
         if (res.status === 200) {
             const fetchedData = await res.json()
-            console.log(fetchedData)
             const mappedData = mapOffersData(fetchedData)
             setOffersData(mappedData)
             data = mappedData
+        } else if (res.status === 406) {
+            setOffersData([])
         }
         setOffersLoading(false)
         return data
@@ -103,15 +98,26 @@ const Hizmetler = () => {
         //eslint-disable-next-line
     }, [selectedService])
 
+    const fetchAll = () => {
+        fetchServices()
+        fetchOffers()
+    }
+
     return (
         <CRow className="d-flex justify-content-center">
-        {/* I'm mapping the toasters from toasters array, each element is an object, object has: element, textObj, and 
-            for every element in the array I'm calling the element's "element", which is a function that returns a react
-            element, and giving it "textObj" as props, and passing index as second argument. */}
         {toasters && toasters.map((toaster, i) => ( toaster.element(toaster.textObj, i)))}
-        {editingModalOn && 
-        <EditingModal show = {editingModalOn} onClose = {setEditingModalOn} 
-            offer = {selectedOffer} toasters = {toasters} triggerToaster = {addToaster} refetch = {fetchOffers} reselect = {reSetSelectedOffer} />
+        {   // EditingModal is responsible for updating an offer's details, such as name, description, value and active
+            editingModalOn && 
+            <EditingModal show = {editingModalOn} onClose = {setEditingModalOn} 
+            offer = {selectedOffer} toasters = {toasters} triggerToaster = {addToaster} refetch = {fetchOffers} />
+        }
+        {
+            selectedService !== "0" ?
+            <ConfirmDeleteModal 
+            modalOn = {confirmDeleteServiceModal} setModal = {setConfirmDeleteServiceModal} toasters = {toasters}  
+            refetch = {fetchAll} serviceID = {selectedService} triggerToaster = {addToaster} />
+            :
+            null
         }
             <CCol xs="12" md="12">
                 <CCard>
@@ -125,46 +131,54 @@ const Hizmetler = () => {
                                 </CCol>
                                 <CCol xs = "12" md = "2">
                                     <HocLoader isLoading = {servicesLoading} relative>
-                                        <CSelect onChange = {(e) => setSelectedService(e.target.value)} >
-                                            <option></option>
+                                        <CSelect onChange = {(e) => setSelectedService( e.target.value)} >
+                                            <option value = {0} ></option>
                                             {servicesData && servicesData.map((service) => (
                                                 <option key = {service.service_id} value = {service.service_id}>{service.name}</option>))}
                                         </CSelect>
                                     </HocLoader>
                                 </CCol>
+                                <CCol>
+                                    <CButton disabled = {selectedService === "0" ? true : false} color = "danger" shape = "ghost" onClick = {()=> setConfirmDeleteServiceModal(true)} >SİL</CButton>
+                                </CCol>
                             </CFormGroup>
-                        <CDataTable
-                            items={offersData}
-                            fields={fields}
-                            loading = {offersLoading}
-                            hover
-                            // clickableRows
-                            // onRowClick={(item) => { setModal(true); setModalData(item)}}
-                            scopedSlots = {{
-                            'değeri':
-                                (item)=>(
-                                <td>
-                                    <p style = {{color: "green"}} >{item.değeri} TL</p>
-                                </td>
-                                ),
-                                'show_details':
-                                (item, index)=>{
-                                    return (
-                                    <td className="py-2">
-                                        <CButton
-                                            color="primary"
-                                            variant="outline"
-                                            shape="square"
-                                            size="sm"
-                                            onClick={() => {setSelectedOffer(item); setEditingModalOn(true)}}
-                                        >
-                                            Değiştir
-                                        </CButton>
-                                    </td>
-                                    )
-                                }
-                            }}
-                        />
+                            {/* if a service is selected, render the offers table */}
+                            {
+                                selectedService !== "0" ?
+                                    <CDataTable
+                                        items={offersData}
+                                        fields={fields}
+                                        loading = {offersLoading}
+                                        hover
+                                        // clickableRows
+                                        // onRowClick={(item) => { setModal(true); setModalData(item)}}
+                                        scopedSlots = {{
+                                        'değeri':
+                                            (item)=>(
+                                            <td>
+                                                <p style = {{color: "green"}} >{item.değeri} TL</p>
+                                            </td>
+                                            ),
+                                        'show_details':
+                                            (item, index)=>{
+                                            return (
+                                            <td className="py-2">
+                                                <CButton
+                                                    color="primary"
+                                                    variant="outline"
+                                                    shape="square"
+                                                    size="sm"
+                                                    onClick={() => {setSelectedOffer(item); setEditingModalOn(true)}}
+                                                >
+                                                    Değiştir
+                                                </CButton>
+                                            </td>
+                                            )
+                                        }
+                                        }}
+                                    />
+                                    : null
+                            }
                     </CCardBody>
                     {/* <CCardFooter>
                         <CButton type="submit" size="sm" color="primary" onClick={onSubmit} disabled = {inputFieldsNotEmpty} ><CIcon name="cil-scrubber" /> Gönder</CButton>

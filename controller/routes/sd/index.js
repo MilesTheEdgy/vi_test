@@ -70,9 +70,10 @@ app.put("/application/:applicationID",
         }
     } catch (err) {
         await client.query('ROLLBACK')
-        return status500Error(err, res, serverErrorStr)
+        status500Error(err, res, serverErrorStr)
     } finally {
         client.release()
+        return
     }
 })
 
