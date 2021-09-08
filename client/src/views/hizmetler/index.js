@@ -230,7 +230,7 @@ export const ConfirmDeleteModal = ({ modalOn, setModal, serviceID, toasters, tri
                     <CModalTitle> Dikkat </CModalTitle>
                 </CModalHeader>
                 <CModalBody>
-                    <h5 style = {{textAlign: "center"}}>Bu hizmeti silmek istediğinizden emin misiniz?</h5>
+                    <h5 style = {{textAlign: "center"}}>Bu hizmeti silmek istediğinizden emin misiniz? hizmeti </h5>
                 </CModalBody>
                 <CModalFooter>
                     <CButton color="danger" onClick={confirmDelete}>Onayla</CButton>
