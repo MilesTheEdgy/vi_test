@@ -12,22 +12,14 @@ import {
     CInput,
     CTextarea
   } from '@coreui/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, memo } from 'react'
 
-import Toaster from "../../components/toaster/Toaster2"
-import HocLoader from '../hocloader/HocLoader'
+import Toaster from "../../../../components/toaster/Toaster2"
+import HocLoader from '../../../hocloader/HocLoader'
+import { successObj, errorObj } from '../../index'
 
-export const successObj = {
-    color: "success",
-    body: "Değişikleriniz başarıyla tamamlanmıştır!"
-}
 
-export const errorObj = {
-    color: "danger",
-    body: "Bir hata oldu, lütfen daha sonra tekrar deneyin"
-}
-
-export const EditingModal = ({offer, show, onClose, toasters, triggerToaster, refetch}) => {
+const OfferEdit = ({offer, show, onClose, toasters, triggerToaster, refetch}) => {
     const [offerDetails, setOfferDetails] = useState(offer)
     const [newName, setNewName] = useState(offer.kampanya_ismi)
     const [newValue, setNewValue] = useState(offer.değeri)
@@ -196,47 +188,4 @@ export const EditingModal = ({offer, show, onClose, toasters, triggerToaster, re
     )
 }
 
-
-export const ConfirmDeleteModal = ({ modalOn, setModal, serviceID, toasters, triggerToaster, refetch }) => {
-    console.log('MODAL ON')
-    const [loading, setLoading] = useState(false)
-    const confirmDelete = async () => {
-        setLoading(true)
-        const res = await fetch(`/service?serviceID=${serviceID}`, {
-              method: 'DELETE',
-              headers: {
-                'Content-Type': 'application/json',
-                'authorization': `Bearer ${document.cookie.slice(8)} `
-              }
-        })
-        if (res.status === 200) {
-            triggerToaster([...toasters, {element: Toaster, textObj: successObj}])
-        } else {
-            triggerToaster([...toasters, {element: Toaster, textObj: errorObj}])
-        }
-        refetch()
-        setModal(false)
-        setLoading(false)
-    }
-    return (
-        <CModal 
-        show={modalOn}
-        onClose={() => setModal(!modalOn)}
-        color="warning"
-        centered
-        >   
-            <HocLoader relative isLoading = {loading} >
-                <CModalHeader closeButton>
-                    <CModalTitle> Dikkat </CModalTitle>
-                </CModalHeader>
-                <CModalBody>
-                    <h5 style = {{textAlign: "center"}}>Bu hizmeti silmek istediğinizden emin misiniz? hizmeti </h5>
-                </CModalBody>
-                <CModalFooter>
-                    <CButton color="danger" onClick={confirmDelete}>Onayla</CButton>
-                    <CButton color="secondary" onClick={() => setModal(!modalOn)}>Kapat</CButton>
-                </CModalFooter>
-            </HocLoader>
-        </CModal>
-    )
-}
+export default memo(OfferEdit)
