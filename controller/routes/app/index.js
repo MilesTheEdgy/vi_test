@@ -15,16 +15,17 @@ const app = module.exports = express();
 //**************
 
 
-// This route returns all of the services, takes profitable as route query argument. 
+// This route returns all of the services, takes active as route query argument. 
 app.get("/services", authenticateToken, async (req, res) => {
     try {
-        const { profitable } = req.query
-        let serviceQuery
-        if (profitable)
-            serviceQuery = await pool.query("SELECT * FROM services WHERE active = true AND profitable = true")
-        else
-            serviceQuery = await pool.query("SELECT * FROM services WHERE active = true")
+        const { active } = req.query
+        const selectedStatement = "SELECT * FROM services"
+        const activeCondition = " WHERE active = true"
+        let serviceStatement = selectedStatement
+        if (active)
+            serviceStatement = selectedStatement + activeCondition
         
+        const serviceQuery = await pool.query(serviceStatement)
         return res.status(200).json(serviceQuery.rows)
     } catch (error) {
         console.log(error)
@@ -35,7 +36,15 @@ app.get("/services", authenticateToken, async (req, res) => {
 app.get("/service/:serviceID", async (req, res) => {
     try {
         const { serviceID } = req.params
-        const offersQuery = await pool.query("SELECT * FROM offers WHERE service_id = $1", [serviceID])
+        const { active } = req.query
+
+        const selectedStatement = "SELECT * FROM offers WHERE service_id = $1"
+        const activeCondition = " AND active = true"
+        let offersStatement = selectedStatement
+        if (active)
+            offersStatement = selectedStatement + activeCondition
+
+        const offersQuery = await pool.query(offersStatement, [serviceID])
         if (offersQuery.rowCount === 0) {
             const errorStr = "offers under requested service ID " + serviceID + " does not exist in database"
             return customStatusError(errorStr, res, 406, "offers under your requested service ID does not exist")

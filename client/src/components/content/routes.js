@@ -19,6 +19,7 @@ const Hesap = lazy(() => import("../../views/hesap/Hesap"))
 const KazancRapor = lazy(() => import("../../views/rapor/KazancRapor"))
 const KazancRaporDetay = lazy(() => import("../../views/rapor/KazancRaporDetay"))
 const Hizmetler = lazy(() => import("../../views/hizmetler/Hizmetler"))
+const Hedefler = lazy(() => import("../../views/hedefler/Hedefler"))
 
 
 // FIX THE PATH NAMES
@@ -41,7 +42,8 @@ const routes = [
   { path: "/hesap", exact: true, name: 'Hesap Detayları', component: Hesap},
   { path: "/bayi/rapor/kazanc", exact: true, name: 'Bayi kazanç raporları', component: KazancRapor},
   { path: "/bayi/rapor/kazanc/detay/:id", exact: true, name: 'Bayi kazanç raporlar detayı', component: KazancRaporDetay},
-  { path: "/sdc/hizmetler", exact: true, name: 'Hizmetler', component: Hizmetler}
+  { path: "/sdc/hizmetler", exact: true, name: 'Hizmetler', component: Hizmetler},
+  { path: "/sdc/hedefler", exact: true, name: 'Hedefler', component: Hedefler}
 ];
 
 export default routes;

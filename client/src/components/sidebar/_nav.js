@@ -598,6 +598,12 @@ export const satisdestekchef_nav =  [
     name: 'Hizmetler',
     to: '/sdc/hizmetler',
     icon: <i className="fas fa-home c-sidebar-nav-icon"></i>
+  },
+  {
+    _tag: 'CSidebarNavItem',
+    name: 'Hedefler',
+    to: '/sdc/hedefler',
+    icon: <i className="fas fa-home c-sidebar-nav-icon"></i>
   }
 ]
 

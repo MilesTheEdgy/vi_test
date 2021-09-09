@@ -181,7 +181,7 @@ app.post("/service", authenticateToken, verifyReqBodyObjValuesNotEmpty, async (r
   try {
     // get services and store them in array to check if user's submitted service is not duplicate (The name column in db
     // already has a unique constraint but still having a custom error message would be usefull)
-    const servicesStatement = "SELECT * FROM services WHERE active = true AND profitable = TRUE"
+    const servicesStatement = "SELECT * FROM services WHERE active = true"
     const servicesQuery = await pool.query(servicesStatement)
     const servicesArr = servicesQuery.rows.map(obj => obj.name)
     // check if 'service' value from req.body exists in services array, if true return 401
@@ -190,37 +190,35 @@ app.post("/service", authenticateToken, verifyReqBodyObjValuesNotEmpty, async (r
       return customStatusError(errorStrUnexpectedInput, res, 406, "Service already exists")
     }
     // VERIFICATION ENDS
-    const serviceNameEng = replaceTURCharWithENG(newServiceName)
-    const queryString = "INSERT INTO services(name, description, profitable, eng_equivalent) VALUES ($1, $2, $3, $4)"
-    await pool.query(queryString, [newServiceName, newServiceDescription, isProfitable, serviceNameEng])
+    const queryString = "INSERT INTO services(name, description, profitable) VALUES ($1, $2, $3)"
+    await pool.query(queryString, [newServiceName, newServiceDescription, isProfitable])
     return res.status(200).json("Your service was added successfully!")
   } catch (err) {
     return status500Error(err, res, "Could not insert service")
   }
 })
 
-app.put("/service/name", authenticateToken, verifyReqBodyObjNoWhiteSpace, async (req, res) => {
-  const { service } = req.query
-  const serviceEngName = service
+app.put("/service/name", authenticateToken, async (req, res) => {
+  const { serviceID } = req.query
   const { newServiceName } = req.body
-  const userInfo = res.locals
+  const { userInfo } = res.locals
 
   // VERIFICATION BEGINS
   const isReqObjVerified = verifyReqObjExpectedObjKeys(["newServiceName"], req.body, res)
   if (isReqObjVerified.ok === false)
     return customStatusError(isReqObjVerified.error, res, isReqObjVerified.statusCode, isReqObjVerified.resString)
-  const isInputEmpty = verifyInputNotEmptyFunc(res.body)
+  const isInputEmpty = verifyInputNotEmptyFunc(req.body)
   if (isInputEmpty.ok === false)
     return customStatusError(isInputEmpty.error, res, isInputEmpty.statusCode, isInputEmpty.resString)
   if (userInfo.role !== "sales_assistant_chef")
     return customStatusError("unauthorized access, no sales_assistant_chef role /service/name at"+__dirname, res, 401, "Unauthorized route")
   try {
     // get services and store them in array
-    const servicesStatement = "SELECT * FROM services WHERE eng_equivalent = $1"
-    const servicesQuery = await pool.query(servicesStatement, [serviceEngName])
+    const servicesStatement = "SELECT * FROM services WHERE service_id = $1"
+    const servicesQuery = await pool.query(servicesStatement, [serviceID])
     // check if 'service' value exists in DB, else return 406
     if (servicesQuery.rowCount === 0) {
-      const errorStrUnexpectedInput = "requester's requested service '" + serviceEngName + "' does not exist "
+      const errorStrUnexpectedInput = "requester's requested service '" + serviceID + "' does not exist "
       return customStatusError(errorStrUnexpectedInput, res, 406, "your requested service does not exist")
     }
     if (newServiceName === servicesQuery.rows[0].name) {
@@ -228,18 +226,16 @@ app.put("/service/name", authenticateToken, verifyReqBodyObjNoWhiteSpace, async 
       return customStatusError(errorStrSameName, res, 406, "Service name is already the same, no change required")
     }
     // VERIFICATION ENDS
-    const serviceEngEquivalent = replaceTURCharWithENG(newServiceName)
-    const queryString = "UPDATE services SET name = $1, eng_equivalent = $2 WHERE eng_equivalent = $3"
-    await pool.query(queryString, [newServiceName, serviceEngEquivalent, serviceEngName])
+    const queryString = "UPDATE services SET name = $1 WHERE service_id = $2"
+    await pool.query(queryString, [newServiceName, serviceID])
     res.status(200).json("Your service name was updated successfully")
   } catch (err) {
     return status500Error(err, res, "server error while PUTTING service name")
   }
 })
 
-app.put("/service/description", async (req, res) => {
-  const { service } = req.query
-  const serviceEngName = service
+app.put("/service/description", authenticateToken, async (req, res) => {
+  const { serviceID } = req.query
   const { newServiceDescription } = req.body
   const { userInfo } = res.locals
 
@@ -247,68 +243,35 @@ app.put("/service/description", async (req, res) => {
   const isReqObjVerified = verifyReqObjExpectedObjKeys(["newServiceDescription"], req.body, res)
   if (isReqObjVerified.ok === false)
     return customStatusError(isReqObjVerified.error, res, isReqObjVerified.statusCode, isReqObjVerified.resString)
-  const isInputNotEmpty = verifyInputNotEmptyFunc(res.body)
-  if (isInputNotEmpty.ok === false)
-    return customStatusError(isInputNotEmpty.error, res, isInputNotEmpty.statusCode, isInputNotEmpty.resString)
+  const isInputEmpty = verifyInputNotEmptyFunc(req.body)
+  if (isInputEmpty.ok === false)
+    return customStatusError(isInputEmpty.error, res, isInputEmpty.statusCode, isInputEmpty.resString)
   if (userInfo.role !== "sales_assistant_chef")
     return customStatusError("unauthorized access, no sales_assistant_chef role /service/description at"+__dirname, res, 401, "Unauthorized route")
   try {
     // get services and store them in array
-    const servicesStatement = "SELECT * FROM services WHERE eng_equivalent = $1"
-    const servicesQuery = await pool.query(servicesStatement, [serviceEngName])
+    const servicesStatement = "SELECT * FROM services WHERE service_id = $1"
+    const servicesQuery = await pool.query(servicesStatement, [serviceID])
     // check if 'service' value exists in DB, else return 406
     if (servicesQuery.rowCount === 0) {
-      const errorStrUnexpectedInput = "requester's requested service '" + serviceEngName + "' does not exist "
+      const errorStrUnexpectedInput = "requester's requested service '" + serviceID + "' does not exist "
       return customStatusError(errorStrUnexpectedInput, res, 406, "your requested service does not exist")
     }
     if (newServiceDescription === servicesQuery.rows[0].description) {
-      const errorStrSameDescription = "requested service description change '" + newServiceDescription + "' is no different than " + servicesQuery.rows[0].description
-      return customStatusError(errorStrSameDescription, res, 406, "Service description is already the same, no change required")
+      const errorStrSameName = "requested service name change '" + newServiceDescription + "' is no different than " + servicesQuery.rows[0].name
+      return customStatusError(errorStrSameName, res, 406, "Service name is already the same, no change required")
     }
     // VERIFICATION ENDS
-    const queryString = "UPDATE services SET description = $1 WHERE eng_equivalent = $2"
-    await pool.query(queryString, [newServiceDescription, serviceEngName])
-    res.status(200).json("Your service description was updated successfully")
+    const queryString = "UPDATE services SET description = $1 WHERE service_id = $2"
+    await pool.query(queryString, [newServiceDescription, serviceID])
+    res.status(200).json("Your service name was updated successfully")
   } catch (err) {
-    return status500Error(err, res, "server error while PUTTING service description")
+    return status500Error(err, res, "server error while PUTTING service name")
   }
 })
 
-//// ***** the below route is inactive for now, I implemented an alternative which deletes the entire service instead of setting it as inactive
 
-// app.put("/service/active", authenticateToken, async (req, res) => {
-//   const { service } = req.query
-//   const serviceEngName = service
-//   const { userInfo } = res.locals
-
-//   // VERIFICATION BEGINS
-//   if (userInfo.role !== "sales_assistant_chef")
-//     return customStatusError("unauthorized access, no sales_assistant_chef role /service/active at"+__dirname, res, 401, "Unauthorized route")
-//   const isReqQueryValid = verifyReqObjExpectedObjKeys(['service'], req.query)
-//   if (isReqQueryValid.ok === false)
-//     return customStatusError(isReqQueryValid.error, res, isReqQueryValid.statusCode, isReqQueryValid.resString)
-//   const isInputNotEmpty = verifyInputNotEmptyFunc(req.query)
-//   if (isInputNotEmpty.ok === false)
-//     return customStatusError(isInputNotEmpty.error, res, isInputNotEmpty.statusCode, isInputNotEmpty.resString)
-//   try {
-//     // get services and store them in array
-//     const servicesStatement = "SELECT * FROM services WHERE eng_equivalent = $1"
-//     const servicesQuery = await pool.query(servicesStatement, [serviceEngName])
-//     // check if 'service' value exists in DB, else return 406
-//     if (servicesQuery.rowCount === 0) {
-//       const errorStrUnexpectedInput = "requester's requested service '" + serviceEngName + "' does not exist "
-//       return customStatusError(errorStrUnexpectedInput, res, 406, "your requested service does not exist")
-//     }
-//     // VERIFICATION ENDS
-//     const queryString = "UPDATE services SET active = NOT active, active_last_change_date = CURRENT_TIMESTAMP WHERE eng_equivalent = $1"
-//     await pool.query(queryString, [serviceEngName])
-//     res.status(200).json("Your service's active state was toggled successfully")
-//   } catch (err) {
-//     return status500Error(err, res, "server error while PUTTING service active")
-//   }
-// })
-
-app.delete("/service", authenticateToken, async (req, res) => {
+app.put("/service/active", authenticateToken, async (req, res) => {
   const { serviceID } = req.query
   const { userInfo } = res.locals
 
@@ -335,9 +298,9 @@ app.delete("/service", authenticateToken, async (req, res) => {
     // VERIFICATION ENDS
 
 
-    const deleteServicesQuery = "DELETE FROM services WHERE service_id = $1"
+    const deleteServicesQuery = "UPDATE services SET active = NOT active WHERE service_id = $1"
     await client.query(deleteServicesQuery, [serviceID])
-    const deleteOffersQuery = "DELETE FROM offers WHERE service_id = $1"
+    const deleteOffersQuery = "UPDATE offers SET active = NOT active WHERE service_id = $1"
     await client.query(deleteOffersQuery, [serviceID])
 
     await client.query("COMMIT")
@@ -349,6 +312,50 @@ app.delete("/service", authenticateToken, async (req, res) => {
     return status500Error(err, res, "server error while PUTTING service active")
 }
 })
+
+//// ***** the below route is inactive for now
+
+// app.delete("/service", authenticateToken, async (req, res) => {
+//   const { serviceID } = req.query
+//   const { userInfo } = res.locals
+
+//   // VERIFICATION BEGINS
+//   if (userInfo.role !== "sales_assistant_chef")
+//     return customStatusError("unauthorized access, no sales_assistant_chef role /service/active at"+__dirname, res, 401, "Unauthorized route")
+//   const isReqQueryValid = verifyReqObjExpectedObjKeys(['serviceID'], req.query)
+//   if (isReqQueryValid.ok === false)
+//     return customStatusError(isReqQueryValid.error, res, isReqQueryValid.statusCode, isReqQueryValid.resString)
+//   const isInputNotEmpty = verifyInputNotEmptyFunc(req.query)
+//   if (isInputNotEmpty.ok === false)
+//     return customStatusError(isInputNotEmpty.error, res, isInputNotEmpty.statusCode, isInputNotEmpty.resString)
+//   const client = await pool.connect()
+//   try {
+//     await client.query("BEGIN")
+//     // get services and store them in array
+//     const servicesStatement = "SELECT * FROM services WHERE service_id = $1"
+//     const servicesQuery = await pool.query(servicesStatement, [serviceID])
+//     // check if 'serviceID' value exists in DB, else return 406
+//     if (servicesQuery.rowCount === 0) {
+//       const errorStrUnexpectedInput = "requester's requested service ID '" + serviceID + "' does not exist "
+//       return customStatusError(errorStrUnexpectedInput, res, 406, "your requested service ID does not exist")
+//     }
+//     // VERIFICATION ENDS
+
+
+//     const deleteServicesQuery = "DELETE FROM services WHERE service_id = $1"
+//     await client.query(deleteServicesQuery, [serviceID])
+//     const deleteOffersQuery = "DELETE FROM offers WHERE service_id = $1"
+//     await client.query(deleteOffersQuery, [serviceID])
+
+//     await client.query("COMMIT")
+//     client.release()
+//     res.status(200).json("Your service's active state was toggled successfully")
+// } catch (err) {
+//     await client.query("ROLLBACK")
+//     client.release
+//     return status500Error(err, res, "server error while PUTTING service active")
+// }
+// })
 
 app.put("/service/profitable", verifyReqBodyObjValuesNotEmpty, authenticateToken, async (req, res) => {
   const { service } = req.query
@@ -399,7 +406,7 @@ app.post("/offer", authenticateToken, verifyReqBodyObjValuesNotEmpty, async (req
       const errorStrUnexpectedInput = "requester's requested service ID '" + forServiceID + "' does not exist "
       return customStatusError(errorStrUnexpectedInput, res, 406, "your service ID that includes the offer does not exist")
     }
-    const offersStatement = "SELECT name FROM offers WHERE name = $1 AND service_id = $2"
+    const offersStatement = "SELECT name FROM offers WHERE name = $1 AND service_id = $2 AND active = true"
     const offersQuery = await pool.query(offersStatement, [newOfferName, forServiceID])
     if (offersQuery.rowCount !== 0) {
       const errorStrUnexpectedInput = "requester's requested offer '" + newOfferName + "' already exists in database "
@@ -577,8 +584,8 @@ app.put("/offer/description", authenticateToken, verifyReqBodyObjValuesNotEmpty,
       return customStatusError(errorStrUnexpectedInput, res, 406, "your requested offer does not exist")
     }
     // VERIFICATION ENDS
-    const queryString = "UPDATE services SET active = NOT active WHERE offerID = $1"
-    await pool.query(queryString, [serviceEngName])
+    const queryString = "UPDATE offers SET active = NOT active WHERE offer_id = $1"
+    await pool.query(queryString, [offerID])
     res.status(200).json("Your offer's active state was toggled successfully")
   } catch (err) {
     return status500Error(err, res, "server error while PUTTING offer active")
