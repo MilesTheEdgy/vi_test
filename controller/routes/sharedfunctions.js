@@ -7,11 +7,11 @@ const {
 
 const getGoal = async (services = "ALL", userID = "ALL", month = "ALL", year = "ALL") => {
     // Statements...
-    const goalSelectStatement = "SELECT * FROM goals"
-    const serviceConditionStatement = "service ="
-    const userConditionStatement = "for_user_id ="
-    const extractMonthStatement = "EXTRACT(MONTH FROM for_date) ="
-    const extractYearStatement = "EXTRACT(YEAR FROM for_date) ="
+    const goalSelectStatement = "SELECT goals.for_date, goals.done, goals.goal, goals.goal_id, goals.for_user_id, goals.service_id, services.name AS service FROM goals INNER JOIN services ON services.service_id = goals.service_id"
+    const serviceConditionStatement = "goals.service_id ="
+    const userConditionStatement = "goals.for_user_id ="
+    const extractMonthStatement = "EXTRACT(MONTH FROM goals.for_date) ="
+    const extractYearStatement = "EXTRACT(YEAR FROM goals.for_date) ="
 
     // If service == "ALL", dont change it since it will be omitted below anyways, ELSE, to prevent unicode in URL query
     // params, switch the service name to turkish letters to match it in the database
@@ -46,6 +46,7 @@ const getGoal = async (services = "ALL", userID = "ALL", month = "ALL", year = "
 
     // Final statement that will get submitted
     const finalQueryStatement = queryConstructorDate(goalSelectStatement, verifiedQueryConditionStatements)
+    // console.log('STATEMENT: ', finalQueryStatement, "\n", "PARAMS: ", verifiedQueryConditionStatements)
     try {
         const finalQuery = await pool.query(finalQueryStatement, verifiedQueryParams)
         return finalQuery.rows

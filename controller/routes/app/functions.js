@@ -1,6 +1,18 @@
 const pool = require("../../database")
 const { queryConstructorDate, customStatusError, switchServiceNameToTurkish } = require("../../helpers/functions")
 
+
+function verifyDateValues(dateObj) {
+    let returnVal = []
+    for (const key in dateObj) {
+        if (isNaN(dateObj[key]))
+            returnVal.push("ALL")
+        else
+            returnVal.push(dateObj[key])
+    }
+    return returnVal
+}
+
 // a query constructor specific to INTERVAL queries
 const queryConstructorInterval = (selectStatement, conditionArr) => {
     let conditionText = ""
@@ -168,13 +180,14 @@ const getDealerApplications = async (query, date = "ALL", userID, status = "ALL"
         const conditionQueryArr = [intervalConditionObj, userIDConditionObj, statusConditionObj, serviceConditionObj]
         return fetchAppsAccordToInterval(query, interval, selectStatement, conditionArr, conditionQueryArr)
     } else { // ELSE if user is querying as an exact date with month and year format...
-        const [month, year] = date
+        let [day, month, year] = verifyDateValues(date)
         const extractMonthCondition = "EXTRACT(MONTH FROM sales_applications.submit_time) = "
-        const extracYearCondition = "EXTRACT(YEAR FROM sales_applications.submit_time) = "
+        const extractYearCondition = "EXTRACT(YEAR FROM sales_applications.submit_time) = "
+        const extractDayCondition = "EXTRACT(DAY FROM sales_applications.submit_time) = "
 
 
-        const conditionArr = [month, Number(year), userID, status, service]
-        const conditionQueryArr = [extractMonthCondition, extracYearCondition, conditionSubmitter, conditionStatus, conditionService]
+        const conditionArr = [day, month, Number(year), userID, status, service]
+        const conditionQueryArr = [extractDayCondition, extractMonthCondition, extractYearCondition, conditionSubmitter, conditionStatus, conditionService]
         return fetchAppsAccordToDate(query, selectStatement, conditionArr, conditionQueryArr)
     }
 }

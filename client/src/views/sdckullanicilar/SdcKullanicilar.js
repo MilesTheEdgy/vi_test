@@ -10,6 +10,7 @@ import {
   CPagination,
   CButton
 } from '@coreui/react'
+import Select from "react-select"
 import "./style.css"
 import ToggleSwitch from '../../components/toggleswitch/ToggleSwitch'
 import HocLoader from '../hocloader/HocLoader'
@@ -32,6 +33,11 @@ const fields = [
   }
 ]
 
+const selectRoleOptions = [
+  { value: 'sales_assistant', label: 'Satış Destek' },
+  { value: 'dealer', label: 'Bayi' }
+]
+
 const SdcKullanicilar = () => {
   const history = useHistory()
   const queryPage = useLocation().search.match(/sayfa=([0-9]+)/, '')
@@ -39,7 +45,7 @@ const SdcKullanicilar = () => {
   const [page, setPage] = useState(currentPage)
   const [usersData, setUsersData] = useState([])
   const [loading, setLoading] = useState(true)
-  const [modalOn, setModaOn] = useState(false)
+  const [modalOn, setModalOn] = useState(false)
 
   const pageChange = newPage => {
     currentPage !== newPage && history.push(`/sdc/kullanicilar?sayfa=${newPage}`)
@@ -71,6 +77,23 @@ const SdcKullanicilar = () => {
     }
   };
 
+  const changeUserRole = async (newRole, userID) => {
+    setLoading(true)
+    const res = await fetch(`/user/assign/role?userID=${userID}&toRole=${newRole}`, {
+      method: 'PUT',
+      headers: {
+        'content-type': 'application/json',
+        'authorization' :`Bearer ${document.cookie.slice(8)} `
+      }
+    })
+    if (res.status === 200) {
+      fetchData()
+    } else {
+      setModalOn(true)
+    }
+    setLoading(false)
+  }
+
   const updateUserActiveState = async (userID) => {
     setLoading(true)
     const res = await fetch(`/user/active/${userID}`, {
@@ -84,7 +107,7 @@ const SdcKullanicilar = () => {
     if (res.status === 200) {
       fetchData()
     } else {
-      setModaOn(true)
+      // setModalOn(true)
       fetchData()
     }
   }
@@ -97,7 +120,7 @@ const SdcKullanicilar = () => {
 
   return (
     <HocLoader isLoading = {false} absolute = {true}>
-      <Modal modalOn = {modalOn} setModal = {setModaOn} color = "danger" header = "Hata" body = "Sunucu hatasından dolayı güncelleme sağlanmamıştır, lütfen tekrar deneyin" />
+      <Modal modalOn = {modalOn} setModal = {setModalOn} color = "danger" header = "Hata" body = "Sunucu hatasından dolayı güncelleme sağlanmamıştır, lütfen tekrar deneyin" />
       <CRow className = "d-flex justify-content-center">
         <CCol xl={12}>
           <CCard>
@@ -162,7 +185,15 @@ const SdcKullanicilar = () => {
                             </CButton>
                           </td>
                           )
-                      }
+                      },
+                    'Röl':
+                    (item, index)=>{
+                      return (
+                        <td>
+                          <Select options = {selectRoleOptions} placeholder = {item.Röl} onChange = {e => changeUserRole(e.value, item.ID)} />
+                        </td>
+                        )
+                    }
                   }}
               />
               <CPagination

@@ -3,96 +3,60 @@ import {
     CCard,
     CCardBody,
     CFormGroup,
-    CSelect,
     CCol,
     CLabel,
     CDataTable,
     CButton
 } from "@coreui/react"
 import "./hedefler.css"
-import { mapMonths, mapYears, currentYear, currentMonth, mapGoalsData, fields, AddGoal } from "."
-
-const Dealers = ({setDealer}) => {
-    const [dealers, setDealers] = useState([])
-    useEffect(() => {
-        const fetchData = async () => {
-            const res = await fetch(`/users`, {
-                headers: {
-                  'content-type': 'application/json',
-                  'authorization' :`Bearer ${document.cookie.slice(8)} `
-                }
-            })
-            if (res.status === 200) {
-                const fetchData = await res.json()
-                const filteredData = fetchData.filter(obj => obj.role === "dealer")
-                console.log('data: ', filteredData)
-                setDealers(filteredData)
-            }
-        }
-        fetchData()
-    }, [])
-    return (
-        <CSelect onChange = {(e) => setDealer(e.target.value)} >
-            <option value = {"0"}></option>
-            {
-                dealers && dealers.map(dealer => <option key={dealer.user_id} value={dealer.user_id}>{dealer.name}</option>)
-            }
-        </CSelect>
-    )
-}
-
-const Date = ({setMonth, setYear}) => {
-    const months = mapMonths()
-    const years = mapYears()
-    return (
-        <div id = "date-fields-div">
-            <CSelect onChange = {e => setMonth(e.target.value)} >
-                {months.map(month => <option value={month} key={month}>{month}</option>)}
-            </CSelect>
-            <p id = "month-year-seperator-slash" >-</p>
-            <CSelect onChange = {e => setYear(e.target.value)} >
-                {years.map(year => <option value={year} key={year}>{year}</option>)}
-            </CSelect>
-        </div>
-    )
-}
+import AddGoal from "./AddGoal"
+import { currentYear, currentMonth, mapGoalsData, fields, DateField, DealersField } from "."
 
 const Hedefler = () => {
-    const [dealerID, setDealerID] = useState("")
+    const [dealer, setDealer] = useState({})
     const [month, setMonth] = useState(currentMonth())
     const [year, setYear] = useState(currentYear())
     const [goals, setGoals] = useState([])
     const [loading, setLoading] = useState(false)
     const [addGoalModal, setAddGoalModal] = useState(false)
-    useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true)
-            const res = await fetch(`/goal?userID=${dealerID}&month=${month}&year=${year}` , {
-                headers: {
-                  'content-type': 'application/json',
-                  'authorization' :`Bearer ${document.cookie.slice(8)} `
-                }
-            })
-            if (res.status === 200) {
-                const data = await res.json()
-                const mappedData = mapGoalsData(data)
-                console.log(mappedData)
-                setGoals(mappedData)
+    const [toasters, addToaster] = useState([])
+
+    const fetchGoals = async () => {
+        setLoading(true)
+        const res = await fetch(`/goal?userID=${dealer.user_id}&month=${month}&year=${year}` , {
+            headers: {
+              'content-type': 'application/json',
+              'authorization' :`Bearer ${document.cookie.slice(8)} `
             }
-            setLoading(false)
-        } 
-        if (dealerID !== "")
-            fetchData()
-    }, [dealerID, month, year])
+        })
+        if (res.status === 200) {
+            const data = await res.json()
+            const mappedData = mapGoalsData(data)
+            setGoals(mappedData)
+        }
+        setLoading(false)
+    }
+
+    useEffect(() => {
+        // NEEDS to handle dealer as an object not as a string
+        if (dealer.user_id !== undefined)
+            fetchGoals()
+        //eslint-disable-next-line
+    }, [dealer, month, year])
     return (
         <CCard>
+
+            {toasters && toasters.map((toaster, i) => ( toaster.element(toaster.textObj, i)))}
+
+            <AddGoal modalOn={addGoalModal} setModal={setAddGoalModal} toasters={toasters} triggerToaster={addToaster} refetch={fetchGoals} goals={goals} month={month} year={year} dealer={dealer} />
+
             <CCardBody>
                 <CFormGroup row>
                     <CCol xs = "12" lg = "1">
                         <CLabel>Bayi</CLabel>
                     </CCol>
                     <CCol xs = "12" lg = "3" >
-                        <Dealers setDealer = {setDealerID} />
+                        <DealersField setDealer = {setDealer} />
                     </CCol>
                     <CCol xs = "12" lg = "4" ></CCol>
 
@@ -100,12 +64,12 @@ const Hedefler = () => {
                         <CLabel>Tarih</CLabel>
                     </CCol>
                     <CCol xs = "12" lg = "2" >
-                        <Date setYear = {setYear} setMonth = {setMonth} />
+                        <DateField setYear = {setYear} setMonth = {setMonth} />
                     </CCol>
                 </CFormGroup>
                 <div id = "add-goal-div-row" >
                     <CButton color = "info" id = "add-goal-div-row-button" 
-                        onClick = {() => setAddGoalModal(true)}
+                        onClick = {() => setAddGoalModal(true)} disabled = {dealer.user_id !== undefined ? false : true}
                     >Hedef ekle</CButton>
                 </div>
                 <CDataTable

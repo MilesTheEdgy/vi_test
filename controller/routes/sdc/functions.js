@@ -26,7 +26,7 @@ const verifyGoalDoesNotExist = async (date, service, userID) => {
     const tempInputDate = new Date(date);
     // outputs date year month according to input date, but it adds day: 01
     const inputDateString = `${tempInputDate.getFullYear()}-${tempInputDate.getMonth()+1}-01`
-    const dateQueryStatement = "SELECT date_part('year', for_date), date_part('month', for_date) FROM goals WHERE for_date = $1 AND for_user_id = $2 AND service = $3"
+    const dateQueryStatement = "SELECT date_part('year', for_date), date_part('month', for_date) FROM goals WHERE for_date = $1 AND for_user_id = $2 AND service_id = $3"
     try {
         const dateQuery = await pool.query(dateQueryStatement, [inputDateString, userID, service])
         console.log(dateQuery.rowCount, typeof dateQuery.rowCount)

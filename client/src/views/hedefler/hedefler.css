@@ -15,6 +15,14 @@
 }
 
 #add-goal-div-row-button {
+
     position: absolute;
     right: 0;
+}
+
+#AddGoal-modal-footer-div {
+    display: flex;
+    position: absolute;
+    right: 0;
+    margin-right: 10px;
 }

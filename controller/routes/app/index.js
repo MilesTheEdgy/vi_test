@@ -89,20 +89,25 @@ app.get("/application/:applicationID", authenticateToken, async(req, res) => {
 
 app.get("/applications/:query", authenticateToken, async (req, res) => {
     const { query } = req.params
-    const { status, interval, service, month, year } = req.query
+    const { status, interval, service, day, month, year } = req.query
 
     let userID
     if (res.locals.userInfo.role !== "sales_assistant_chef" && res.locals.userInfo.role !== "sales_assistant")
         userID = res.locals.userInfo.userID
     else
-        userID = req.query.userID
+        if (req.query.userID)
+            userID = req.query.userID
+        else
+            userID = "ALL"
         
     console.log("service ", service)
     try {
         let selectQuery
         // If the REQUEST QUERY date variables are month and year
-        if (month && year)
-            selectQuery = await getDealerApplications(query, [month, year], userID, status, service)
+        if (month || year || day) {
+            const dayObj = {day, month, year}
+            selectQuery = await getDealerApplications(query, dayObj, userID, status, service)
+        }
         // ELSE IF the REQUEST QUERY date variables are interval
         else
             selectQuery = await getDealerApplications(query, interval, userID, status, service)

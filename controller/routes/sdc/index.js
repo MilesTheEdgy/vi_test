@@ -113,7 +113,7 @@ app.put("/user/assign/role", authenticateToken, async (req, res) => {
 })
 
 app.post("/goal", authenticateToken, verifyReqBodyObjValuesNotEmpty, verifyReqBodyObjNoWhiteSpace, async (req, res) => {
-  const userInfo = res.locals
+  const { userInfo } = res.locals
 
   // VERIFICATION BEGINS
   const isReqObjVerified = verifyReqObjExpectedObjKeys(["userID", "date", "service", "goal"], req.body, res)
@@ -137,11 +137,11 @@ app.post("/goal", authenticateToken, verifyReqBodyObjValuesNotEmpty, verifyReqBo
     }
 
     // get services and store them in array
-    const servicesStatement = "SELECT * FROM services WHERE active = true AND profitable = TRUE"
+    const servicesStatement = "SELECT * FROM services WHERE active = true"
     const servicesQuery = await pool.query(servicesStatement)
-    const servicesArr = servicesQuery.rows.map(obj => obj.name)
+    const servicesArr = servicesQuery.rows.map(obj => obj.service_id)
     // check if 'service' value from req.body exists in services array, if false return 406
-    if (servicesArr.includes(service) === false) {
+    if (servicesArr.includes(Number(service)) === false) {
       const errorStrUnexpectedInput = "expected input in array '" + servicesArr + "' got " + service
       return customStatusError(errorStrUnexpectedInput, res, 406, "Unexpected input")
     }
@@ -157,7 +157,7 @@ app.post("/goal", authenticateToken, verifyReqBodyObjValuesNotEmpty, verifyReqBo
     const { verifiedDate } = isDateOlderThanPresent
     // VERIFICATION ENDS
     try {
-      const queryString = "INSERT INTO goals(service, goal, for_date, for_user_id, submit_date, done, success) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, 0, false)"
+      const queryString = "INSERT INTO goals(service_id, goal, for_date, for_user_id, submit_date, done, success) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, 0, false)"
       await pool.query(queryString, [service, goal, verifiedDate, userID])
     } catch (error) {
       return status500Error(error, res, "Could not insert goal")
