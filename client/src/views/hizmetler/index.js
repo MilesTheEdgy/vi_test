@@ -19,12 +19,12 @@ import { useEffect, useState } from 'react'
 import Toaster from "../../components/toaster/Toaster2"
 import HocLoader from '../hocloader/HocLoader'
 
-const successObj = {
+export const successObj = {
     color: "success",
     body: "Değişikleriniz başarıyla tamamlanmıştır!"
 }
 
-const errorObj = {
+export const errorObj = {
     color: "danger",
     body: "Bir hata oldu, lütfen daha sonra tekrar deneyin"
 }
