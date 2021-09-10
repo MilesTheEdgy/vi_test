@@ -7,7 +7,7 @@ import {
   CDropdownToggle,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { Link, useHistory } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 
 const TheHeaderDropdown = () => {
   const dispatch = useDispatch()

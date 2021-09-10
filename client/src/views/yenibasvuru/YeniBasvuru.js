@@ -6,22 +6,13 @@ import {
   CCardFooter,
   CCardHeader,
   CCol,
-  CForm,
   CFormGroup,
   CFormText,
   CTextarea,
   CInput,
-  CInputRadio,
   CLabel,
   CSelect,
   CRow,
-  CToaster,
-  CToast,
-  CToastBody,
-  CModal,
-  CModalTitle,
-  CModalBody,
-  CModalFooter,
   CInputFile
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
@@ -29,17 +20,7 @@ import Modal from "../../components/modals/Modal"
 import HocLoader from "../hocloader/HocLoader"
 import { initialState, reducer } from "."
 
-const Toaster = ({toasterObj}) => {
-    return (
-        <CToaster position="top-right">
-            <CToast show={true} autohide={3000} fade={true} color={toasterObj.color} className = "applicationToaster">
-                <CToastBody>{toasterObj.body}</CToastBody>
-            </CToast>
-        </CToaster>
-    )
-} 
-
-const ApplicationImages = ({dispatch, loadImages, applicationImages}) => {
+const ApplicationImages = ({dispatch, applicationImages}) => {
     return (
         <>
         <CFormGroup row>
@@ -106,6 +87,7 @@ const Services = ({selectedService, dispatch}) => {
 
     useEffect(() => {
         fetchData()
+        //eslint-disable-next-line
     }, [])
 
     return (
@@ -128,7 +110,7 @@ const Services = ({selectedService, dispatch}) => {
     )
 }
 
-const Offers = ({dispatch, isServiceSelected, selectedServiceID, selectedOffer, setSelectedOffer}) => {
+const Offers = ({dispatch, isServiceSelected, selectedServiceID, selectedOffer }) => {
     const [offers, setOffers] = useState([])
     const [fetching, setFetching] = useState(true)
     const handleInputDisabled = () => {
@@ -166,6 +148,7 @@ const Offers = ({dispatch, isServiceSelected, selectedServiceID, selectedOffer, 
             fetchData()
         else
             setOffers([])
+        //eslint-disable-next-line
     }, [isServiceSelected, selectedServiceID])
 
     return (
@@ -175,7 +158,7 @@ const Offers = ({dispatch, isServiceSelected, selectedServiceID, selectedOffer, 
         </CCol>
         <CCol xs="12" md="9">
             <CSelect disabled = {handleInputDisabled()} 
-                     onChange = {setSelectedOffer} value={selectedOffer} onChange={(e) => dispatch({type: "SET_OFFER", payload: e.target.value})} >
+                value={selectedOffer} onChange={(e) => dispatch({type: "SET_OFFER", payload: e.target.value})} >
                 {handleServicesWithNoOffers()}
                 {
                     offers && offers.map(offer => {
@@ -228,7 +211,7 @@ const YeniBasvuru = () => {
     const { selectedService, selectedOffer, clientDescription, clientName, applicationImages } = state
 
     // Form's other values that control the flow of the form itself
-    const { isServiceSelected, isOfferSelected, isDescriptionInputted, isClientNameInputted, applicationImagesObjUrls, areImagesInputted, toasters, modalObj, modalTextObj } = state
+    const { isServiceSelected, isOfferSelected, isDescriptionInputted, isClientNameInputted, applicationImagesObjUrls, areImagesInputted, toasters, modalTextObj } = state
 
     const [inputFieldsNotEmpty, setInputFieldsNotEmpty] = useState(true)
     const [modalOn, setModalOn] = useState(false)

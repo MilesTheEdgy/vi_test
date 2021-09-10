@@ -12,9 +12,9 @@ import {
   CSidebarNavItem,
 } from '@coreui/react'
 
-import CIcon from '@coreui/icons-react'
-import VarolLogo from "../../icons/VarolLogo.png"
-import VarolLogoText from "../../icons/VarolLogoText.png"
+// import CIcon from '@coreui/icons-react'
+// import VarolLogo from "../../icons/VarolLogo.png"
+// import VarolLogoText from "../../icons/VarolLogoText.png"
 
 // sidebar nav config
 import { bayi_nav, satisdestek_nav, satisdestekchef_nav } from './_nav'

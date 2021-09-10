@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Link } from 'react-router-dom'
-import { connect, useDispatch } from 'react-redux';
+import { connect } from 'react-redux';
 import {
   CButton,
   CCard,
@@ -31,7 +31,6 @@ class Login extends React.Component {
       modalOn: false, 
       modalBody: "", 
       modalHeader: "", 
-      modalColor: "",
       loading: false
     }
   };

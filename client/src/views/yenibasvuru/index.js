@@ -155,6 +155,7 @@ export const reducer = (state = initialState, action) => {
                     areImagesInputted: true
                 }
             }
+            break
         case "SET_MODAL_TEXT_SUCCESS":
             return {
                 ...state,

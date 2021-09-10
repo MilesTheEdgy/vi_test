@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from "react-redux"
 import { useHistory } from 'react-router-dom'
 import HocLoader from '../hocloader/HocLoader'
 import "./style.css"
-import { filterAndMapAppData, mapUsersData } from '.'
+import { mapUsersData } from '.'
 
 const fetchUserLoginDate = async (id) => {
   const res = await fetch(`/user/${id}`, {
@@ -141,7 +141,7 @@ const SdcKullanici = ({match}) => {
                   </CFormGroup>
                 </HocLoader>
                 <div className = "sdcKullainici-divider" style = {{marginBottom: "20px"}}></div>
-                <CFormGroup className="my-0 p-2" row className = "justify-content-center align-items-center" >
+                <CFormGroup className="my-0 p-2 justify-content-center align-items-center" row >
                   <CCol lg = "6">
                     <h5>İşlem Raporu</h5>
                   </CCol>

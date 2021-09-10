@@ -33,7 +33,7 @@ const Widget = ({color, fetchFrom, pushToLink, text}) => {
     <CWidgetDropdown
       onClick = {() => history.push(`${pushToLink}`)}
       style = {{height: "130px", cursor: "pointer"}}
-      color={color}
+      color={color} 
       header={state}
       text={text}
     >

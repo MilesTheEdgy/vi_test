@@ -41,11 +41,6 @@ const Rapor = ({match, location}) => {
   const [usersData, setUsersData] = useState(undefined)
   const qsQuery = qs.parse(location.search)
   const qsQueryString = returnRaporQueryString(qsQuery)
-  let urlStatusParam = ""
-  if (qsQuery.status)
-    urlStatusParam  = qsQuery.status
-  else
-    urlStatusParam = qsQuery["?status"]
   const pageChange = newPage => {
     currentPage !== newPage && history.push(`/bayi/islemler/rapor?sayfa=${newPage}&${qsQueryString}`)
   }
@@ -103,7 +98,7 @@ const Rapor = ({match, location}) => {
                 items={usersData}
                 fields={[
                 { key: 'İsim', _classes: 'font-weight-bold' },
-                'Tarih', 'Tip', 'Statü'
+                'Tarih', 'Hizmet', 'Statü'
                 ]}
                 tableFilter
                 hover

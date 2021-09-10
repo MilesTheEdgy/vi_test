@@ -52,7 +52,6 @@ const RaporDetay = ({match, location}) => {
   const [loading, setLoading] = useState(true)
   const [reportsData, setReportsData] = useState(undefined)
   const [details, setDetails] = useState([])
-  const [clickedItemIndex, setClickedItemIndex] = useState(0)
 
   const pageChange = newPage => {
     currentPage !== newPage && history.push(`${match.url}?sayfa=${newPage}`)
@@ -145,7 +144,6 @@ const RaporDetay = ({match, location}) => {
                         size="sm"
                         onClick={()=>{
                           toggleDetails(index, details, setDetails)
-                          setClickedItemIndex(index)
                           }}
                       >
                         {details.includes(index) ? 'Sakla' : 'Göster'}
