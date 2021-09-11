@@ -3,6 +3,7 @@ const Bree = require("bree")
 const express = require("express");
 const app = express();
 const pool = require("./db");
+const path = require("path")
 
 const verifyRoute = require("./controller/routes/verify")
 const generalRoute = require("./controller/routes/app")
@@ -21,6 +22,8 @@ const bree = new Bree({
 bree.start();
 
 app.use(express.json());
+app.use(express.static(path.join(__dirname, "client", "build")));
+app.use(express.static("public"));
 app.use(verifyRoute)
 app.use(generalRoute)
 app.use(dealerRoute)
@@ -30,6 +33,10 @@ app.use(sdcRoute)
 pool.on('error', (err, client) => {
     console.error('Unexpected error on idle client', err)
     process.exit(-1)
+})
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "client", "build", "index.html"));
 })
 
 const PORT = process.env.PORT || 8080
