@@ -65,7 +65,7 @@ const convertDateInputToSQLInterval = (interval) => {
 //     "sentCount": "0",
 //   }
 const mapAppsAccordToServices = async (userID, date) => {
-    const [month, year] = date
+    const { month, year } = date
     const FOR_SDC_GET_APPLICATION_CRITERIA_COUNT = "SELECT COUNT(sales_applications.submitter) FROM sales_applications WHERE sales_applications.status = $1 AND sales_applications.id IN (SELECT id FROM sales_applications_details WHERE selected_service = $2) AND sales_applications.submitter = $3 AND EXTRACT(YEAR FROM sales_applications.submit_time) = $4"
     // month condition statement
     const extractMonthCondition = " AND EXTRACT(MONTH FROM sales_applications.submit_time) = $5"
