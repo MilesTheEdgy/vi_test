@@ -1,16 +1,19 @@
-//are you okay brah
-const Bree = require("bree")
 const express = require("express");
-const app = express();
-const pool = require("./db");
+/** Bree for setting up a function that runs every month */
+const Bree = require("bree")
+const pool = require("./controller/database");
 const path = require("path")
 
+const app = express();
+
+/** Require the rest of the routes */
 const verifyRoute = require("./controller/routes/verify")
 const generalRoute = require("./controller/routes/app")
 const dealerRoute = require("./controller/routes/dealer")
 const sdRoute = require("./controller/routes/sd")
 const sdcRoute = require("./controller/routes/sdc")
 
+/** Define job file and cron which reads 'every start of the month', it will look in a folder name 'jobs' and start a file named 'printreport.js' */
 const bree = new Bree({
     jobs: [
       {
@@ -22,8 +25,10 @@ const bree = new Bree({
 bree.start();
 
 app.use(express.json());
+/** Render '/client/build' static directory */
 app.use(express.static(path.join(__dirname, "client", "build")));
 app.use(express.static("public"));
+/** Use the rest of the routes */
 app.use(verifyRoute)
 app.use(generalRoute)
 app.use(dealerRoute)
