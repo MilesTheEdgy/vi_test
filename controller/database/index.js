@@ -13,9 +13,9 @@ const { Pool } = require('pg')
 
 /////////////////////////////////
 const pool = new Pool({
-  host: "localhost",
+  host: "3.66.82.165",
   user: 'postgres',
-  password: "crossmyheart1243",
+  password: PG_DATABASE_PASSWORD,
   port: 5432,
   database: "varoliletisim",
   max: 20,

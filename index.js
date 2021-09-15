@@ -35,6 +35,9 @@ app.use(dealerRoute)
 app.use(sdRoute)
 app.use(sdcRoute)
 
+pool.on('connect', client => {
+    console.log('Database connection established')
+})
 pool.on('error', (err, client) => {
     console.error('Unexpected error on idle client', err)
     process.exit(-1)

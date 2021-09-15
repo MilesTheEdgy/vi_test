@@ -54,34 +54,31 @@ const TheLayout = React.lazy(() => import('./components/layout/Layout'));
 class App extends Component {
   
   validate = async () => {
-    //validating token on first start
-    const res = await fetch("/validate-token", {
-    method: 'GET',
-    headers: {
-      'content-type': 'application/json',
-      //slice the work 'vitoken' from document.cookie
-      'authorization' :`Bearer ${document.cookie.slice(8)} `
-      }
-    })
-    if (res.status < 405 && res.status > 400) {
-    return
-    } else if (res.status === 200) {
-      //set login to true
-    this.props.userLoggingin()
-      //pushing user to /anasayfa
-    this.props.history.push("/anasayfa")
-      //awaiting data regarding user info
-    let data = await res.json();
-      //sending user data to redux store
-    this.props.fillUserInfo(data)
-    }
   }
 
   componentDidMount() {
-    setTimeout(() => {
-      this.setState({compLoaded: true});
-    }, 3000)
     this.validate();
+    (async () => {
+    //validating token on first start
+    const res = await fetch("/validate-token", {
+      method: 'GET',
+      headers: {
+        'content-type': 'application/json',
+        //slice the work 'vitoken' from document.cookie
+        'authorization' :`Bearer ${document.cookie.slice(8)} `
+        }
+      })
+      if (res.status < 405 && res.status > 400) {
+        //set login to true
+        this.props.userLoggingin()
+        //pushing user to /anasayfa
+      this.props.history.push("/anasayfa")
+        //awaiting data regarding user info
+      let data = await res.json();
+        //sending user data to redux store
+      this.props.fillUserInfo(data)
+      }
+    })()
   }
 
   render() {
@@ -105,15 +102,15 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = (dispatch) => {
 return {
-  userLoggingin : () => {
-      dispatch({type: "LOGIN"})
-    },
-  logoutUser : () => {
-      dispatch({type: "LOGOUT"})
-    },
-  fillUserInfo: (data) => {
-      dispatch({type: "FILL_USER_INFO", payload: data})
-  }
+    userLoggingin : () => {
+        dispatch({type: "LOGIN"})
+      },
+    logoutUser : () => {
+        dispatch({type: "LOGOUT"})
+      },
+    fillUserInfo: (data) => {
+        dispatch({type: "FILL_USER_INFO", payload: data})
+    }
   }
 }  
 
