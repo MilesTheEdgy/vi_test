@@ -1,8 +1,3 @@
-handle route query params: https://learnwithparam.com/blog/how-to-handle-query-params-in-react-router/
-
-
-
-
 
 STYLE FIX IF COREUI UPDATES BY MISTAKE:
 
@@ -13,9 +8,6 @@ npm install @coreui/coreui@3.4.0
 npm uninstall sass
 npm install sass@1.32.8
 --- CHECK VERSION
-
-
-
 
 
 npm uninstall @coreui/icons
