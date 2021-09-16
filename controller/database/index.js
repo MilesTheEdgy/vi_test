@@ -1,6 +1,5 @@
 // const Pool = require("pg").Pool;
 const { Pool } = require('pg')
-
 // const { Client } = require("pg");
 
 // const client = new Client({
@@ -15,7 +14,7 @@ const { Pool } = require('pg')
 const pool = new Pool({
   host: "3.66.82.165",
   user: 'postgres',
-  password: PG_DATABASE_PASSWORD,
+  password: process.env.PG_DATABASE_PASSWORD,
   port: 5432,
   database: "varoliletisim",
   max: 20,

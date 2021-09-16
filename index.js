@@ -2,8 +2,12 @@
 const Bree = require("bree")
 const express = require("express");
 const app = express();
-const pool = require("./db");
 const path = require("path")
+
+const dotenv = require("dotenv")
+dotenv.config();
+
+const pool = require("./controller/database");
 
 const verifyRoute = require("./controller/routes/verify")
 const generalRoute = require("./controller/routes/app")
@@ -29,14 +33,6 @@ app.use(generalRoute)
 app.use(dealerRoute)
 app.use(sdRoute)
 app.use(sdcRoute)
-
-pool.on('connect', client => {
-    console.log('Database connection established')
-})
-pool.on('error', (err, client) => {
-    console.error('Unexpected error on idle client', err)
-    process.exit(-1)
-})
 
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "client", "build", "index.html"));
