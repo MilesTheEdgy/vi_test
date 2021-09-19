@@ -26,23 +26,23 @@ function startServer() {
   console.log('the express static path that was used: ', path.join(__dirname, "client", "build"))
   app.use(morgan('combined'))
   app.use(express.json());
-  // app.use(express.static(path.join(__dirname, "client", "build")));
-  app.use(express.static(path.join(__dirname, "test")));
+  app.use(express.static(path.join(__dirname, "client", "build")));
+  // app.use(express.static(path.join(__dirname, "test")));
   app.use(verifyRoute);
   app.use(generalRoute);
   app.use(dealerRoute);
   app.use(sdRoute);
   app.use(sdcRoute);
   
-  app.get("/sendclientbuild", (req, res) => {
+  app.get("/api/sendclientbuild", (req, res) => {
     console.log('SENDING CLIENT BUILD: ', path.join(__dirname, "client", "build", "index.html"))
     res.sendFile(path.join(__dirname, "client", "build", "index.html"));
   });
-  app.get("/testresponse", (req, res) => {
+  app.get("/api/testresponse", (req, res) => {
     console.log("SENDING A COMMON STRING")
     res.json("this route is working, check logs")
   });
-  app.get("sendtest", (req, res) => {
+  app.get("/api/sendtest", (req, res) => {
     console.log('SENDING TEST HTML')
     res.sendFile(path.join(__dirname, "test","index.html"));
   })
