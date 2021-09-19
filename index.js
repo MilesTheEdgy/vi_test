@@ -10,6 +10,7 @@ const generalRoute = require("./controller/routes/app");
 const dealerRoute = require("./controller/routes/dealer");
 const sdRoute = require("./controller/routes/sd");
 const sdcRoute = require("./controller/routes/sdc");
+const morgan = require("morgan")
 
 function startServer() {
   const bree = new Bree({
@@ -22,17 +23,22 @@ function startServer() {
   });
   bree.start();
 
+  app.use(morgan('combined'))
   app.use(express.json());
-  app.use(express.static(path.join(__dirname, "client", "build")));
-  app.use(express.static("public"));
+  app.use(express.static(path.join("client", "build")));
   app.use(verifyRoute);
   app.use(generalRoute);
   app.use(dealerRoute);
   app.use(sdRoute);
   app.use(sdcRoute);
   
-  app.get("*", (req, res) => {
+  app.get("/sendclientbuild", (req, res) => {
+    console.log('SENDING CLIENT BUILD: ', path.join(__dirname, "client", "build", "index.html"))
     res.sendFile(path.join(__dirname, "client", "build", "index.html"));
+  });
+  app.get("/testresponse", (req, res) => {
+    console.log("SENDING A COMMON STRING")
+    res.json("this route is working, check logs")
   });
   const PORT = process.env.PORT || 8080;
   app.listen(PORT, () => console.log(`Server is listening on port ${PORT}`));
