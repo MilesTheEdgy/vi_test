@@ -26,7 +26,7 @@ function startServer() {
   console.log('the express static path that was used: ', path.join(__dirname, "client", "build"))
   app.use(morgan('combined'))
   app.use(express.json());
-  app.use(express.static(path.join(__dirname, "client", "build")));
+  // app.use(express.static(path.join(__dirname, "client", "build")));
   app.use(verifyRoute);
   app.use(generalRoute);
   app.use(dealerRoute);
