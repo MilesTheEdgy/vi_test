@@ -27,6 +27,7 @@ function startServer() {
   app.use(morgan('combined'))
   app.use(express.json());
   // app.use(express.static(path.join(__dirname, "client", "build")));
+  app.use(express.static(path.join(__dirname, "test")));
   app.use(verifyRoute);
   app.use(generalRoute);
   app.use(dealerRoute);
@@ -41,6 +42,10 @@ function startServer() {
     console.log("SENDING A COMMON STRING")
     res.json("this route is working, check logs")
   });
+  app.get("sendtest", (req, res) => {
+    console.log('SENDING TEST HTML')
+    res.sendFile(path.join(__dirname, "test","index.html"));
+  })
 
   app.get("*", (req, res) => {
     console.log('WILDCARD, sending APP')
