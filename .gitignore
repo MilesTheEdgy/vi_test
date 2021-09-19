@@ -4,7 +4,6 @@ postgres_vol
 # dependencies
 /client/node_modules
 node_modules
-/clientpackage-lock.json
 # testing
 /client/coverage
 

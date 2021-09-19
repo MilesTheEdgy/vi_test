@@ -5,6 +5,8 @@ const uniqid = require("uniqid")
 
 let isCancelled = false;
 
+
+
 // this function get's called by the bree library
 // it runs on each begining of the month
 // it runs for each dealer in the database
@@ -21,7 +23,7 @@ let isCancelled = false;
         const transactionStatement = "SELECT SUM(amount) FROM transactions WHERE EXTRACT(month from date) = (SELECT date_part('month', (SELECT date_trunc('day', NOW() - interval '1 month')))) AND EXTRACT(year from date) = (SELECT date_part('year', (SELECT date_trunc('day', NOW() - interval '1 month')))) AND user_id = $1"
         // get current date
         const date = new Date()
-        // change it to previous month, while always setting date equal to '01'
+        // change it to previous month, while always setting day equal to '01'
         const prevMonthDate = `${date.getFullYear()}-${date.getMonth()}-${'01'}`
         // for every dealer (user_id)
         for (let i = 0; i < dealers.length; i++) {
