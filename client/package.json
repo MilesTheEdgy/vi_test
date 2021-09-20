@@ -12,7 +12,6 @@
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^12.8.3",
     "core-js": "^3.16.0",
-    "http-proxy-middleware": "^2.0.1",
     "node-sass": "^6.0.1",
     "qs": "^6.10.1",
     "react": "^17.0.2",
@@ -50,5 +49,6 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  }
+  },
+  "proxy": "https://projects.muhammed-aldulaimi.com/b2b-iys"
 }
