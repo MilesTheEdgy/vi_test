@@ -47,10 +47,10 @@ function startServer() {
     res.sendFile(path.join(__dirname, "test","index.html"));
   })
 
-  app.get("*", (req, res) => {
-    console.log('WILDCARD, sending TEST INDEX')
-    res.sendFile(path.join(__dirname, "client", "build", "index.html"));
-  });
+  // app.get("*", (req, res) => {
+  //   console.log('WILDCARD, sending TEST INDEX')
+  //   res.sendFile(path.join(__dirname, "client", "build", "index.html"));
+  // });
 
   const PORT = process.env.PORT || 8080;
   app.listen(PORT, () => console.log(`Server is listening on port ${PORT}`));
