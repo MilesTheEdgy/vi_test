@@ -46,6 +46,7 @@ app.get("/validate-token", authenticateToken, async (req, res) => {
 });
 
 app.post("/login", verifyCredentials, async(req, res) => {
+    console.log('ATTEMPTED LOGIN IN /login ROUTE')
     try {
         const { email, role, userID, name, balance, assigned_area } = res.locals.userInfo
         let token = generateAccessToken({
