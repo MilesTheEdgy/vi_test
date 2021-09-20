@@ -68,6 +68,7 @@ async function connectDB() {
       // Start express server
       startServer();
       break;
+      
     } catch (error) {
       console.log("Postgres database error: ", error);
       retries -= 1;
